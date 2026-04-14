@@ -1,9 +1,7 @@
 # @bitmacro/bitmacro-signer
 
-![BitMacro bitmacro-signer](https://raw.githubusercontent.com/bitmacro/bitmacro-signer/main/.github/social-preview.png)
-
 [![CI](https://github.com/bitmacro/bitmacro-signer/actions/workflows/ci.yml/badge.svg)](https://github.com/bitmacro/bitmacro-signer/actions/workflows/ci.yml)
-[![npm version](https://img.shields.io/npm/v/@bitmacro/bitmacro-signer.svg)](https://www.npmjs.com/package/@bitmacro/bitmacro-signer)
+[![npm](https://img.shields.io/badge/npm-not%20on%20registry%20yet-CBD5E1?logo=npm)](https://github.com/bitmacro/bitmacro-signer)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?logo=typescript)](https://www.typescriptlang.org/)
 [![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](https://nodejs.org/)
