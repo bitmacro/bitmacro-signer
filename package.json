@@ -1,0 +1,60 @@
+{
+  "name": "@bitmacro/bitmacro-signer",
+  "version": "0.1.0",
+  "description": "Managed NIP-46 bunker for the BitMacro ecosystem — secure remote signing without exposing nsec",
+  "private": false,
+  "license": "MIT",
+  "author": "BitMacro <contact@bitmacro.io>",
+  "homepage": "https://signer.bitmacro.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bitmacro/bitmacro-signer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bitmacro/bitmacro-signer/issues"
+  },
+  "keywords": [
+    "nostr",
+    "nip-46",
+    "bunker",
+    "signer",
+    "bitmacro",
+    "nostr-connect",
+    "webcrypto",
+    "aes-gcm"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@bitmacro/relay-connect": "^0.1.1",
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.76.1",
+    "clsx": "^2.1.0",
+    "lucide-react": "^0.460.0",
+    "next": "^16",
+    "next-themes": "^0.4.6",
+    "nostr-tools": "^2.23.3",
+    "qrcode.react": "^4.2.0",
+    "react": "^19",
+    "react-dom": "^19",
+    "tailwind-merge": "^2.5.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "^16",
+    "tailwindcss": "^4",
+    "typescript": "^5.7"
+  }
+}
