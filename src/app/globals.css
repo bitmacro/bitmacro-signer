@@ -1,2 +1,170 @@
-/* Intenção: design tokens BitMacro (claro/escuro), tipografia e base — alinhar ao relay-panel quando implementar UI. */
 @import "tailwindcss";
+
+/* Landing: dark-only (BitMacro Identity–aligned) */
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: #0d0f14;
+  --foreground: #e2e6f0;
+  --card: #13161d;
+  --card-foreground: #e2e6f0;
+  --popover: #13161d;
+  --popover-foreground: #e2e6f0;
+  --primary: #f7931a;
+  --primary-foreground: #000000;
+  --secondary: #1a1e28;
+  --secondary-foreground: #e2e6f0;
+  --muted: #222736;
+  --muted-foreground: #8892a4;
+  --accent: #1a1e28;
+  --accent-foreground: #e2e6f0;
+  --destructive: #ef4444;
+  --border: #2a2f3d;
+  --input: #1a1e28;
+  --ring: #f7931a;
+  --radius: 0.375rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --font-family-sans: var(--font-sans), "IBM Plex Sans", system-ui, sans-serif;
+  --font-family-mono: var(--font-mono), "IBM Plex Mono", monospace;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans), "IBM Plex Sans", system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .footer-link {
+    @apply text-[12px] text-muted-foreground transition-colors hover:text-foreground;
+  }
+}
+
+/* Landing (bitmacro-id / relay-panel inspired) */
+.bg-landing-premium {
+  position: relative;
+}
+
+.bg-landing-premium::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(247, 147, 26, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 60%, rgba(0, 102, 255, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 50% at 20% 80%, rgba(247, 147, 26, 0.03) 0%, transparent 50%);
+}
+
+.bg-landing-premium::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+.landing-content {
+  position: relative;
+  z-index: 1;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.glow-orange {
+  box-shadow: 0 0 20px rgba(247, 147, 26, 0.1);
+}
+
+.glow-orange-strong {
+  box-shadow: 0 0 30px rgba(247, 147, 26, 0.15), 0 0 80px rgba(247, 147, 26, 0.08);
+}
+
+.elevation-1 {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.elevation-2 {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.section-glow-divider::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(247, 147, 26, 0.3), transparent);
+}
+
+/* Comparison table: zebra + sticky first column on wide screens */
+.compare-table-wrap {
+  @apply overflow-x-auto rounded-xl border border-border;
+}
+
+.compare-table {
+  @apply w-full min-w-[640px] border-collapse text-left text-[13px];
+}
+
+.compare-table th,
+.compare-table td {
+  @apply border-b border-border px-3 py-2.5 align-top;
+}
+
+.compare-table thead th {
+  @apply bg-secondary/80 font-semibold text-foreground;
+}
+
+.compare-table tbody tr:nth-child(even) {
+  @apply bg-muted/30;
+}
+
+.compare-table .col-product {
+  @apply w-[28%] font-medium text-foreground;
+}
+
+.compare-table .check {
+  @apply text-primary;
+}
+
+.compare-table .dash {
+  @apply text-muted-foreground;
+}
