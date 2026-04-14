@@ -84,25 +84,31 @@ export async function authorizeApp(
     .single();
 
   if (error || !data) {
-    throw new Error(
+    const err = new Error(
       error?.message ?? "authorizeApp: insert failed",
-    );
+    ) as Error & { pgCode?: string };
+    if (error?.code) err.pgCode = error.code;
+    throw err;
   }
 
   raw.fill(0);
   return { sessionId: data.id, secret };
 }
 
-export async function revokeApp(sessionId: string): Promise<void> {
+/** Deletes the session row. Returns true if a row was removed, false if id was unknown. */
+export async function revokeApp(sessionId: string): Promise<boolean> {
   const supabase = createServiceRoleClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("signer_sessions")
     .delete()
-    .eq("id", sessionId);
+    .eq("id", sessionId)
+    .select("id")
+    .maybeSingle();
 
   if (error) {
     throw new Error(`revokeApp: ${error.message}`);
   }
+  return data != null;
 }
 
 /**
