@@ -135,36 +135,3 @@
   background: linear-gradient(90deg, transparent, rgba(247, 147, 26, 0.3), transparent);
 }
 
-/* Comparison table: zebra + sticky first column on wide screens */
-.compare-table-wrap {
-  @apply overflow-x-auto rounded-xl border border-border;
-}
-
-.compare-table {
-  @apply w-full min-w-[640px] border-collapse text-left text-[13px];
-}
-
-.compare-table th,
-.compare-table td {
-  @apply border-b border-border px-3 py-2.5 align-top;
-}
-
-.compare-table thead th {
-  @apply bg-secondary/80 font-semibold text-foreground;
-}
-
-.compare-table tbody tr:nth-child(even) {
-  @apply bg-muted/30;
-}
-
-.compare-table .col-product {
-  @apply w-[28%] font-medium text-foreground;
-}
-
-.compare-table .check {
-  @apply text-primary;
-}
-
-.compare-table .dash {
-  @apply text-muted-foreground;
-}

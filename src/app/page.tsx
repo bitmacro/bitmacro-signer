@@ -4,10 +4,10 @@ import {
   Github,
   KeyRound,
   Lock,
-  Minus,
   Plug,
   QrCode,
   Server,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -28,11 +28,11 @@ function Header() {
           className="flex items-center gap-2.5 text-[14px] font-semibold tracking-tight text-foreground"
         >
           <Image
-            src="/icons/bitmacro.svg"
+            src="/bitmacro-logo.png"
             alt="BitMacro"
-            width={28}
-            height={28}
-            className="size-7 shrink-0"
+            width={36}
+            height={36}
+            className="size-9 shrink-0 object-contain"
             priority
           />
           BitMacro Signer
@@ -176,86 +176,281 @@ function HowItWorks() {
   );
 }
 
-function ComparisonTable() {
-  type Cell = "yes" | "partial" | "no" | "text";
-  const rows: {
-    label: string;
-    signer: { kind: Cell; label?: string };
-    amber: { kind: Cell; label?: string };
-    alby: { kind: Cell; label?: string };
-  }[] = [
-    {
-      label: "Plataforma",
-      signer: { kind: "text", label: "Web (bunker gerido + self-host)" },
-      amber: { kind: "text", label: "Android (app)" },
-      alby: { kind: "text", label: "Extensão de browser" },
-    },
-    {
-      label: "Bunker NIP-46 / Nostr Connect",
-      signer: { kind: "yes" },
-      amber: { kind: "partial", label: "Foco em signer local no dispositivo" },
-      alby: { kind: "yes" },
-    },
-    {
-      label: "nsec em repouso no serviço",
-      signer: {
-        kind: "text",
-        label: "Blob AES-GCM (WebCrypto); servidor sem plaintext em disco",
-      },
-      amber: { kind: "text", label: "Armazenamento local no telemóvel" },
-      alby: { kind: "text", label: "Armazenamento da extensão" },
-    },
-    {
-      label: "Assinatura remota sem o device sempre online",
-      signer: { kind: "yes" },
-      amber: { kind: "no" },
-      alby: { kind: "partial", label: "Depende da extensão / NWC" },
-    },
-    {
-      label: "Self-host & licença",
-      signer: { kind: "text", label: "MIT · Docker" },
-      amber: { kind: "text", label: "Open source" },
-      alby: { kind: "text", label: "Open source" },
-    },
-    {
-      label: "Integração relay BitMacro",
-      signer: { kind: "yes" },
-      amber: { kind: "no" },
-      alby: { kind: "no" },
-    },
-  ];
+type CompareCell =
+  | { kind: "yes" }
+  | { kind: "no" }
+  | { kind: "pill"; text: string }
+  | { kind: "partial" }
+  | { kind: "yesPhase2" }
+  | { kind: "yesPill"; pill: string };
 
-  function CellIcon({
-    cell,
-  }: {
-    cell: { kind: Cell; label?: string };
-  }) {
-    if (cell.kind === "yes") {
+type CompareCategoryRow = { type: "category"; title: string };
+
+type CompareDataRow = {
+  type: "row";
+  feature: string;
+  detail?: string;
+  amber: CompareCell;
+  alby: CompareCell;
+  signer: CompareCell;
+};
+
+type CompareRow = CompareCategoryRow | CompareDataRow;
+
+const COMPARE_PILL =
+  "inline-flex max-w-full items-center rounded-full border border-border bg-secondary/70 px-2 py-0.5 text-[11px] font-medium leading-tight text-muted-foreground";
+
+function CompareCellContent({ cell }: { cell: CompareCell }) {
+  switch (cell.kind) {
+    case "yes":
+      return <Check className="size-4 shrink-0 text-emerald-400" strokeWidth={2.5} aria-hidden />;
+    case "no":
+      return <X className="size-4 shrink-0 text-red-400" strokeWidth={2.5} aria-hidden />;
+    case "partial":
+      return <span className={COMPARE_PILL}>Parcial</span>;
+    case "pill":
       return (
-        <span className="inline-flex items-center gap-1.5">
-          <Check className="check size-4 shrink-0" aria-hidden />
-          <span className="sr-only">Sim</span>
+        <span className={COMPARE_PILL} title={cell.text}>
+          {cell.text}
         </span>
       );
-    }
-    if (cell.kind === "no") {
+    case "yesPhase2":
       return (
-        <span className="inline-flex items-center gap-1.5">
-          <Minus className="dash size-4 shrink-0" aria-hidden />
-          <span className="sr-only">Não</span>
+        <span className="flex flex-wrap items-center gap-1.5">
+          <Check className="size-4 shrink-0 text-emerald-400" strokeWidth={2.5} aria-hidden />
+          <span className={COMPARE_PILL}>fase 2</span>
         </span>
       );
-    }
-    if (cell.kind === "partial") {
+    case "yesPill":
       return (
-        <span className="text-[12px] leading-snug text-muted-foreground">
-          Parcial
-          {cell.label ? ` — ${cell.label}` : ""}
+        <span className="flex flex-wrap items-center gap-1.5">
+          <Check className="size-4 shrink-0 text-emerald-400" strokeWidth={2.5} aria-hidden />
+          <span className={`${COMPARE_PILL} font-mono text-[10px]`}>{cell.pill}</span>
         </span>
       );
-    }
-    return <span className="text-[12px] leading-snug text-muted-foreground">{cell.label}</span>;
+    default:
+      return null;
   }
+}
+
+const COMPARISON_ROWS: CompareRow[] = [
+  { type: "category", title: "Plataforma" },
+  {
+    type: "row",
+    feature: "Dispositivos suportados",
+    amber: { kind: "pill", text: "Android" },
+    alby: { kind: "pill", text: "Desktop" },
+    signer: { kind: "pill", text: "Qualquer" },
+  },
+  {
+    type: "row",
+    feature: "Sem instalação necessária",
+    amber: { kind: "no" },
+    alby: { kind: "no" },
+    signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    feature: "Funciona em iOS",
+    amber: { kind: "no" },
+    alby: { kind: "no" },
+    signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    feature: "Funciona sem extensão browser",
+    amber: { kind: "no" },
+    alby: { kind: "no" },
+    signer: { kind: "yes" },
+  },
+  { type: "category", title: "Identidade" },
+  {
+    type: "row",
+    feature: "Geração de keypair integrada",
+    amber: { kind: "yes" },
+    alby: { kind: "yes" },
+    signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    feature: "NIP-05 incluído no plano",
+    amber: { kind: "no" },
+    alby: { kind: "pill", text: "pago extra" },
+    signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    feature: "Lightning Address incluída",
+    amber: { kind: "no" },
+    alby: { kind: "pill", text: "pago extra" },
+    signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    feature: "Onboarding unificado",
+    detail: "(keypair + NIP-05 + relay + bunker num único flow)",
+    amber: { kind: "no" },
+    alby: { kind: "no" },
+    signer: { kind: "yes" },
+  },
+  { type: "category", title: "Segurança" },
+  {
+    type: "row",
+    feature: "nsec nunca exposta ao app",
+    amber: { kind: "yes" },
+    alby: { kind: "yes" },
+    signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    feature: "Client-side decrypt",
+    amber: { kind: "yes" },
+    alby: { kind: "partial" },
+    signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    feature: "Zero-knowledge no hosted",
+    amber: { kind: "pill", text: "N/A" },
+    alby: { kind: "no" },
+    signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    feature: "Recuperação via Shamir SSS",
+    amber: { kind: "no" },
+    alby: { kind: "no" },
+    signer: { kind: "yesPhase2" },
+  },
+  {
+    type: "row",
+    feature: "Código auditável (open source)",
+    amber: { kind: "yes" },
+    alby: { kind: "yes" },
+    signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    feature: "Reproducible builds + hash",
+    amber: { kind: "no" },
+    alby: { kind: "no" },
+    signer: { kind: "yesPhase2" },
+  },
+  { type: "category", title: "Bunker NIP-46" },
+  {
+    type: "row",
+    feature: "Bunker remoto NIP-46",
+    amber: { kind: "yes" },
+    alby: { kind: "partial" },
+    signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    feature: "24/7 sem device ligado",
+    amber: { kind: "no" },
+    alby: { kind: "partial" },
+    signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    feature: "Policy automática de assinatura",
+    amber: { kind: "no" },
+    alby: { kind: "no" },
+    signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    feature: "TTL de sessão configurável",
+    amber: { kind: "no" },
+    alby: { kind: "no" },
+    signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    feature: "Revogação de sessão imediata",
+    amber: { kind: "no" },
+    alby: { kind: "no" },
+    signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    feature: "Log de assinaturas auditável",
+    amber: { kind: "no" },
+    alby: { kind: "no" },
+    signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    feature: "Interface web de gestão",
+    amber: { kind: "no" },
+    alby: { kind: "partial" },
+    signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    feature: "QR code do bunker URI",
+    amber: { kind: "yes" },
+    alby: { kind: "no" },
+    signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    feature: "Managed hosted (sem ops)",
+    amber: { kind: "no" },
+    alby: { kind: "no" },
+    signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    feature: "Self-host disponível (Docker)",
+    amber: { kind: "yes" },
+    alby: { kind: "no" },
+    signer: { kind: "yes" },
+  },
+  { type: "category", title: "Ecossistema" },
+  {
+    type: "row",
+    feature: "Relay Nostr incluído",
+    amber: { kind: "no" },
+    alby: { kind: "no" },
+    signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    feature: "Lightning integrado",
+    amber: { kind: "no" },
+    alby: { kind: "yes" },
+    signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    feature: "Pagamentos nativos Lightning",
+    amber: { kind: "no" },
+    alby: { kind: "yes" },
+    signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    feature: "SDK para developers",
+    amber: { kind: "no" },
+    alby: { kind: "no" },
+    signer: { kind: "yesPill", pill: "@bitmacro/relay-connect" },
+  },
+  {
+    type: "row",
+    feature: "Stack completo num produto",
+    amber: { kind: "no" },
+    alby: { kind: "no" },
+    signer: { kind: "yes" },
+  },
+];
+
+function ComparisonTable() {
+  const signerCol =
+    "border-b border-border bg-[rgba(0,102,255,0.09)] px-3 py-2.5 align-middle transition-colors duration-150 max-md:min-w-[7rem] group-hover:bg-[rgba(0,102,255,0.14)]";
+  const stdCol = "border-b border-border px-3 py-2.5 align-middle text-center max-md:min-w-[5.5rem]";
+  const featureCol =
+    "border-b border-border px-3 py-2.5 align-middle text-left text-[13px] font-medium text-foreground max-md:min-w-[12rem]";
 
   return (
     <section
@@ -263,58 +458,107 @@ function ComparisonTable() {
       className="section-glow-divider relative border-t border-border/60 px-4 py-16 sm:px-6 md:py-24"
     >
       <div className="landing-content mx-auto max-w-6xl">
-        <div className="mb-3 flex flex-wrap items-end gap-3">
-          <h2 className="text-[22px] font-bold tracking-tight text-foreground md:text-[28px]">
-            Comparação
-          </h2>
-          <span className="rounded-md border border-border bg-secondary/50 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
-            referência
-          </span>
-        </div>
+        <h2 className="mb-3 text-[22px] font-bold tracking-tight text-foreground md:text-[28px]">
+          Comparação
+        </h2>
         <p className="mb-10 max-w-2xl text-[15px] text-muted-foreground">
-          BitMacro Signer frente a soluções conhecidas no ecossistema Nostr — critérios orientados
-          para bunker gerido e relay BitMacro.
+          BitMacro Signer frente a soluções conhecidas no ecossistema Nostr — funcionalidades por
+          categoria.
         </p>
-        <div className="compare-table-wrap glass-card elevation-1">
-          <table className="compare-table">
+        <div className="glass-card elevation-1 overflow-x-auto rounded-xl border border-border">
+          <table className="w-full min-w-[720px] border-collapse text-left text-[13px]">
             <thead>
-              <tr>
-                <th scope="col" className="col-product pl-4">
+              <tr className="bg-secondary/80">
+                <th
+                  scope="col"
+                  className="border-b border-border px-3 py-3 text-left text-[12px] font-semibold text-muted-foreground"
+                >
                   Característica
                 </th>
-                <th scope="col" className="text-primary">
-                  BitMacro Signer
+                <th
+                  scope="col"
+                  className="border-b border-border px-3 py-3 text-center text-[12px] font-semibold text-foreground"
+                >
+                  Amber
                 </th>
-                <th scope="col">Amber</th>
-                <th scope="col" className="pr-4">
+                <th
+                  scope="col"
+                  className="border-b border-border px-3 py-3 text-center text-[12px] font-semibold text-foreground"
+                >
                   Alby
+                </th>
+                <th
+                  scope="col"
+                  className="border-b border-border bg-[rgba(0,102,255,0.09)] px-3 py-3 text-center align-bottom text-[12px] font-semibold text-foreground"
+                >
+                  <span className="mb-2 inline-flex rounded-full border border-sky-500/35 bg-sky-500/15 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-sky-300">
+                    recomendado
+                  </span>
+                  <span className="mt-1 block text-[13px] font-semibold text-foreground">
+                    BitMacro Signer
+                  </span>
                 </th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
-                <tr key={row.label}>
-                  <th scope="row" className="col-product bg-muted/20 pl-4 font-medium">
-                    {row.label}
-                  </th>
-                  <td>
-                    <CellIcon cell={row.signer} />
-                  </td>
-                  <td>
-                    <CellIcon cell={row.amber} />
-                  </td>
-                  <td className="pr-4">
-                    <CellIcon cell={row.alby} />
-                  </td>
-                </tr>
-              ))}
+              {COMPARISON_ROWS.map((row, idx) => {
+                if (row.type === "category") {
+                  return (
+                    <tr key={`cat-${row.title}`} className="bg-muted/25">
+                      <td
+                        colSpan={4}
+                        className="border-b border-border px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                      >
+                        {row.title}
+                      </td>
+                    </tr>
+                  );
+                }
+                const rk = `row-${row.feature}-${idx}`;
+                return (
+                  <tr
+                    key={rk}
+                    className="group transition-colors duration-150 hover:bg-muted/25"
+                  >
+                    <th scope="row" className={featureCol}>
+                      <span className="block">{row.feature}</span>
+                      {row.detail ? (
+                        <span className="mt-0.5 block text-[11px] font-normal leading-snug text-muted-foreground">
+                          {row.detail}
+                        </span>
+                      ) : null}
+                    </th>
+                    <td className={stdCol}>
+                      <div className="flex justify-center">
+                        <CompareCellContent cell={row.amber} />
+                      </div>
+                    </td>
+                    <td className={stdCol}>
+                      <div className="flex justify-center">
+                        <CompareCellContent cell={row.alby} />
+                      </div>
+                    </td>
+                    <td className={signerCol}>
+                      <div className="flex justify-center">
+                        <CompareCellContent cell={row.signer} />
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
-        <p className="mt-4 text-[12px] text-muted-foreground">
-          Amber e Alby são projectos independentes; esta tabela resume diferenços típicos de modelo,
-          não um ranking absoluto.
-        </p>
+        <div className="mt-5 space-y-2 text-[12px] leading-relaxed text-muted-foreground">
+          <p>
+            <span className="font-medium text-foreground/90">fase 2</span> = roadmap previsto, não
+            disponível no MVP.
+          </p>
+          <p>
+            Amber e Alby são projectos independentes — comparação baseada em funcionalidades
+            típicas do modelo, não ranking absoluto.
+          </p>
+        </div>
       </div>
     </section>
   );
