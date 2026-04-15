@@ -1,6 +1,7 @@
 # @bitmacro/bitmacro-signer
 
 [![CI](https://github.com/bitmacro/bitmacro-signer/actions/workflows/ci.yml/badge.svg)](https://github.com/bitmacro/bitmacro-signer/actions/workflows/ci.yml)
+[![Daemon GHCR](https://github.com/bitmacro/bitmacro-signer/actions/workflows/daemon.yml/badge.svg)](https://github.com/bitmacro/bitmacro-signer/actions/workflows/daemon.yml)
 [![npm](https://img.shields.io/badge/npm-not%20on%20registry%20yet-CBD5E1?logo=npm)](https://github.com/bitmacro/bitmacro-signer)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?logo=typescript)](https://www.typescriptlang.org/)
@@ -42,6 +43,34 @@ docker compose up --build
 ```
 
 Compose defines **`web`** (Next on port **3000**, health check `GET /api/health`) and **`daemon`** (bunker loop — see `Dockerfile.daemon` and `src/daemon/index.ts`).
+
+### Daemon image on GHCR (EQ14 / self-host)
+
+On every push to `main` that touches `src/daemon/**`, `src/lib/**`, `Dockerfile.daemon`, or `package.json`, [`.github/workflows/daemon.yml`](.github/workflows/daemon.yml) builds **`linux/amd64`** and pushes to:
+
+- `ghcr.io/bitmacro/bitmacro-signer-daemon:latest`
+- `ghcr.io/bitmacro/bitmacro-signer-daemon:<short-sha>` (7-character Git commit SHA)
+
+The workflow run logs include the **image digest (SHA-256)** after a successful push.
+
+The repository is **private** — the server must authenticate to GitHub Container Registry before `docker pull`.
+
+**One-time login on the server** (replace placeholders):
+
+```bash
+echo YOUR_GITHUB_PAT | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+```
+
+- Create a **Personal Access Token (classic)** or fine-grained token with the **`read:packages`** scope (and **`write:packages`** only if you also push from that machine).
+- Use a dedicated machine user or your own GitHub account for `YOUR_GITHUB_USERNAME`.
+
+**Pull and run** (example):
+
+```bash
+docker pull ghcr.io/bitmacro/bitmacro-signer-daemon:latest
+# Configure env (see .env.example): DAEMON_IDENTITY_IDS, DAEMON_VAULT_PASSPHRASE, Supabase, NEXT_PUBLIC_RELAY_URL, etc.
+docker run --env-file .env ghcr.io/bitmacro/bitmacro-signer-daemon:latest
+```
 
 ## Development
 
