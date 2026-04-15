@@ -14,7 +14,7 @@ import {
   assertAppMayUseSigner,
   completeConnect,
 } from "@/lib/session/app-keys";
-import { createServiceRoleClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 import {
   NOSTR_CONNECT_KIND,

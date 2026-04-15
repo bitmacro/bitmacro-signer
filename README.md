@@ -37,10 +37,11 @@ Implementation is not finalized. The app will combine **`nostr-tools`**, **`@bit
 ```bash
 cp .env.example .env
 # Set at minimum NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_APP_URL
+# For the NIP-46 daemon (self-host): DAEMON_IDENTITY_IDS, DAEMON_VAULT_PASSPHRASE, NEXT_PUBLIC_RELAY_URL, SUPABASE_SERVICE_ROLE_KEY
 docker compose up --build
 ```
 
-The service listens on port **3000**. Health check: `GET /api/health`.
+Compose defines **`web`** (Next on port **3000**, health check `GET /api/health`) and **`daemon`** (bunker loop — see `Dockerfile.daemon` and `src/daemon/index.ts`).
 
 ## Development
 
