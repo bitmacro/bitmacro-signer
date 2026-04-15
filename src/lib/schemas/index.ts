@@ -1,3 +1,4 @@
+export { type AuthUnlockBody, authUnlockBodySchema } from "./auth";
 export {
   type SessionCreateBody,
   sessionCreateBodySchema,
