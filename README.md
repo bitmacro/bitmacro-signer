@@ -53,16 +53,15 @@ On every push to `main` that touches `src/daemon/**`, `src/lib/**`, `Dockerfile.
 
 The workflow run logs include the **image digest (SHA-256)** after a successful push.
 
-The repository is **private** — the server must authenticate to GitHub Container Registry before `docker pull`.
-
-**One-time login on the server** (replace placeholders):
+**Pulling the image:** If the GHCR package visibility is **public** (default for many public repos), `docker pull ghcr.io/bitmacro/bitmacro-signer-daemon:latest` often works **without** logging in. If the package is **private** or pull fails with “denied”, authenticate once:
 
 ```bash
 echo YOUR_GITHUB_PAT | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
 ```
 
-- Create a **Personal Access Token (classic)** or fine-grained token with the **`read:packages`** scope (and **`write:packages`** only if you also push from that machine).
-- Use a dedicated machine user or your own GitHub account for `YOUR_GITHUB_USERNAME`.
+- PAT needs **`read:packages`** (and **`write:packages`** only if this machine also pushes images).
+
+**Previously private repos:** After making the GitHub repo public, open **Packages → bitmacro-signer-daemon → Package settings** and set visibility to **public** if you want anonymous pulls on the EQ14.
 
 **Pull and run** (example):
 
