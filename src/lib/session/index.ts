@@ -1,5 +1,5 @@
 export type { Session } from "./ttl";
-export { buildBunkerUri, isSessionValid } from "./ttl";
+export { buildBunkerUri, bunkerPubkeyToHex, isSessionValid } from "./ttl";
 export {
   assertAppMayUseSigner,
   authorizeApp,

@@ -2,6 +2,44 @@
  * Session helpers (no DB). NIP-46 bunker URI shape; validity uses `used` + `expires_at`.
  */
 
+import * as nip19 from "nostr-tools/nip19";
+
+function bytesToHexLower(bytes: Uint8Array): string {
+  let s = "";
+  for (let i = 0; i < bytes.length; i++) {
+    s += bytes[i]!.toString(16).padStart(2, "0");
+  }
+  return s;
+}
+
+/**
+ * Bunker URI (NIP-46) must use 64-char hex pubkey, not bech32 npub.
+ */
+export function bunkerPubkeyToHex(bunkerPubkey: string): string {
+  const t = bunkerPubkey.trim();
+  if (/^[0-9a-fA-F]{64}$/.test(t)) {
+    return t.toLowerCase();
+  }
+  if (t.startsWith("npub1")) {
+    const d = nip19.decode(t);
+    if (d.type !== "npub") {
+      throw new Error("Invalid npub: expected npub bech32");
+    }
+    const raw: unknown = d.data;
+    if (raw instanceof Uint8Array) {
+      return bytesToHexLower(raw);
+    }
+    if (typeof raw === "string") {
+      const s = raw.trim();
+      if (/^[0-9a-fA-F]{64}$/.test(s)) {
+        return s.toLowerCase();
+      }
+    }
+    throw new Error("Invalid npub decoded payload");
+  }
+  throw new Error("bunker_pubkey must be 64-char hex or npub1…");
+}
+
 export type Session = {
   id: string;
   vault_id: string;
@@ -21,7 +59,7 @@ export function isSessionValid(session: Session): boolean {
 
 /**
  * NIP-46-style bunker connection URI. Does not log or persist `secret`.
- * @param bunkerPubkey — bunker npub (hex or bech32 per your stack)
+ * @param bunkerPubkey — bunker public key as 64-char hex or `npub1…` (normalized to hex in URI)
  * @param relayUrl — WebSocket URL of the relay (e.g. wss://relay.bitmacro.io)
  * @param secret — one-time secret returned from authorizeApp (never store in logs)
  */
@@ -30,7 +68,8 @@ export function buildBunkerUri(
   relayUrl: string,
   secret: string,
 ): string {
+  const pkHex = bunkerPubkeyToHex(bunkerPubkey);
   const relay = encodeURIComponent(relayUrl);
   const sec = encodeURIComponent(secret);
-  return `bunker://${bunkerPubkey}?relay=${relay}&secret=${sec}`;
+  return `bunker://${pkHex}?relay=${relay}&secret=${sec}`;
 }

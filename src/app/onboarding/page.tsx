@@ -28,7 +28,7 @@ type UnlockOk = {
 };
 
 type Phase = 1 | 2 | 3;
-type VaultMode = "import" | "generate" | null;
+type Step1Path = "have_npub" | "fresh_npub";
 
 function truncateMiddle(s: string, keep = 14): string {
   if (s.length <= keep * 2 + 3) return s;
@@ -50,12 +50,13 @@ async function parseUnlockError(res: Response): Promise<string> {
 export default function OnboardingPage() {
   const [phase, setPhase] = useState<Phase>(1);
 
+  const [step1Path, setStep1Path] = useState<Step1Path>("have_npub");
+
   const [npubInput, setNpubInput] = useState("");
   const [passphraseStep1, setPassphraseStep1] = useState("");
 
   const [identityId, setIdentityId] = useState("");
 
-  const [vaultMode, setVaultMode] = useState<VaultMode>(null);
   const vaultNsecRef = useRef<string | null>(null);
 
   const [nsecImport, setNsecImport] = useState("");
@@ -95,6 +96,14 @@ export default function OnboardingPage() {
   useEffect(() => {
     void refreshStatus();
   }, [refreshStatus]);
+
+  const ensureFreshKeypair = useCallback(() => {
+    if (vaultNsecRef.current) return;
+    const { nsec, npub } = generateKeypair();
+    vaultNsecRef.current = nsec;
+    setNpubDisplay(npub);
+    setEncryptPassword("");
+  }, []);
 
   const createSessionAndQr = useCallback(
     async (id: string) => {
@@ -158,10 +167,7 @@ export default function OnboardingPage() {
       await refreshStatus();
 
       if (!data.vault_exists) {
-        setVaultMode(null);
-        vaultNsecRef.current = null;
         setNsecImport("");
-        setNpubDisplay("");
         setEncryptPassword("");
         setPhase(2);
         return;
@@ -175,80 +181,43 @@ export default function OnboardingPage() {
     }
   };
 
-  const startGenerateMode = () => {
-    setError(null);
-    setVaultMode("generate");
-    const { nsec, npub } = generateKeypair();
-    vaultNsecRef.current = nsec;
-    setNpubDisplay(npub);
-    setEncryptPassword("");
-  };
-
-  const handleCreateVault = async (e: React.FormEvent) => {
+  const handleFreshCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    const id = identityId.trim();
-    if (!id) {
-      setError("identity_id em falta — volta ao passo 1.");
+    const npub = npubDisplay.trim();
+    const nsecRef = vaultNsecRef.current;
+    if (!npub || !nsecRef) {
+      setError("Gera o par ou recarrega a opção «Não tenho npub ainda».");
       return;
     }
-    if (!vaultMode) {
-      setError("Escolhe uma opção.");
+    if (!encryptPassword) {
+      setError("Indica a passphrase do cofre.");
       return;
     }
 
     setLoading(true);
     try {
-      let nsecMaterial: string | null = null;
-      let bunkerNpub: string;
-
-      if (vaultMode === "import") {
-        const raw = nsecImport.trim();
-        if (!raw) {
-          setError("Cola a tua nsec.");
-          setLoading(false);
-          return;
-        }
-        const dec = nip19.decode(raw);
-        if (dec.type !== "nsec") {
-          setError("Formato nsec inválido (esperado nsec1…).");
-          setLoading(false);
-          return;
-        }
-        const sk = new Uint8Array(dec.data as Uint8Array);
-        const derived = nip19.npubEncode(getPublicKey(sk));
-        sk.fill(0);
-        if (derived !== npubInput.trim()) {
-          setError("Esta nsec não corresponde ao teu npub");
-          setLoading(false);
-          return;
-        }
-        nsecMaterial = raw;
-        bunkerNpub = npubInput.trim();
-      } else {
-        const ref = vaultNsecRef.current;
-        if (!ref) {
-          setError("Gera o par novamente (escolhe de novo «Gerar novo par»).");
-          setLoading(false);
-          return;
-        }
-        nsecMaterial = ref;
-        bunkerNpub = npubDisplay.trim();
+      const bootRes = await fetch("/api/identities/bootstrap", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ npub }),
+      });
+      const bootJson = (await bootRes.json().catch(() => ({}))) as {
+        identity_id?: string;
+        error?: string;
+      };
+      if (!bootRes.ok) {
+        throw new Error(bootJson.error ?? "Não foi possível criar a identidade");
       }
-
-      if (!encryptPassword) {
-        setError("Indica a passphrase do cofre.");
-        setLoading(false);
-        return;
+      const id = bootJson.identity_id?.trim();
+      if (!id) {
+        throw new Error("Resposta sem identity_id");
       }
+      setIdentityId(id);
 
-      const payload = await encryptNsec(nsecMaterial, encryptPassword);
-      if (vaultMode === "import") {
-        setNsecImport("");
-      } else {
-        vaultNsecRef.current = null;
-      }
-      nsecMaterial = "";
+      const payload = await encryptNsec(nsecRef, encryptPassword);
+      vaultNsecRef.current = null;
 
       const vaultRes = await fetch("/api/vault", {
         method: "POST",
@@ -259,7 +228,89 @@ export default function OnboardingPage() {
           blob: payload.blob,
           salt: payload.salt,
           iv: payload.iv,
-          bunker_pubkey: bunkerNpub,
+          bunker_pubkey: npub,
+        }),
+      });
+      const vJson = (await vaultRes.json().catch(() => ({}))) as {
+        error?: string;
+      };
+      if (!vaultRes.ok) {
+        throw new Error(vJson.error ?? "Erro ao guardar o cofre");
+      }
+
+      const unlockRes = await fetch("/api/auth/unlock", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          npub,
+          passphrase: encryptPassword,
+        }),
+      });
+      if (!unlockRes.ok) {
+        throw new Error(await parseUnlockError(unlockRes));
+      }
+      await refreshStatus();
+      setPhase(3);
+      await createSessionAndQr(id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStep2ImportVault = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    const id = identityId.trim();
+    if (!id) {
+      setError("identity_id em falta — volta ao passo 1.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const raw = nsecImport.trim();
+      if (!raw) {
+        setError("Cola a tua nsec.");
+        setLoading(false);
+        return;
+      }
+      const dec = nip19.decode(raw);
+      if (dec.type !== "nsec") {
+        setError("Formato nsec inválido (esperado nsec1…).");
+        setLoading(false);
+        return;
+      }
+      const sk = new Uint8Array(dec.data as Uint8Array);
+      const derived = nip19.npubEncode(getPublicKey(sk));
+      sk.fill(0);
+      if (derived !== npubInput.trim()) {
+        setError("Esta nsec não corresponde ao teu npub");
+        setLoading(false);
+        return;
+      }
+
+      if (!encryptPassword) {
+        setError("Indica a passphrase do cofre.");
+        setLoading(false);
+        return;
+      }
+
+      const payload = await encryptNsec(raw, encryptPassword);
+      setNsecImport("");
+
+      const vaultRes = await fetch("/api/vault", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          identity_id: id,
+          blob: payload.blob,
+          salt: payload.salt,
+          iv: payload.iv,
+          bunker_pubkey: npubInput.trim(),
         }),
       });
       const vJson = (await vaultRes.json().catch(() => ({}))) as {
@@ -305,7 +356,7 @@ export default function OnboardingPage() {
       setPassphraseStep1("");
       setNpubInput("");
       setIdentityId("");
-      setVaultMode(null);
+      setStep1Path("have_npub");
       setNsecImport("");
       setEncryptPassword("");
       setNpubDisplay("");
@@ -351,15 +402,15 @@ export default function OnboardingPage() {
               />
               <span className="text-zinc-400">Bunker:</span>
               {statusIdentity ? (
-                <span
-                  className={
-                    statusRunning ? "font-medium text-emerald-400" : "text-amber-400"
-                  }
-                >
-                  {statusRunning ? "Activo" : "Inactivo"}
-                </span>
+                statusRunning ? (
+                  <span className="font-medium text-emerald-400">Activo</span>
+                ) : (
+                  <span className="max-w-[min(100%,16rem)] font-medium leading-snug text-sky-300/95 sm:max-w-none">
+                    Sessão activa — bunker em modo managed (EQ14)
+                  </span>
+                )
               ) : (
-                <span className="text-zinc-500">Sem sessão</span>
+                <span className="text-zinc-500">Inactivo</span>
               )}
               {statusIdentity ? (
                 <button
@@ -373,7 +424,10 @@ export default function OnboardingPage() {
                 </button>
               ) : null}
             </div>
-            {statusIdentity && phase === 1 ? (
+            <p className="text-[11px] leading-relaxed text-zinc-500">
+              O bunker corre no servidor — não depende desta janela estar aberta.
+            </p>
+            {statusIdentity && phase === 1 && step1Path === "have_npub" ? (
               <button
                 type="button"
                 disabled={loading}
@@ -430,58 +484,147 @@ export default function OnboardingPage() {
               1. Identificação
             </h2>
           </div>
-          <form onSubmit={(e) => void handleUnlock(e)} className="space-y-4">
-            <div>
-              <label
-                htmlFor="npub"
-                className="mb-1.5 block text-[13px] text-zinc-400"
-              >
-                Chave pública Nostr (npub)
-              </label>
-              <input
-                id="npub"
-                value={npubInput}
-                onChange={(e) => setNpubInput(e.target.value)}
-                autoComplete="off"
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2.5 font-mono text-[12px] text-white outline-none ring-offset-2 ring-offset-[#080808] focus:ring-2 focus:ring-[#0066ff]"
-                placeholder="npub1…"
-                required
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="passphrase"
-                className="mb-1.5 block text-[13px] text-zinc-400"
-              >
-                Passphrase do cofre
-              </label>
-              <input
-                id="passphrase"
-                type="password"
-                value={passphraseStep1}
-                onChange={(e) => setPassphraseStep1(e.target.value)}
-                autoComplete="new-password"
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2.5 text-[14px] text-white outline-none ring-offset-2 ring-offset-[#080808] focus:ring-2 focus:ring-[#0066ff]"
-                required
-              />
-            </div>
+
+          <div className="mb-4 flex flex-col gap-3">
             <button
-              type="submit"
-              disabled={loading}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-              style={{ backgroundColor: ACCENT }}
+              type="button"
+              onClick={() => {
+                setError(null);
+                setStep1Path("have_npub");
+              }}
+              className={`rounded-lg border px-4 py-3 text-left text-[14px] transition-colors ${
+                step1Path === "have_npub"
+                  ? "border-[#0066ff]/50 bg-[rgba(0,102,255,0.08)]"
+                  : "border-zinc-600 hover:bg-zinc-800"
+              }`}
             >
-              {loading ? (
-                <Loader2 className="size-4 animate-spin" aria-hidden />
-              ) : (
-                <Lock className="size-4" aria-hidden />
-              )}
-              Desbloquear
+              <span className="font-medium text-white">Já tenho npub</span>
+              <span className="mt-1 block text-[12px] text-zinc-500">
+                Npub BitMacro Identity + passphrase do cofre
+              </span>
             </button>
-          </form>
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setStep1Path("fresh_npub");
+                ensureFreshKeypair();
+              }}
+              className={`rounded-lg border px-4 py-3 text-left text-[14px] transition-colors ${
+                step1Path === "fresh_npub"
+                  ? "border-[#0066ff]/50 bg-[rgba(0,102,255,0.08)]"
+                  : "border-zinc-600 hover:bg-zinc-800"
+              }`}
+            >
+              <span className="font-medium text-white">Não tenho npub ainda</span>
+              <span className="mt-1 block text-[12px] text-zinc-500">
+                Gera um par no browser e cria o cofre sem passar pelo unlock
+              </span>
+            </button>
+          </div>
+
+          {step1Path === "have_npub" ? (
+            <form onSubmit={(e) => void handleUnlock(e)} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="npub"
+                  className="mb-1.5 block text-[13px] text-zinc-400"
+                >
+                  Chave pública Nostr (npub)
+                </label>
+                <input
+                  id="npub"
+                  value={npubInput}
+                  onChange={(e) => setNpubInput(e.target.value)}
+                  autoComplete="off"
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2.5 font-mono text-[12px] text-white outline-none ring-offset-2 ring-offset-[#080808] focus:ring-2 focus:ring-[#0066ff]"
+                  placeholder="npub1…"
+                  required
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="passphrase"
+                  className="mb-1.5 block text-[13px] text-zinc-400"
+                >
+                  Passphrase do cofre
+                </label>
+                <input
+                  id="passphrase"
+                  type="password"
+                  value={passphraseStep1}
+                  onChange={(e) => setPassphraseStep1(e.target.value)}
+                  autoComplete="new-password"
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2.5 text-[14px] text-white outline-none ring-offset-2 ring-offset-[#080808] focus:ring-2 focus:ring-[#0066ff]"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                style={{ backgroundColor: ACCENT }}
+              >
+                {loading ? (
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                ) : (
+                  <Lock className="size-4" aria-hidden />
+                )}
+                Desbloquear
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={(e) => void handleFreshCreate(e)} className="space-y-4">
+              <p className="rounded-lg border border-amber-900/40 bg-amber-950/20 px-3 py-2 text-[12px] text-amber-100/90">
+                Guarda este npub — é a tua identidade Nostr no bunker. Depois do cofre,
+                podes associá-la à BitMacro Identity se quiseres.
+              </p>
+              <div>
+                <span className="mb-1.5 block text-[13px] text-zinc-400">
+                  npub gerado (readonly)
+                </span>
+                <textarea
+                  readOnly
+                  value={npubDisplay}
+                  rows={3}
+                  className="w-full resize-none rounded-lg border border-zinc-700 bg-zinc-950/80 px-3 py-2 font-mono text-[12px] text-zinc-300"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="enc_fresh"
+                  className="mb-1.5 block text-[13px] text-zinc-400"
+                >
+                  Passphrase do cofre
+                </label>
+                <input
+                  id="enc_fresh"
+                  type="password"
+                  value={encryptPassword}
+                  onChange={(e) => setEncryptPassword(e.target.value)}
+                  autoComplete="new-password"
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2.5 text-[14px] text-white outline-none ring-offset-2 ring-offset-[#080808] focus:ring-2 focus:ring-[#0066ff]"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                style={{ backgroundColor: ACCENT }}
+              >
+                {loading ? (
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                ) : (
+                  <KeyRound className="size-4" aria-hidden />
+                )}
+                Criar cofre e activar bunker
+              </button>
+            </form>
+          )}
         </section>
 
-        {/* Step 2 */}
+        {/* Step 2 — import nsec (após unlock sem vault, fluxo «Já tenho npub») */}
         {phase >= 2 ? (
           <section className="mb-14 scroll-mt-8 opacity-100">
             <div className="mb-4 flex items-center gap-2">
@@ -491,174 +634,61 @@ export default function OnboardingPage() {
               </h2>
             </div>
             {phase === 2 ? (
-              <div className="space-y-4">
+              <form
+                onSubmit={(e) => void handleStep2ImportVault(e)}
+                className="space-y-4"
+              >
                 <p className="text-[13px] leading-relaxed text-zinc-400">
-                  Ainda não tens cofre no Signer para este npub. Escolhe como
-                  queres continuar.
+                  Ainda não há cofre no Signer para este npub. Cola a nsec que corresponde
+                  ao npub do passo 1 e define a passphrase para encriptar o cofre.
                 </p>
-
-                {vaultMode === null ? (
-                  <div className="flex flex-col gap-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setVaultMode("import");
-                        vaultNsecRef.current = null;
-                        setNpubDisplay("");
-                        setNsecImport("");
-                        setEncryptPassword("");
-                      }}
-                      className="rounded-lg border border-zinc-600 px-4 py-3 text-left text-[14px] text-zinc-200 transition-colors hover:bg-zinc-800"
-                    >
-                      <span className="font-medium text-white">
-                        Já tenho uma nsec
-                      </span>
-                      <span className="mt-1 block text-[12px] text-zinc-500">
-                        Importa a chave que corresponde a este npub
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => startGenerateMode()}
-                      className="rounded-lg border border-zinc-600 px-4 py-3 text-left text-[14px] text-zinc-200 transition-colors hover:bg-zinc-800"
-                    >
-                      <span className="font-medium text-white">
-                        Não tenho npub ainda
-                      </span>
-                      <span className="mt-1 block text-[12px] text-zinc-500">
-                        Gera um par só para o bunker (nsec só encriptada no cofre)
-                      </span>
-                    </button>
-                  </div>
-                ) : null}
-
-                {vaultMode === "import" ? (
-                  <form onSubmit={(e) => void handleCreateVault(e)} className="space-y-4">
-                    <div>
-                      <label
-                        htmlFor="nsec_import"
-                        className="mb-1.5 block text-[13px] text-zinc-400"
-                      >
-                        nsec (bech32)
-                      </label>
-                      <textarea
-                        id="nsec_import"
-                        value={nsecImport}
-                        onChange={(e) => setNsecImport(e.target.value)}
-                        rows={3}
-                        className="w-full rounded-lg border border-zinc-700 bg-zinc-950/80 px-3 py-2 font-mono text-[11px] text-zinc-300"
-                        placeholder="nsec1…"
-                        autoComplete="off"
-                      />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="enc_pw_import"
-                        className="mb-1.5 block text-[13px] text-zinc-400"
-                      >
-                        Passphrase para encriptar o cofre
-                      </label>
-                      <input
-                        id="enc_pw_import"
-                        type="password"
-                        value={encryptPassword}
-                        onChange={(e) => setEncryptPassword(e.target.value)}
-                        autoComplete="new-password"
-                        className="w-full rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2.5 text-[14px] text-white outline-none focus:ring-2 focus:ring-[#0066ff] ring-offset-2 ring-offset-[#080808]"
-                        required
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setVaultMode(null);
-                          setNsecImport("");
-                        }}
-                        className="rounded-lg border border-zinc-600 px-3 py-2 text-[13px] text-zinc-400"
-                      >
-                        Voltar
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className="flex-1 rounded-lg px-4 py-3 text-[14px] font-semibold text-white disabled:opacity-60"
-                        style={{ backgroundColor: ACCENT }}
-                      >
-                        {loading ? (
-                          <Loader2 className="mx-auto size-4 animate-spin" />
-                        ) : (
-                          "Guardar cofre e continuar"
-                        )}
-                      </button>
-                    </div>
-                  </form>
-                ) : null}
-
-                {vaultMode === "generate" ? (
-                  <form onSubmit={(e) => void handleCreateVault(e)} className="space-y-4">
-                    <p className="rounded-lg border border-amber-900/40 bg-amber-950/20 px-3 py-2 text-[12px] text-amber-100/90">
-                      Guarda este npub — é a identidade Nostr usada pelo bunker
-                      (pode ser diferente do npub da BitMacro Identity se geraste um
-                      par novo).
-                    </p>
-                    <div>
-                      <span className="mb-1.5 block text-[13px] text-zinc-400">
-                        npub gerado (readonly)
-                      </span>
-                      <textarea
-                        readOnly
-                        value={npubDisplay}
-                        rows={3}
-                        className="w-full resize-none rounded-lg border border-zinc-700 bg-zinc-950/80 px-3 py-2 font-mono text-[12px] text-zinc-300"
-                      />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="enc_pw_gen"
-                        className="mb-1.5 block text-[13px] text-zinc-400"
-                      >
-                        Passphrase para encriptar o cofre
-                      </label>
-                      <input
-                        id="enc_pw_gen"
-                        type="password"
-                        value={encryptPassword}
-                        onChange={(e) => setEncryptPassword(e.target.value)}
-                        autoComplete="new-password"
-                        className="w-full rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2.5 text-[14px] text-white outline-none focus:ring-2 focus:ring-[#0066ff] ring-offset-2 ring-offset-[#080808]"
-                        required
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setVaultMode(null);
-                          vaultNsecRef.current = null;
-                          setNpubDisplay("");
-                          setEncryptPassword("");
-                        }}
-                        className="rounded-lg border border-zinc-600 px-3 py-2 text-[13px] text-zinc-400"
-                      >
-                        Voltar
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className="flex-1 rounded-lg px-4 py-3 text-[14px] font-semibold text-white disabled:opacity-60"
-                        style={{ backgroundColor: ACCENT }}
-                      >
-                        {loading ? (
-                          <Loader2 className="mx-auto size-4 animate-spin" />
-                        ) : (
-                          "Guardar cofre e continuar"
-                        )}
-                      </button>
-                    </div>
-                  </form>
-                ) : null}
-              </div>
+                <div>
+                  <label
+                    htmlFor="nsec_import"
+                    className="mb-1.5 block text-[13px] text-zinc-400"
+                  >
+                    nsec (bech32)
+                  </label>
+                  <textarea
+                    id="nsec_import"
+                    value={nsecImport}
+                    onChange={(e) => setNsecImport(e.target.value)}
+                    rows={3}
+                    className="w-full rounded-lg border border-zinc-700 bg-zinc-950/80 px-3 py-2 font-mono text-[11px] text-zinc-300"
+                    placeholder="nsec1…"
+                    autoComplete="off"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="enc_pw_import"
+                    className="mb-1.5 block text-[13px] text-zinc-400"
+                  >
+                    Passphrase para encriptar o cofre
+                  </label>
+                  <input
+                    id="enc_pw_import"
+                    type="password"
+                    value={encryptPassword}
+                    onChange={(e) => setEncryptPassword(e.target.value)}
+                    autoComplete="new-password"
+                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2.5 text-[14px] text-white outline-none focus:ring-2 focus:ring-[#0066ff] ring-offset-2 ring-offset-[#080808]"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-[14px] font-semibold text-white disabled:opacity-60"
+                  style={{ backgroundColor: ACCENT }}
+                >
+                  {loading ? (
+                    <Loader2 className="size-4 animate-spin" aria-hidden />
+                  ) : (
+                    "Guardar cofre e continuar"
+                  )}
+                </button>
+              </form>
             ) : (
               <p className="text-[13px] text-zinc-500">Cofre já criado — passo concluído.</p>
             )}
