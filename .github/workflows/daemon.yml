@@ -1,6 +1,7 @@
 name: Daemon Docker (GHCR)
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
@@ -8,6 +9,8 @@ on:
       - "src/lib/**"
       - "Dockerfile.daemon"
       - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/daemon.yml"
 
 permissions:
   contents: read
