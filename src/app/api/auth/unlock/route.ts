@@ -72,7 +72,11 @@ export async function POST(request: Request) {
     return jsonError(vaultErr.message, 500);
   }
   if (!vault?.blob || !vault?.salt || !vault?.iv) {
-    return jsonError("Vault not found", 404);
+    return NextResponse.json({
+      ok: true,
+      vault_exists: false,
+      is_running: false,
+    });
   }
 
   let nsec: string;
@@ -109,6 +113,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
+    vault_exists: true,
     is_running: isRunning(identity_id),
   });
 }
