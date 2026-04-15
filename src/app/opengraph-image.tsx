@@ -16,7 +16,7 @@ export default function OpenGraphImage() {
           justifyContent: "center",
           backgroundColor: "#0d0f14",
           backgroundImage:
-            "radial-gradient(ellipse 80% 60% at 50% -20%, rgba(247, 147, 26, 0.14) 0%, transparent 55%), radial-gradient(ellipse 50% 50% at 90% 80%, rgba(0, 102, 255, 0.06) 0%, transparent 50%)",
+            "radial-gradient(ellipse 80% 60% at 50% -20%, rgba(0, 102, 255, 0.14) 0%, transparent 55%), radial-gradient(ellipse 50% 50% at 90% 80%, rgba(0, 102, 255, 0.08) 0%, transparent 50%)",
         }}
       >
         <div
@@ -35,7 +35,7 @@ export default function OpenGraphImage() {
               alignSelf: "stretch",
               minHeight: 200,
               borderRadius: 4,
-              background: "linear-gradient(180deg, #f7931a 0%, #c46a08 100%)",
+              background: "linear-gradient(180deg, #0066ff 0%, #0047b3 100%)",
             }}
           />
           <div style={{ display: "flex", flexDirection: "column", gap: 16, flex: 1 }}>

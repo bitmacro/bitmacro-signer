@@ -94,7 +94,7 @@ function Hero() {
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <Link
             href="/onboarding"
-            className="glow-orange hover:glow-orange-strong inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-[14px] font-semibold text-primary-foreground transition-all duration-300 hover:scale-[1.02] sm:min-h-0 sm:py-2.5"
+            className="glow-primary hover:glow-primary-strong inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-[14px] font-semibold text-primary-foreground transition-all duration-300 hover:scale-[1.02] sm:min-h-0 sm:py-2.5"
           >
             Começar grátis
             <ArrowRight className="size-4" aria-hidden />
@@ -491,7 +491,7 @@ function ComparisonTable() {
                   scope="col"
                   className="border-b border-border bg-[rgba(0,102,255,0.09)] px-3 py-3 text-center align-bottom text-[12px] font-semibold text-foreground"
                 >
-                  <span className="mb-2 inline-flex rounded-full border border-sky-500/35 bg-sky-500/15 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-sky-300">
+                  <span className="mb-2 inline-flex rounded-full border border-blue-500/35 bg-blue-500/15 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-blue-300">
                     recomendado
                   </span>
                   <span className="mt-1 block text-[13px] font-semibold text-foreground">

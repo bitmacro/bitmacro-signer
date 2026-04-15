@@ -10,8 +10,8 @@
   --card-foreground: #e2e6f0;
   --popover: #13161d;
   --popover-foreground: #e2e6f0;
-  --primary: #f7931a;
-  --primary-foreground: #000000;
+  --primary: #0066ff;
+  --primary-foreground: #ffffff;
   --secondary: #1a1e28;
   --secondary-foreground: #e2e6f0;
   --muted: #222736;
@@ -21,7 +21,7 @@
   --destructive: #ef4444;
   --border: #2a2f3d;
   --input: #1a1e28;
-  --ring: #f7931a;
+  --ring: #0066ff;
   --radius: 0.375rem;
 }
 
@@ -79,9 +79,9 @@
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(247, 147, 26, 0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 60%, rgba(0, 102, 255, 0.04) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 50% at 20% 80%, rgba(247, 147, 26, 0.03) 0%, transparent 50%);
+    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(0, 102, 255, 0.1) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 60%, rgba(0, 102, 255, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 50% at 20% 80%, rgba(0, 102, 255, 0.04) 0%, transparent 50%);
 }
 
 .bg-landing-premium::after {
@@ -108,12 +108,12 @@
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.glow-orange {
-  box-shadow: 0 0 20px rgba(247, 147, 26, 0.1);
+.glow-primary {
+  box-shadow: 0 0 20px rgba(0, 102, 255, 0.12);
 }
 
-.glow-orange-strong {
-  box-shadow: 0 0 30px rgba(247, 147, 26, 0.15), 0 0 80px rgba(247, 147, 26, 0.08);
+.glow-primary-strong {
+  box-shadow: 0 0 30px rgba(0, 102, 255, 0.2), 0 0 80px rgba(0, 102, 255, 0.1);
 }
 
 .elevation-1 {
@@ -132,6 +132,6 @@
   transform: translateX(-50%);
   width: 200px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(247, 147, 26, 0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(0, 102, 255, 0.35), transparent);
 }
 
