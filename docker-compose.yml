@@ -1,6 +1,8 @@
-# Intenção: `docker compose up --build` — app Next em modo standalone, sem config extra além de `.env` (copiar de `.env.example`).
+# `docker compose up --build` — serviço web (Next standalone) + daemon (bunker NIP-46).
+# Variáveis: copiar `.env.example` → `.env` e preencher (serviços partilham `.env`; ver chaves só-daemon abaixo).
+
 services:
-  signer:
+  web:
     build:
       context: .
       dockerfile: Dockerfile
@@ -23,3 +25,13 @@ services:
       timeout: 5s
       retries: 3
       start_period: 40s
+
+  daemon:
+    build:
+      context: .
+      dockerfile: Dockerfile.daemon
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+    restart: unless-stopped

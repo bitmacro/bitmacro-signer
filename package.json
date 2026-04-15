@@ -29,6 +29,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
+    "build:daemon": "esbuild src/daemon/index.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/daemon/index.js --alias:@=./src",
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
@@ -38,7 +39,6 @@
     "@bitmacro/relay-connect": "^0.1.1",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.76.1",
-    "bcryptjs": "^3.0.3",
     "clsx": "^2.1.0",
     "jose": "^6.2.2",
     "lucide-react": "^0.460.0",
@@ -53,10 +53,10 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "^0.25.0",
     "eslint": "^9",
     "eslint-config-next": "^16",
     "tailwindcss": "^4",

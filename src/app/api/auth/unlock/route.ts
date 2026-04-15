@@ -1,4 +1,3 @@
-import { compare } from "bcryptjs";
 import { NextResponse } from "next/server";
 
 import { setSessionCookie } from "@/lib/auth/session-cookie";
@@ -15,7 +14,7 @@ function jsonError(message: string, status: number, details?: unknown) {
 }
 
 /**
- * POST /api/auth/unlock — verify Identity password (bcrypt), decrypt vault, start NIP-46 bunker, set session cookie.
+ * POST /api/auth/unlock — resolve identity by npub, decrypt vault with passphrase, start bunker, session cookie.
  */
 export async function POST(request: Request) {
   let supabase: ReturnType<typeof createServiceRoleClient>;
@@ -37,30 +36,22 @@ export async function POST(request: Request) {
     return jsonError("Validation failed", 400, parsed.error.flatten());
   }
 
-  const { identity_id, password } = parsed.data;
+  const { npub, passphrase } = parsed.data;
 
   const { data: identity, error: idErr } = await supabase
     .from("identities")
-    .select("id, password_hash")
-    .eq("id", identity_id)
+    .select("id")
+    .eq("npub", npub)
     .maybeSingle();
 
   if (idErr) {
     return jsonError(idErr.message, 500);
   }
-  if (!identity) {
-    return jsonError("Identity not found", 404);
+  if (!identity?.id) {
+    return jsonError("Npub not registered", 404);
   }
 
-  const hash = identity.password_hash as string | null;
-  if (!hash || hash.length === 0) {
-    return jsonError("Password not set for this identity", 401);
-  }
-
-  const passwordOk = await compare(password, hash);
-  if (!passwordOk) {
-    return jsonError("Invalid credentials", 401);
-  }
+  const identity_id = identity.id as string;
 
   const { data: vault, error: vaultErr } = await supabase
     .from("signer_vaults")
@@ -75,6 +66,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       vault_exists: false,
+      identity_id,
       is_running: false,
     });
   }
@@ -83,15 +75,20 @@ export async function POST(request: Request) {
   try {
     nsec = await decryptNsec(
       { blob: vault.blob, salt: vault.salt, iv: vault.iv },
-      password,
+      passphrase,
     );
   } catch (e) {
     if (e instanceof VaultDecryptError) {
-      return jsonError("Invalid credentials", 401);
+      return jsonError("Passphrase incorrecta", 401);
     }
     throw e;
   }
 
+  /*
+   * TODO: startBunker aqui é placeholder para desenvolvimento local.
+   * Em produção o daemon corre no EQ14 via Dockerfile.daemon.
+   * A API route faz apenas auth + cookie; o daemon escuta por si próprio.
+   */
   try {
     await startBunker(identity_id, nsec);
   } catch (e) {
@@ -114,6 +111,7 @@ export async function POST(request: Request) {
   return NextResponse.json({
     ok: true,
     vault_exists: true,
+    identity_id,
     is_running: isRunning(identity_id),
   });
 }
