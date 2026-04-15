@@ -15,6 +15,18 @@ function hashSecret(bytes: Buffer): string {
 }
 
 /**
+ * Same hashing as `authorizeApp` for the base64url secret shown once to the client.
+ * @throws if the string is not a valid 32-byte secret encoding
+ */
+export function hashSecretFromPlaintext(secretBase64Url: string): string {
+  const buf = Buffer.from(secretBase64Url, "base64url");
+  if (buf.length !== 32) {
+    throw new Error("invalid secret: expected 32 bytes after base64url decode");
+  }
+  return hashSecret(buf);
+}
+
+/**
  * Resolves signer_vaults.id for a BitMacro Identity. Expects a row to exist.
  * Server must use a Supabase client with permission to read signer_vaults (e.g. service role).
  */
@@ -96,6 +108,78 @@ export async function authorizeApp(
 }
 
 /** Deletes the session row. Returns true if a row was removed, false if id was unknown. */
+/**
+ * NIP-46 `connect`: validates one-time secret, marks session `used`, then signing RPCs rely on
+ * {@link assertAppMayUseSigner} until `expires_at`.
+ */
+export async function completeConnect(
+  identityId: string,
+  appPubkey: string,
+  secret: string,
+): Promise<void> {
+  const supabase = createServiceRoleClient();
+  const vaultId = await getVaultIdForIdentity(supabase, identityId);
+  let secret_hash: string;
+  try {
+    secret_hash = hashSecretFromPlaintext(secret);
+  } catch {
+    throw new Error("connect: invalid secret");
+  }
+
+  const { data: row, error } = await supabase
+    .from("signer_sessions")
+    .select("id")
+    .eq("vault_id", vaultId)
+    .eq("app_pubkey", appPubkey)
+    .eq("secret_hash", secret_hash)
+    .eq("used", false)
+    .gt("expires_at", new Date().toISOString())
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`completeConnect: ${error.message}`);
+  }
+  if (!row?.id) {
+    throw new Error("connect: unauthorized or secret already used");
+  }
+
+  const { error: upd } = await supabase
+    .from("signer_sessions")
+    .update({ used: true })
+    .eq("id", row.id);
+
+  if (upd) {
+    throw new Error(`completeConnect: ${upd.message}`);
+  }
+}
+
+/**
+ * Requires a row with `used === true` (NIP-46 `connect` completed with valid secret) and not expired.
+ * Prevents signing before `connect` even if a pending session row exists.
+ */
+export async function assertAppMayUseSigner(
+  identityId: string,
+  appPubkey: string,
+): Promise<void> {
+  const supabase = createServiceRoleClient();
+  const vaultId = await getVaultIdForIdentity(supabase, identityId);
+  const { data, error } = await supabase
+    .from("signer_sessions")
+    .select("id")
+    .eq("vault_id", vaultId)
+    .eq("app_pubkey", appPubkey)
+    .eq("used", true)
+    .gt("expires_at", new Date().toISOString())
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`assertAppMayUseSigner: ${error.message}`);
+  }
+  if (!data?.id) {
+    throw new Error("NIP-46: app not authorized or session expired");
+  }
+}
+
 export async function revokeApp(sessionId: string): Promise<boolean> {
   const supabase = createServiceRoleClient();
   const { data, error } = await supabase
