@@ -52,7 +52,7 @@ Compose defines **`web`** (Next on port **3000**, health check `GET /api/health`
 - `ghcr.io/bitmacro/bitmacro-signer-web:latest`
 - `ghcr.io/bitmacro/bitmacro-signer-web:<short-sha>`
 
-Runs on changes to the main app (not `src/daemon/**` or `Dockerfile.daemon` — those are covered by the daemon workflow).
+Runs on `push` to `main` when listed paths change (incl. `src/**`). Alterações só em `src/daemon/` também casam `src/**`, por isso o build web pode correr em paralelo com o workflow do daemon — é redundante mas válido. GitHub não permite `paths` e `paths-ignore` no mesmo gatilho.
 
 ### Daemon image on GHCR (self-host)
 

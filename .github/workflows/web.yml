@@ -12,9 +12,6 @@ on:
       - "public/**"
       - "src/**"
       - ".github/workflows/web.yml"
-    paths-ignore:
-      - "src/daemon/**"
-      - "Dockerfile.daemon"
 
 permissions:
   contents: read
