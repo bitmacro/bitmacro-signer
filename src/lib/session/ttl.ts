@@ -52,6 +52,15 @@ export function bunkerPubkeyToHex(bunkerPubkey: string): string {
   }
 }
 
+/** 64-char hex secp256k1 pubkey → `npub1…` (para mostrar a chave de sessão NIP-46 no cliente). */
+export function nostrHexPubkeyToNpub(hex: string): string {
+  const t = hex.trim().toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(t)) {
+    throw new Error("expected 64-char hex pubkey");
+  }
+  return nip19.npubEncode(t);
+}
+
 export type Session = {
   id: string;
   vault_id: string;

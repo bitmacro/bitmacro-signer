@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Check, Copy, Loader2 } from "lucide-react";
 
+import { nostrHexPubkeyToNpub } from "@/lib/session/ttl";
+
 const ACCENT = "#0066FF";
 const BG = "#080808";
 
@@ -25,48 +27,89 @@ type SessionRow = {
 
 function SessionCard({
   row,
+  copiedKey,
   onCopied,
-  copiedId,
 }: {
   row: SessionRow;
-  onCopied: (id: string) => void;
-  copiedId: string | null;
+  copiedKey: string | null;
+  onCopied: (key: string) => void;
 }) {
-  const copyPk = async () => {
+  let clientNpub: string | null = null;
+  try {
+    clientNpub = nostrHexPubkeyToNpub(row.app_pubkey);
+  } catch {
+    clientNpub = null;
+  }
+
+  const kHex = `${row.id}:hex`;
+  const kNpub = `${row.id}:npub`;
+
+  const copyHex = async () => {
     await navigator.clipboard.writeText(row.app_pubkey);
-    onCopied(row.id);
+    onCopied(kHex);
+  };
+
+  const copyNpub = async () => {
+    if (!clientNpub) return;
+    await navigator.clipboard.writeText(clientNpub);
+    onCopied(kNpub);
   };
 
   return (
     <li className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-3 text-[13px]">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-500">
-        Chave do cliente (NIP-46)
+      {row.app_name ? (
+        <p className="text-[15px] font-semibold leading-snug text-white">{row.app_name}</p>
+      ) : (
+        <p className="text-[13px] text-zinc-500">Sem etiqueta — definida ao gerar o QR no onboarding</p>
+      )}
+      <p className="mt-3 text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+        Chave de sessão no cliente (NIP-46)
+      </p>
+      {clientNpub ? (
+        <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <code
+            className="break-all font-mono text-[11px] leading-relaxed text-zinc-200"
+            title={clientNpub}
+          >
+            {truncateHexMiddle(clientNpub, 18, 16)}
+          </code>
+          <button
+            type="button"
+            onClick={() => void copyNpub()}
+            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md border border-zinc-600 px-2.5 py-1.5 text-[12px] text-zinc-200 hover:bg-zinc-800"
+          >
+            {copiedKey === kNpub ? (
+              <Check className="size-3.5 text-emerald-400" aria-hidden />
+            ) : (
+              <Copy className="size-3.5" aria-hidden />
+            )}
+            {copiedKey === kNpub ? "Copiado" : "Copiar npub"}
+          </button>
+        </div>
+      ) : null}
+      <p className="mt-2 text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+        Hex (técnico)
       </p>
       <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <code
-          className="break-all font-mono text-[11px] leading-relaxed text-zinc-200"
+          className="break-all font-mono text-[11px] leading-relaxed text-zinc-400"
           title={row.app_pubkey}
         >
           {truncateHexMiddle(row.app_pubkey)}
         </code>
         <button
           type="button"
-          onClick={() => void copyPk()}
-          className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md border border-zinc-600 px-2.5 py-1.5 text-[12px] text-zinc-200 hover:bg-zinc-800"
+          onClick={() => void copyHex()}
+          className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md border border-zinc-700 px-2.5 py-1.5 text-[12px] text-zinc-400 hover:bg-zinc-800"
         >
-          {copiedId === row.id ? (
+          {copiedKey === kHex ? (
             <Check className="size-3.5 text-emerald-400" aria-hidden />
           ) : (
             <Copy className="size-3.5" aria-hidden />
           )}
-          {copiedId === row.id ? "Copiado" : "Copiar hex"}
+          {copiedKey === kHex ? "Copiado" : "Copiar hex"}
         </button>
       </div>
-      {row.app_name ? (
-        <p className="mt-2 text-[12px] text-zinc-500">
-          Etiqueta: <span className="text-zinc-400">{row.app_name}</span>
-        </p>
-      ) : null}
       <div className="mt-2 text-[12px] text-zinc-500">
         expira {new Date(row.expires_at).toLocaleString()}{" "}
         {row.used ? "· usada" : "· pendente"}
@@ -80,7 +123,7 @@ export default function SessionsPage() {
   const [rows, setRows] = useState<SessionRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -133,10 +176,9 @@ export default function SessionsPage() {
             <p className="mt-2 font-mono text-[12px] text-zinc-500">{identityId}</p>
           ) : null}
           <p className="mt-3 max-w-2xl text-[13px] leading-relaxed text-zinc-500">
-            Cada linha é uma <strong className="font-medium text-zinc-400">app</strong> autorizada
-            (Nostrudel, Coracle, …). O protocolo NIP-46 identifica o cliente pela{" "}
-            <strong className="font-medium text-zinc-400">chave temporária</strong> da app — não pelo
-            nome da app nem pelo teu npub de perfil.
+            O NIP-46 não envia o nome da app: usa a <strong className="font-medium text-zinc-400">chave de sessão</strong>{" "}
+            (npub/hex abaixo). Se definires uma <strong className="font-medium text-zinc-400">etiqueta</strong> ao gerar o
+            QR, ela aparece em destaque.
           </p>
         </header>
 
@@ -170,10 +212,10 @@ export default function SessionsPage() {
               <SessionCard
                 key={r.id}
                 row={r}
-                copiedId={copiedId}
-                onCopied={(id) => {
-                  setCopiedId(id);
-                  window.setTimeout(() => setCopiedId(null), 2000);
+                copiedKey={copiedKey}
+                onCopied={(key) => {
+                  setCopiedKey(key);
+                  window.setTimeout(() => setCopiedKey(null), 2000);
                 }}
               />
             ))}

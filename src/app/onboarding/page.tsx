@@ -65,6 +65,8 @@ export default function OnboardingPage() {
   const [encryptPassword, setEncryptPassword] = useState("");
 
   const [bunkerUri, setBunkerUri] = useState<string | null>(null);
+  /** Etiqueta humana para esta ligação (guardada como app_name; o NIP-46 não envia o nome da app). */
+  const [sessionLabel, setSessionLabel] = useState("");
   const [copied, setCopied] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -115,6 +117,10 @@ export default function OnboardingPage() {
     const body: Record<string, unknown> = {
       identity_id: id,
     };
+    const label = sessionLabel.trim();
+    if (label) {
+      body.app_name = label;
+    }
     if (clientPubkeyRaw?.trim()) {
       try {
         body.app_pubkey = nostrPubkeyInputToHex(clientPubkeyRaw.trim());
@@ -148,7 +154,7 @@ export default function OnboardingPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [sessionLabel]);
 
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -360,6 +366,7 @@ export default function OnboardingPage() {
         credentials: "include",
       });
       setBunkerUri(null);
+      setSessionLabel("");
       setPhase(1);
       vaultNsecRef.current = null;
       setPassphraseStep1("");
@@ -722,6 +729,27 @@ export default function OnboardingPage() {
                   (não o npub do teu perfil). Gera o QR e cola-o na app — na primeira ligação o cliente
                   envia essa chave e a sessão fica associada automaticamente.
                 </p>
+                <div>
+                  <label
+                    htmlFor="session_label"
+                    className="mb-1.5 block text-[13px] text-zinc-400"
+                  >
+                    Etiqueta (opcional)
+                  </label>
+                  <input
+                    id="session_label"
+                    value={sessionLabel}
+                    onChange={(e) => setSessionLabel(e.target.value)}
+                    maxLength={120}
+                    autoComplete="off"
+                    placeholder="ex.: Nostrudel · Coracle no telemóvel"
+                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2.5 text-[14px] text-white outline-none ring-offset-2 ring-offset-[#080808] placeholder:text-zinc-600 focus:ring-2 focus:ring-[#0066ff]"
+                  />
+                  <p className="mt-1.5 text-[11px] leading-relaxed text-zinc-600">
+                    O protocolo <strong className="font-medium text-zinc-500">não envia</strong> o nome da
+                    app (Nostrudel, Coracle, …). Esta etiqueta aparece nas sessões para te orientares.
+                  </p>
+                </div>
                 <button
                   type="button"
                   disabled={loading || !identityId.trim()}
@@ -773,6 +801,16 @@ export default function OnboardingPage() {
                     {copied ? "Copiado" : "Copiar"}
                   </button>
                 </div>
+                <button
+                  type="button"
+                  disabled={loading || !identityId.trim()}
+                  onClick={() => {
+                    setBunkerUri(null);
+                  }}
+                  className="inline-flex w-full items-center justify-center rounded-lg border border-zinc-600 py-3 text-[14px] font-medium text-zinc-200 transition-colors hover:bg-zinc-900 disabled:opacity-60"
+                >
+                  Gerar outro QR (invalida o deste ecrã)
+                </button>
                 <Link
                   href="/sessions"
                   className="inline-flex w-full items-center justify-center rounded-lg border border-zinc-600 py-3 text-[14px] font-medium text-zinc-200 transition-colors hover:bg-zinc-900"

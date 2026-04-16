@@ -3,6 +3,7 @@ import {
   buildBunkerUri,
   bunkerPubkeyToHex,
   isSessionValid,
+  nostrHexPubkeyToNpub,
   type Session,
 } from "./ttl";
 
@@ -31,6 +32,15 @@ describe("session / ttl", () => {
       const npub =
         "npub1rwzv24nmzfjypx2a8m264ws9vht3uxp5vpypnluuzl67n4waq78suk0wul";
       expect(bunkerPubkeyToHex(npub)).toMatch(/^[0-9a-f]{64}$/);
+    });
+  });
+
+  describe("nostrHexPubkeyToNpub", () => {
+    it("round-trips hex from npub back to same npub", () => {
+      const npub =
+        "npub1rwzv24nmzfjypx2a8m264ws9vht3uxp5vpypnluuzl67n4waq78suk0wul";
+      const hex = bunkerPubkeyToHex(npub);
+      expect(nostrHexPubkeyToNpub(hex)).toBe(npub);
     });
   });
 
