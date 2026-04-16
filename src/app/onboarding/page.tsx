@@ -13,8 +13,9 @@ import {
   Radio,
   Shield,
 } from "lucide-react";
-import { generateSecretKey, getPublicKey } from "nostr-tools";
+import { getPublicKey } from "nostr-tools";
 import * as nip19 from "nostr-tools/nip19";
+import { nostrPubkeyInputToHex } from "@/lib/session/ttl";
 import { generateKeypair, encryptNsec } from "@/lib/vault";
 
 const BG = "#080808";
@@ -64,6 +65,8 @@ export default function OnboardingPage() {
   const [encryptPassword, setEncryptPassword] = useState("");
 
   const [bunkerUri, setBunkerUri] = useState<string | null>(null);
+  /** npub (ou hex) da **app** onde vais colar o bunker — tem de coincidir com a chave que assina o NIP-46 (ex. Nostrudel). */
+  const [clientAppPubkey, setClientAppPubkey] = useState("");
   const [copied, setCopied] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -105,42 +108,46 @@ export default function OnboardingPage() {
     setEncryptPassword("");
   }, []);
 
-  const createSessionAndQr = useCallback(
-    async (id: string) => {
-      setLoading(true);
-      setError(null);
-      const sk = generateSecretKey();
-      try {
-        const appPubkey = getPublicKey(sk);
-        const res = await fetch("/api/sessions", {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            identity_id: id,
-            app_pubkey: appPubkey,
-            app_name: "BitMacro Signer",
-          }),
-        });
-        const data = (await res.json().catch(() => ({}))) as {
-          bunker_uri?: string;
-          error?: string;
-        };
-        if (!res.ok) {
-          throw new Error(data.error ?? "Não foi possível criar a sessão");
-        }
-        if (!data.bunker_uri) {
-          throw new Error("Resposta sem bunker_uri");
-        }
-        setBunkerUri(data.bunker_uri);
-        setPhase(3);
-      } finally {
-        sk.fill(0);
-      }
+  const createSessionAndQr = useCallback(async (id: string, clientPubkeyRaw: string) => {
+    setLoading(true);
+    setError(null);
+    let appPubkey: string;
+    try {
+      appPubkey = nostrPubkeyInputToHex(clientPubkeyRaw);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Pubkey do cliente inválido");
       setLoading(false);
-    },
-    [],
-  );
+      return;
+    }
+    try {
+      const res = await fetch("/api/sessions", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          identity_id: id,
+          app_pubkey: appPubkey,
+          app_name: "BitMacro Signer",
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        bunker_uri?: string;
+        error?: string;
+      };
+      if (!res.ok) {
+        throw new Error(data.error ?? "Não foi possível criar a sessão");
+      }
+      if (!data.bunker_uri) {
+        throw new Error("Resposta sem bunker_uri");
+      }
+      setBunkerUri(data.bunker_uri);
+      setPhase(3);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,7 +180,9 @@ export default function OnboardingPage() {
         return;
       }
 
-      await createSessionAndQr(data.identity_id);
+      setBunkerUri(null);
+      setClientAppPubkey("");
+      setPhase(3);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro");
     } finally {
@@ -251,8 +260,9 @@ export default function OnboardingPage() {
         throw new Error(await parseUnlockError(unlockRes));
       }
       await refreshStatus();
+      setBunkerUri(null);
+      setClientAppPubkey("");
       setPhase(3);
-      await createSessionAndQr(id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro");
     } finally {
@@ -333,8 +343,9 @@ export default function OnboardingPage() {
         throw new Error(await parseUnlockError(unlockRes));
       }
       await refreshStatus();
+      setBunkerUri(null);
+      setClientAppPubkey("");
       setPhase(3);
-      await createSessionAndQr(id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro");
     } finally {
@@ -351,6 +362,7 @@ export default function OnboardingPage() {
         credentials: "include",
       });
       setBunkerUri(null);
+      setClientAppPubkey("");
       setPhase(1);
       vaultNsecRef.current = null;
       setPassphraseStep1("");
@@ -433,12 +445,14 @@ export default function OnboardingPage() {
                 disabled={loading}
                 onClick={() => {
                   setIdentityId(statusIdentity);
-                  void createSessionAndQr(statusIdentity);
+                  setBunkerUri(null);
+                  setClientAppPubkey("");
+                  setPhase(3);
                 }}
                 className="w-full rounded-md py-2 text-[12px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
                 style={{ backgroundColor: ACCENT }}
               >
-                Retomar: gerar QR NIP-46 (sessão activa)
+                Retomar: passo 3 — gerar QR (npub da app)
               </button>
             ) : null}
           </div>
@@ -696,7 +710,7 @@ export default function OnboardingPage() {
         ) : null}
 
         {/* Step 3 */}
-        {phase >= 3 && bunkerUri ? (
+        {phase >= 3 ? (
           <section className="scroll-mt-8">
             <div className="mb-4 flex items-center gap-2">
               <KeyRound className="size-5" style={{ color: ACCENT }} aria-hidden />
@@ -704,36 +718,81 @@ export default function OnboardingPage() {
                 3. Sessão NIP-46
               </h2>
             </div>
-            <p className="mb-6 text-[14px] leading-relaxed text-zinc-400">
-              Cola este QR no teu cliente Nostr (Nostrudel, Coracle, etc.) ou copia o link.
-              A ligação usa uma chave de aplicação gerada neste passo.
-            </p>
-            <div className="mb-6 flex justify-center rounded-xl border border-zinc-800 bg-white p-4">
-              <QRCodeSVG value={bunkerUri} size={200} level="M" />
-            </div>
-            <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center">
-              <code className="flex-1 break-all rounded-lg border border-zinc-800 bg-zinc-950/80 px-3 py-2 font-mono text-[11px] text-zinc-400">
-                {truncateMiddle(bunkerUri, 18)}
-              </code>
-              <button
-                type="button"
-                onClick={() => void copyUri()}
-                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-zinc-600 px-3 py-2 text-[13px] text-zinc-200 hover:bg-zinc-800"
-              >
-                {copied ? (
-                  <Check className="size-4 text-emerald-400" aria-hidden />
-                ) : (
-                  <Copy className="size-4" aria-hidden />
-                )}
-                {copied ? "Copiado" : "Copiar"}
-              </button>
-            </div>
-            <Link
-              href="/sessions"
-              className="inline-flex w-full items-center justify-center rounded-lg border border-zinc-600 py-3 text-[14px] font-medium text-zinc-200 transition-colors hover:bg-zinc-900"
-            >
-              Ver sessões activas
-            </Link>
+
+            {!bunkerUri ? (
+              <div className="space-y-4">
+                <p className="text-[14px] leading-relaxed text-zinc-400">
+                  Indica o <strong className="text-zinc-200">npub da conta</strong> na app onde vais colar o bunker
+                  (ex. Nostrudel → definições / a tua chave). Tem de ser exactamente essa chave: o NIP-46
+                  assina com ela e o servidor valida o par.
+                </p>
+                <div>
+                  <label
+                    htmlFor="client_app_npub"
+                    className="mb-1.5 block text-[13px] text-zinc-400"
+                  >
+                    npub da app cliente (Nostrudel, Amethyst, …)
+                  </label>
+                  <input
+                    id="client_app_npub"
+                    value={clientAppPubkey}
+                    onChange={(e) => setClientAppPubkey(e.target.value)}
+                    autoComplete="off"
+                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2.5 font-mono text-[12px] text-white outline-none ring-offset-2 ring-offset-[#080808] focus:ring-2 focus:ring-[#0066ff]"
+                    placeholder="npub1…"
+                  />
+                </div>
+                <button
+                  type="button"
+                  disabled={loading || !identityId.trim()}
+                  onClick={() => {
+                    void createSessionAndQr(identityId.trim(), clientAppPubkey);
+                  }}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                  style={{ backgroundColor: ACCENT }}
+                >
+                  {loading ? (
+                    <Loader2 className="size-4 animate-spin" aria-hidden />
+                  ) : (
+                    <Radio className="size-4" aria-hidden />
+                  )}
+                  Gerar QR / link bunker
+                </button>
+              </div>
+            ) : (
+              <>
+                <p className="mb-6 text-[14px] leading-relaxed text-zinc-400">
+                  Cola este QR no cliente ou copia o link. O par foi criado para o npub que indicaste
+                  acima.
+                </p>
+                <div className="mb-6 flex justify-center rounded-xl border border-zinc-800 bg-white p-4">
+                  <QRCodeSVG value={bunkerUri} size={200} level="M" />
+                </div>
+                <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <code className="flex-1 break-all rounded-lg border border-zinc-800 bg-zinc-950/80 px-3 py-2 font-mono text-[11px] text-zinc-400">
+                    {truncateMiddle(bunkerUri, 18)}
+                  </code>
+                  <button
+                    type="button"
+                    onClick={() => void copyUri()}
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-zinc-600 px-3 py-2 text-[13px] text-zinc-200 hover:bg-zinc-800"
+                  >
+                    {copied ? (
+                      <Check className="size-4 text-emerald-400" aria-hidden />
+                    ) : (
+                      <Copy className="size-4" aria-hidden />
+                    )}
+                    {copied ? "Copiado" : "Copiar"}
+                  </button>
+                </div>
+                <Link
+                  href="/sessions"
+                  className="inline-flex w-full items-center justify-center rounded-lg border border-zinc-600 py-3 text-[14px] font-medium text-zinc-200 transition-colors hover:bg-zinc-900"
+                >
+                  Ver sessões activas
+                </Link>
+              </>
+            )}
           </section>
         ) : null}
 

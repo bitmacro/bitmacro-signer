@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 
+import { relayConnectLog } from "@bitmacro/relay-connect";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
@@ -140,7 +141,65 @@ export async function completeConnect(
     throw new Error(`completeConnect: ${error.message}`);
   }
   if (!row?.id) {
-    throw new Error("connect: unauthorized or secret already used");
+    const nowIso = new Date().toISOString();
+
+    const { data: pendingBySecret } = await supabase
+      .from("signer_sessions")
+      .select("id, app_pubkey, used")
+      .eq("vault_id", vaultId)
+      .eq("secret_hash", secret_hash)
+      .gt("expires_at", nowIso)
+      .maybeSingle();
+
+    const { data: consumed } = await supabase
+      .from("signer_sessions")
+      .select("id")
+      .eq("vault_id", vaultId)
+      .eq("app_pubkey", appPubkey)
+      .eq("secret_hash", secret_hash)
+      .eq("used", true)
+      .maybeSingle();
+
+    if (
+      pendingBySecret &&
+      !pendingBySecret.used &&
+      pendingBySecret.app_pubkey !== appPubkey
+    ) {
+      relayConnectLog(
+        "warn",
+        "completeConnect: app pubkey mismatch (session created for a different npub than this client)",
+        {
+          component: "app-keys",
+          identityId,
+          eventAppPrefix: appPubkey.slice(0, 12),
+          sessionAppPrefix: pendingBySecret.app_pubkey.slice(0, 12),
+        },
+      );
+      throw new Error(
+        "connect: unauthorized — regenerate the QR in the Signer using the npub of this Nostr app (Settings → your pubkey)",
+      );
+    }
+
+    relayConnectLog(
+      "warn",
+      "completeConnect: no matching pending session",
+      {
+        component: "app-keys",
+        identityId,
+        appPubkeyPrefix: appPubkey.slice(0, 12),
+        secretAlreadyUsed: Boolean(consumed?.id),
+        unknownSecret: !pendingBySecret?.id,
+      },
+    );
+
+    if (consumed?.id) {
+      throw new Error(
+        "connect: secret already used — create a new session in the Signer UI",
+      );
+    }
+    throw new Error(
+      "connect: unauthorized or secret already used",
+    );
   }
 
   const { error: upd } = await supabase

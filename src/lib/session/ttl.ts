@@ -13,10 +13,11 @@ function bytesToHexLower(bytes: Uint8Array): string {
 }
 
 /**
- * Bunker URI (NIP-46) must use 64-char hex pubkey, not bech32 npub.
+ * Normaliza npub1… ou 64-char hex para hex minúsculo (chave pública Nostr).
+ * Usado no bunker URI, `app_pubkey` em sessões, etc.
  */
-export function bunkerPubkeyToHex(bunkerPubkey: string): string {
-  const t = bunkerPubkey.trim();
+export function nostrPubkeyInputToHex(input: string): string {
+  const t = input.trim();
   if (/^[0-9a-fA-F]{64}$/.test(t)) {
     return t.toLowerCase();
   }
@@ -37,7 +38,18 @@ export function bunkerPubkeyToHex(bunkerPubkey: string): string {
     }
     throw new Error("Invalid npub decoded payload");
   }
-  throw new Error("bunker_pubkey must be 64-char hex or npub1…");
+  throw new Error("Esperado npub1… ou 64 caracteres hex (chave pública Nostr).");
+}
+
+/**
+ * Bunker URI (NIP-46) must use 64-char hex pubkey, not bech32 npub.
+ */
+export function bunkerPubkeyToHex(bunkerPubkey: string): string {
+  try {
+    return nostrPubkeyInputToHex(bunkerPubkey);
+  } catch {
+    throw new Error("bunker_pubkey must be 64-char hex or npub1…");
+  }
 }
 
 export type Session = {
