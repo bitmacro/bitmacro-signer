@@ -5,6 +5,8 @@
 
 import type http from "node:http";
 
+import { setRelayConnectLogSink } from "@bitmacro/relay-connect";
+
 import { stopAllBunkers } from "@/lib/bunker";
 import { getRelayUrlServer } from "@/lib/relay/env";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
@@ -59,6 +61,22 @@ async function shutdown(signal: string): Promise<void> {
 }
 
 function main(): void {
+  /** Sem isto, `relayConnectLog` no nip46-loop não escreve lado algum — docker logs ficavam mudos. */
+  setRelayConnectLogSink(
+    (entry) => {
+      const ctx = entry.context ? ` ${JSON.stringify(entry.context)}` : "";
+      const line = `[signer-daemon] ${entry.level.toUpperCase()} [relay-connect] ${entry.message}${ctx}`;
+      if (entry.level === "error") {
+        console.error(line);
+      } else if (entry.level === "warn") {
+        console.warn(line);
+      } else {
+        console.log(line);
+      }
+    },
+    { minLevel: "info" },
+  );
+
   const token = process.env.DAEMON_INTERNAL_TOKEN?.trim();
   if (!token) {
     log("error", "DAEMON_INTERNAL_TOKEN is required");
