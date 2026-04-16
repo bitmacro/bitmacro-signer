@@ -18,6 +18,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build:daemon
 
 FROM base AS runner
+ARG BITMACRO_SIGNER_VERSION=0.0.0
+LABEL org.opencontainers.image.title="bitmacro-signer-daemon" \
+      org.opencontainers.image.description="BitMacro Signer NIP-46 bunker daemon" \
+      org.opencontainers.image.version="${BITMACRO_SIGNER_VERSION}"
 ENV NODE_ENV=production
 RUN apk add --no-cache wget
 RUN addgroup --system --gid 1001 nodejs \

@@ -16,6 +16,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 FROM base AS runner
+ARG BITMACRO_SIGNER_VERSION=0.0.0
+LABEL org.opencontainers.image.title="bitmacro-signer-web" \
+      org.opencontainers.image.description="BitMacro Signer Next.js (signer-web)" \
+      org.opencontainers.image.version="${BITMACRO_SIGNER_VERSION}"
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs \

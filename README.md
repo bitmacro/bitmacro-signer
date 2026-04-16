@@ -49,9 +49,10 @@ Compose defines **`web`** (Next on port **3000**, health check `GET /api/health`
 
 ### Web image on GHCR (Next.js standalone)
 
-[`.github/workflows/web.yml`](.github/workflows/web.yml) builds **`linux/amd64`** from [`Dockerfile`](Dockerfile) and pushes:
+[`.github/workflows/web.yml`](.github/workflows/web.yml) builds **`linux/amd64`** from [`Dockerfile`](Dockerfile) and pushes (version = [`package.json`](package.json) `version`):
 
 - `ghcr.io/bitmacro/bitmacro-signer-web:latest`
+- `ghcr.io/bitmacro/bitmacro-signer-web:<semver>` (e.g. `0.2.0`)
 - `ghcr.io/bitmacro/bitmacro-signer-web:<short-sha>`
 
 Runs on `push` to `main` when listed paths change (incl. `src/**`). Alterações só em `src/daemon/` também casam `src/**`, por isso o build web pode correr em paralelo com o workflow do daemon — é redundante mas válido. GitHub não permite `paths` e `paths-ignore` no mesmo gatilho.
@@ -61,7 +62,10 @@ Runs on `push` to `main` when listed paths change (incl. `src/**`). Alterações
 On every push to `main` that touches `src/daemon/**`, `src/lib/**`, `Dockerfile.daemon`, or `package.json`, [`.github/workflows/daemon.yml`](.github/workflows/daemon.yml) builds **`linux/amd64`** and pushes to:
 
 - `ghcr.io/bitmacro/bitmacro-signer-daemon:latest`
+- `ghcr.io/bitmacro/bitmacro-signer-daemon:<semver>` (matches `package.json`)
 - `ghcr.io/bitmacro/bitmacro-signer-daemon:<short-sha>` (7-character Git commit SHA)
+
+Image labels include `org.opencontainers.image.version` (inspect with `docker inspect`).
 
 The workflow run logs include the **image digest (SHA-256)** after a successful push.
 
