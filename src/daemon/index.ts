@@ -4,6 +4,7 @@
  */
 
 import { startBunker, stopBunker, isRunning } from "@/lib/bunker";
+import { getRelayUrlServer } from "@/lib/relay/env";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { VaultDecryptError, decryptNsec } from "@/lib/vault";
 
@@ -183,8 +184,13 @@ function main(): void {
     process.exit(1);
   }
 
-  if (!process.env.NEXT_PUBLIC_RELAY_URL?.trim()) {
-    log("error", "NEXT_PUBLIC_RELAY_URL is required for the bunker relay connection");
+  try {
+    getRelayUrlServer();
+  } catch {
+    log(
+      "error",
+      "RELAY_URL or NEXT_PUBLIC_RELAY_URL is required for the bunker relay connection",
+    );
     process.exit(1);
   }
 

@@ -5,6 +5,7 @@ import {
   authorizeApp,
   listSessions,
 } from "@/lib/session/app-keys";
+import { getRelayUrlServer } from "@/lib/relay/env";
 import { buildBunkerUri } from "@/lib/session/ttl";
 import type { Session } from "@/lib/session/ttl";
 import { createServiceRoleClient } from "@/lib/supabase/server";
@@ -59,9 +60,14 @@ export async function POST(request: Request) {
 
   const { identity_id, app_pubkey, app_name, ttl_hours } = parsed.data;
 
-  const relayUrl = process.env.NEXT_PUBLIC_RELAY_URL;
-  if (!relayUrl?.trim()) {
-    return jsonError("Server misconfigured: NEXT_PUBLIC_RELAY_URL is not set", 503);
+  let relayUrl: string;
+  try {
+    relayUrl = getRelayUrlServer();
+  } catch {
+    return jsonError(
+      "Server misconfigured: RELAY_URL or NEXT_PUBLIC_RELAY_URL is not set",
+      503,
+    );
   }
 
   const { data: vault, error: vaultError } = await supabase
@@ -98,11 +104,7 @@ export async function POST(request: Request) {
     throw e;
   }
 
-  const bunker_uri = buildBunkerUri(
-    vault.bunker_pubkey,
-    relayUrl.trim(),
-    secret,
-  );
+  const bunker_uri = buildBunkerUri(vault.bunker_pubkey, relayUrl, secret);
 
   return NextResponse.json({
     session_id: sessionId,

@@ -10,6 +10,7 @@ import * as nip44 from "nostr-tools/nip44";
 import { Relay } from "nostr-tools/relay";
 import { NostrConnect } from "nostr-tools/kinds";
 
+import { getRelayUrlServer } from "@/lib/relay/env";
 import {
   assertAppMayUseSigner,
   completeConnect,
@@ -48,11 +49,7 @@ function decodeNsec(nsec: string): Uint8Array {
 }
 
 function requireRelayUrl(): string {
-  const u = process.env.NEXT_PUBLIC_RELAY_URL?.trim();
-  if (!u) {
-    throw new Error("NEXT_PUBLIC_RELAY_URL is not set");
-  }
-  return u;
+  return getRelayUrlServer();
 }
 
 type BunkerRuntime = {
