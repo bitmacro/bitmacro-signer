@@ -66,6 +66,14 @@ export function isRunning(identityId: string): boolean {
   return active.has(identityId);
 }
 
+/** Para shutdown do processo: para todos os bunkers activos. */
+export async function stopAllBunkers(): Promise<void> {
+  const ids = [...active.keys()];
+  for (const id of ids) {
+    await stopBunker(id);
+  }
+}
+
 function clearSecretKeyBytes(sk: Uint8Array): void {
   sk.fill(0);
 }
