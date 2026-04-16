@@ -65,8 +65,6 @@ export default function OnboardingPage() {
   const [encryptPassword, setEncryptPassword] = useState("");
 
   const [bunkerUri, setBunkerUri] = useState<string | null>(null);
-  /** npub (ou hex) da **app** onde vais colar o bunker — tem de coincidir com a chave que assina o NIP-46 (ex. Nostrudel). */
-  const [clientAppPubkey, setClientAppPubkey] = useState("");
   const [copied, setCopied] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -108,27 +106,31 @@ export default function OnboardingPage() {
     setEncryptPassword("");
   }, []);
 
-  const createSessionAndQr = useCallback(async (id: string, clientPubkeyRaw: string) => {
+  const createSessionAndQr = useCallback(async (
+    id: string,
+    clientPubkeyRaw?: string,
+  ) => {
     setLoading(true);
     setError(null);
-    let appPubkey: string;
-    try {
-      appPubkey = nostrPubkeyInputToHex(clientPubkeyRaw);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Pubkey do cliente inválido");
-      setLoading(false);
-      return;
+    const body: Record<string, unknown> = {
+      identity_id: id,
+      app_name: "BitMacro Signer",
+    };
+    if (clientPubkeyRaw?.trim()) {
+      try {
+        body.app_pubkey = nostrPubkeyInputToHex(clientPubkeyRaw.trim());
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Pubkey do cliente inválido");
+        setLoading(false);
+        return;
+      }
     }
     try {
       const res = await fetch("/api/sessions", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          identity_id: id,
-          app_pubkey: appPubkey,
-          app_name: "BitMacro Signer",
-        }),
+        body: JSON.stringify(body),
       });
       const data = (await res.json().catch(() => ({}))) as {
         bunker_uri?: string;
@@ -181,7 +183,6 @@ export default function OnboardingPage() {
       }
 
       setBunkerUri(null);
-      setClientAppPubkey("");
       setPhase(3);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro");
@@ -261,7 +262,6 @@ export default function OnboardingPage() {
       }
       await refreshStatus();
       setBunkerUri(null);
-      setClientAppPubkey("");
       setPhase(3);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro");
@@ -344,7 +344,6 @@ export default function OnboardingPage() {
       }
       await refreshStatus();
       setBunkerUri(null);
-      setClientAppPubkey("");
       setPhase(3);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro");
@@ -362,7 +361,6 @@ export default function OnboardingPage() {
         credentials: "include",
       });
       setBunkerUri(null);
-      setClientAppPubkey("");
       setPhase(1);
       vaultNsecRef.current = null;
       setPassphraseStep1("");
@@ -446,13 +444,12 @@ export default function OnboardingPage() {
                 onClick={() => {
                   setIdentityId(statusIdentity);
                   setBunkerUri(null);
-                  setClientAppPubkey("");
                   setPhase(3);
                 }}
                 className="w-full rounded-md py-2 text-[12px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
                 style={{ backgroundColor: ACCENT }}
               >
-                Retomar: passo 3 — gerar QR (npub da app)
+                Retomar: passo 3 — gerar QR NIP-46
               </button>
             ) : null}
           </div>
@@ -722,31 +719,15 @@ export default function OnboardingPage() {
             {!bunkerUri ? (
               <div className="space-y-4">
                 <p className="text-[14px] leading-relaxed text-zinc-400">
-                  Indica o <strong className="text-zinc-200">npub da conta</strong> na app onde vais colar o bunker
-                  (ex. Nostrudel → definições / a tua chave). Tem de ser exactamente essa chave: o NIP-46
-                  assina com ela e o servidor valida o par.
+                  O NIP-46 usa uma <strong className="text-zinc-200">chave temporária no cliente</strong>{" "}
+                  (não o npub do teu perfil). Gera o QR e cola-o na app — na primeira ligação o cliente
+                  envia essa chave e a sessão fica associada automaticamente.
                 </p>
-                <div>
-                  <label
-                    htmlFor="client_app_npub"
-                    className="mb-1.5 block text-[13px] text-zinc-400"
-                  >
-                    npub da app cliente (Nostrudel, Amethyst, …)
-                  </label>
-                  <input
-                    id="client_app_npub"
-                    value={clientAppPubkey}
-                    onChange={(e) => setClientAppPubkey(e.target.value)}
-                    autoComplete="off"
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2.5 font-mono text-[12px] text-white outline-none ring-offset-2 ring-offset-[#080808] focus:ring-2 focus:ring-[#0066ff]"
-                    placeholder="npub1…"
-                  />
-                </div>
                 <button
                   type="button"
                   disabled={loading || !identityId.trim()}
                   onClick={() => {
-                    void createSessionAndQr(identityId.trim(), clientAppPubkey);
+                    void createSessionAndQr(identityId.trim());
                   }}
                   className="inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
                   style={{ backgroundColor: ACCENT }}
@@ -762,8 +743,8 @@ export default function OnboardingPage() {
             ) : (
               <>
                 <p className="mb-6 text-[14px] leading-relaxed text-zinc-400">
-                  Cola este QR no cliente ou copia o link. O par foi criado para o npub que indicaste
-                  acima.
+                  Cola este QR no cliente ou copia o link. Cada QR é de uso único; se gerares outro, o
+                  anterior deixa de ser válido.
                 </p>
                 <div className="mb-6 flex justify-center rounded-xl border border-zinc-800 bg-white p-4">
                   <QRCodeSVG value={bunkerUri} size={200} level="M" />

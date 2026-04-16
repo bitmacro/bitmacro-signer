@@ -58,7 +58,8 @@ export async function POST(request: Request) {
     return jsonError("Validation failed", 400, parsed.error.flatten());
   }
 
-  const { identity_id, app_pubkey, app_name, ttl_hours } = parsed.data;
+  const { identity_id, app_name, ttl_hours } = parsed.data;
+  const appPubkeyRaw = parsed.data.app_pubkey?.trim() ?? "";
 
   let relayUrl: string;
   try {
@@ -88,7 +89,7 @@ export async function POST(request: Request) {
   try {
     const out = await authorizeApp(
       identity_id,
-      app_pubkey,
+      appPubkeyRaw === "" ? null : appPubkeyRaw,
       app_name,
       ttl_hours,
     );

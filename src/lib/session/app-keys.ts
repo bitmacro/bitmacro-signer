@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 
 import { relayConnectLog } from "@bitmacro/relay-connect";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -6,6 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 import type { Session } from "./ttl";
+import { nostrPubkeyInputToHex } from "./ttl";
 
 function secretBytesToBase64Url(bytes: Buffer): string {
   return bytes.toString("base64url");
@@ -52,14 +53,18 @@ async function getVaultIdForIdentity(
   return data.id;
 }
 
+const PENDING_APP_PUBKEY_PREFIX = "pending:" as const;
+
 /**
- * Authorize an app pubkey for an Identity: resolves vault by `identity_id`, then creates
- * a session row with sha256(secret) only. Any prior session for the same (vault, app_pubkey) is removed.
+ * Authorize a NIP-46 session: resolves vault by `identity_id`, creates a row with sha256(secret).
+ * If `appPubkey` is null/empty, stores `pending:<uuid>` until `connect` (NIP-46: client-keypair pubkey
+ * is learned from the first kind:24133 event, not the user's profile npub).
+ * Clears any **unused** session rows for this vault (novo QR invalida pares pendentes).
  * Returns the plaintext `secret` once — never persisted; do not log it.
  */
 export async function authorizeApp(
   identityId: string,
-  appPubkey: string,
+  appPubkey: string | null,
   appName?: string,
   ttlHours = 24,
 ): Promise<{ sessionId: string; secret: string }> {
@@ -69,14 +74,27 @@ export async function authorizeApp(
   const secret = secretBytesToBase64Url(raw);
   const secret_hash = hashSecret(raw);
 
+  let resolvedAppPk: string;
+  if (appPubkey?.trim()) {
+    try {
+      resolvedAppPk = nostrPubkeyInputToHex(appPubkey.trim());
+    } catch (e) {
+      throw new Error(
+        e instanceof Error ? e.message : "app_pubkey: npub ou hex inválido",
+      );
+    }
+  } else {
+    resolvedAppPk = `${PENDING_APP_PUBKEY_PREFIX}${randomUUID()}`;
+  }
+
   const { error: delErr } = await supabase
     .from("signer_sessions")
     .delete()
     .eq("vault_id", vaultId)
-    .eq("app_pubkey", appPubkey);
+    .eq("used", false);
 
   if (delErr) {
-    throw new Error(`authorizeApp: failed to clear prior session — ${delErr.message}`);
+    throw new Error(`authorizeApp: failed to clear pending sessions — ${delErr.message}`);
   }
 
   const expires_at = new Date(
@@ -87,7 +105,7 @@ export async function authorizeApp(
     .from("signer_sessions")
     .insert({
       vault_id: vaultId,
-      app_pubkey: appPubkey,
+      app_pubkey: resolvedAppPk,
       app_name: appName ?? null,
       secret_hash,
       used: false,
@@ -108,7 +126,6 @@ export async function authorizeApp(
   return { sessionId: data.id, secret };
 }
 
-/** Deletes the session row. Returns true if a row was removed, false if id was unknown. */
 /**
  * NIP-46 `connect`: validates one-time secret, marks session `used`, then signing RPCs rely on
  * {@link assertAppMayUseSigner} until `expires_at`.
@@ -120,6 +137,7 @@ export async function completeConnect(
 ): Promise<void> {
   const supabase = createServiceRoleClient();
   const vaultId = await getVaultIdForIdentity(supabase, identityId);
+  const appPkNorm = appPubkey.trim().toLowerCase();
   let secret_hash: string;
   try {
     secret_hash = hashSecretFromPlaintext(secret);
@@ -129,9 +147,8 @@ export async function completeConnect(
 
   const { data: row, error } = await supabase
     .from("signer_sessions")
-    .select("id")
+    .select("id, app_pubkey")
     .eq("vault_id", vaultId)
-    .eq("app_pubkey", appPubkey)
     .eq("secret_hash", secret_hash)
     .eq("used", false)
     .gt("expires_at", new Date().toISOString())
@@ -140,45 +157,15 @@ export async function completeConnect(
   if (error) {
     throw new Error(`completeConnect: ${error.message}`);
   }
+
   if (!row?.id) {
-    const nowIso = new Date().toISOString();
-
-    const { data: pendingBySecret } = await supabase
-      .from("signer_sessions")
-      .select("id, app_pubkey, used")
-      .eq("vault_id", vaultId)
-      .eq("secret_hash", secret_hash)
-      .gt("expires_at", nowIso)
-      .maybeSingle();
-
     const { data: consumed } = await supabase
       .from("signer_sessions")
       .select("id")
       .eq("vault_id", vaultId)
-      .eq("app_pubkey", appPubkey)
       .eq("secret_hash", secret_hash)
       .eq("used", true)
       .maybeSingle();
-
-    if (
-      pendingBySecret &&
-      !pendingBySecret.used &&
-      pendingBySecret.app_pubkey !== appPubkey
-    ) {
-      relayConnectLog(
-        "warn",
-        "completeConnect: app pubkey mismatch (session created for a different npub than this client)",
-        {
-          component: "app-keys",
-          identityId,
-          eventAppPrefix: appPubkey.slice(0, 12),
-          sessionAppPrefix: pendingBySecret.app_pubkey.slice(0, 12),
-        },
-      );
-      throw new Error(
-        "connect: unauthorized — regenerate the QR in the Signer using the npub of this Nostr app (Settings → your pubkey)",
-      );
-    }
 
     relayConnectLog(
       "warn",
@@ -186,9 +173,8 @@ export async function completeConnect(
       {
         component: "app-keys",
         identityId,
-        appPubkeyPrefix: appPubkey.slice(0, 12),
+        eventAppPrefix: appPkNorm.slice(0, 12),
         secretAlreadyUsed: Boolean(consumed?.id),
-        unknownSecret: !pendingBySecret?.id,
       },
     );
 
@@ -202,9 +188,35 @@ export async function completeConnect(
     );
   }
 
+  const isPendingPlaceholder = row.app_pubkey.startsWith(
+    PENDING_APP_PUBKEY_PREFIX,
+  );
+  if (
+    !isPendingPlaceholder &&
+    row.app_pubkey.toLowerCase() !== appPkNorm
+  ) {
+    relayConnectLog(
+      "warn",
+      "completeConnect: app pubkey mismatch (session was bound to a specific npub)",
+      {
+        component: "app-keys",
+        identityId,
+        eventAppPrefix: appPkNorm.slice(0, 12),
+        sessionAppPrefix: row.app_pubkey.slice(0, 12),
+      },
+    );
+    throw new Error(
+      "connect: unauthorized — this QR was generated for a different client pubkey",
+    );
+  }
+
+  const updatePayload = isPendingPlaceholder
+    ? { used: true as const, app_pubkey: appPkNorm }
+    : { used: true as const };
+
   const { error: upd } = await supabase
     .from("signer_sessions")
-    .update({ used: true })
+    .update(updatePayload)
     .eq("id", row.id);
 
   if (upd) {
@@ -222,11 +234,12 @@ export async function assertAppMayUseSigner(
 ): Promise<void> {
   const supabase = createServiceRoleClient();
   const vaultId = await getVaultIdForIdentity(supabase, identityId);
+  const pk = appPubkey.trim().toLowerCase();
   const { data, error } = await supabase
     .from("signer_sessions")
     .select("id")
     .eq("vault_id", vaultId)
-    .eq("app_pubkey", appPubkey)
+    .eq("app_pubkey", pk)
     .eq("used", true)
     .gt("expires_at", new Date().toISOString())
     .maybeSingle();
@@ -272,5 +285,8 @@ export async function listSessions(identityId: string): Promise<Session[]> {
     throw new Error(`listSessions: ${error.message}`);
   }
 
-  return (data ?? []) as Session[];
+  const rows = (data ?? []) as Session[];
+  return rows.filter(
+    (s) => !s.app_pubkey.startsWith(PENDING_APP_PUBKEY_PREFIX),
+  );
 }
