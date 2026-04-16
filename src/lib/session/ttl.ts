@@ -60,7 +60,7 @@ export function isSessionValid(session: Session): boolean {
 /**
  * NIP-46-style bunker connection URI. Does not log or persist `secret`.
  * @param bunkerPubkey — bunker public key as 64-char hex or `npub1…` (normalized to hex in URI)
- * @param relayUrl — WebSocket URL of the relay (e.g. wss://relay.bitmacro.io)
+ * @param relayUrl — WebSocket URL of the relay (e.g. wss://relay.bitmacro.cloud)
  * @param secret — one-time secret returned from authorizeApp (never store in logs)
  */
 export function buildBunkerUri(

@@ -406,7 +406,7 @@ export default function OnboardingPage() {
                   <span className="font-medium text-emerald-400">Activo</span>
                 ) : (
                   <span className="max-w-[min(100%,16rem)] font-medium leading-snug text-sky-300/95 sm:max-w-none">
-                    Sessão activa — bunker em modo managed (EQ14)
+                    Sessão activa — bunker em modo managed (Server)
                   </span>
                 )
               ) : (

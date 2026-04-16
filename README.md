@@ -11,7 +11,7 @@
 **[→ BitMacro Signer (site)](https://signer.bitmacro.io)**  
 **[→ BitMacro: bitmacro.io](https://bitmacro.io)**
 
-**BitMacro Signer** is the product name; the npm package is **`@bitmacro/bitmacro-signer`**. Next.js app for a **managed NIP-46 bunker**: store `nsec` as an encrypted blob (AES-GCM via Web Crypto on the client), run a **NIP-46** signing loop over **`wss://relay.bitmacro.io`**, and keep decrypted material in server RAM only during an active session with a configurable TTL — the server never sees `nsec` in plaintext at rest.
+**BitMacro Signer** is the product name; the npm package is **`@bitmacro/bitmacro-signer`**. Next.js app for a **managed NIP-46 bunker**: store `nsec` as an encrypted blob (AES-GCM via Web Crypto on the client), run a **NIP-46** signing loop over the configured relay (e.g. **`wss://relay.bitmacro.cloud`** for open testing, **`wss://relay.bitmacro.io`** for the private relay with whitelist), and keep decrypted material in server RAM only during an active session with a configurable TTL — the server never sees `nsec` in plaintext at rest.
 
 **SDK (shared client logic):** [@bitmacro/relay-connect](https://www.npmjs.com/package/@bitmacro/relay-connect) · [relay-connect](https://github.com/bitmacro/relay-connect)
 
@@ -71,7 +71,7 @@ echo YOUR_GITHUB_PAT | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-s
 
 - PAT needs **`read:packages`** (and **`write:packages`** only if this machine also pushes images).
 
-**Previously private repos:** After making the GitHub repo public, open **Packages → bitmacro-signer-daemon → Package settings** and set visibility to **public** if you want anonymous pulls on the EQ14.
+**Previously private repos:** After making the GitHub repo public, open **Packages → bitmacro-signer-daemon → Package settings** and set visibility to **public** if you want anonymous pulls on the server.
 
 **Pull and run** (example):
 
