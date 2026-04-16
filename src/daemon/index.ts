@@ -1,5 +1,5 @@
 /**
- * Standalone bunker process (EQ14 / Docker). Runs the NIP-46 loop for configured identities.
+ * Standalone bunker process (Server / Docker). Runs the NIP-46 loop for configured identities.
  * Does not use Next.js — import graph must stay free of `next/*`.
  */
 

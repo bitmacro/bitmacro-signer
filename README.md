@@ -1,6 +1,7 @@
 # @bitmacro/bitmacro-signer
 
 [![CI](https://github.com/bitmacro/bitmacro-signer/actions/workflows/ci.yml/badge.svg)](https://github.com/bitmacro/bitmacro-signer/actions/workflows/ci.yml)
+[![Web GHCR](https://github.com/bitmacro/bitmacro-signer/actions/workflows/web.yml/badge.svg)](https://github.com/bitmacro/bitmacro-signer/actions/workflows/web.yml)
 [![Daemon GHCR](https://github.com/bitmacro/bitmacro-signer/actions/workflows/daemon.yml/badge.svg)](https://github.com/bitmacro/bitmacro-signer/actions/workflows/daemon.yml)
 [![npm](https://img.shields.io/badge/npm-not%20on%20registry%20yet-CBD5E1?logo=npm)](https://github.com/bitmacro/bitmacro-signer)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -44,7 +45,16 @@ docker compose up --build
 
 Compose defines **`web`** (Next on port **3000**, health check `GET /api/health`) and **`daemon`** (bunker loop — see `Dockerfile.daemon` and `src/daemon/index.ts`).
 
-### Daemon image on GHCR (EQ14 / self-host)
+### Web image on GHCR (Next.js standalone)
+
+[`.github/workflows/web.yml`](.github/workflows/web.yml) builds **`linux/amd64`** from [`Dockerfile`](Dockerfile) and pushes:
+
+- `ghcr.io/bitmacro/bitmacro-signer-web:latest`
+- `ghcr.io/bitmacro/bitmacro-signer-web:<short-sha>`
+
+Runs on changes to the main app (not `src/daemon/**` or `Dockerfile.daemon` — those are covered by the daemon workflow).
+
+### Daemon image on GHCR (self-host)
 
 On every push to `main` that touches `src/daemon/**`, `src/lib/**`, `Dockerfile.daemon`, or `package.json`, [`.github/workflows/daemon.yml`](.github/workflows/daemon.yml) builds **`linux/amd64`** and pushes to:
 

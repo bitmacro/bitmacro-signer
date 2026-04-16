@@ -86,7 +86,7 @@ export async function POST(request: Request) {
 
   /*
    * TODO: startBunker aqui é placeholder para desenvolvimento local.
-   * Em produção o daemon corre no EQ14 via Dockerfile.daemon.
+   * Em produção o daemon corre no server via Dockerfile.daemon.
    * A API route faz apenas auth + cookie; o daemon escuta por si próprio.
    */
   try {
