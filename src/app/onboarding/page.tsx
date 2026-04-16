@@ -114,7 +114,6 @@ export default function OnboardingPage() {
     setError(null);
     const body: Record<string, unknown> = {
       identity_id: id,
-      app_name: "BitMacro Signer",
     };
     if (clientPubkeyRaw?.trim()) {
       try {
@@ -742,9 +741,17 @@ export default function OnboardingPage() {
               </div>
             ) : (
               <>
-                <p className="mb-6 text-[14px] leading-relaxed text-zinc-400">
-                  Cola este QR no cliente ou copia o link. Cada QR é de uso único; se gerares outro, o
-                  anterior deixa de ser válido.
+                <p className="mb-6 space-y-2 text-[14px] leading-relaxed text-zinc-400">
+                  <span className="block">
+                    Cola este QR no cliente ou copia o link completo. Cada QR é de uso único: depois de
+                    uma app ligar com sucesso, esse link deixa de servir.
+                  </span>
+                  <span className="block text-zinc-500">
+                    Para <strong className="font-medium text-zinc-400">outra app</strong> (ex. Coracle
+                    depois de Nostrudel), gera um <strong className="font-medium text-zinc-400">novo</strong>{" "}
+                    QR e cola-o aí — remove ligações antigas ao bunker na app se ainda estiver a usar um
+                    link em cache.
+                  </span>
                 </p>
                 <div className="mb-6 flex justify-center rounded-xl border border-zinc-800 bg-white p-4">
                   <QRCodeSVG value={bunkerUri} size={200} level="M" />
