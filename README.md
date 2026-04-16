@@ -45,6 +45,8 @@ docker compose up --build
 
 Compose defines **`web`** (Next on port **3000**, health check `GET /api/health`) and **`daemon`** (bunker loop — see `Dockerfile.daemon` and `src/daemon/index.ts`).
 
+**MVP (self-host):** the daemon holds NIP-46 signing state **in RAM** only. After a **daemon container restart** (recreate, deploy, crash), users must **unlock again** in the Signer UI — there is no automatic bunker restore on cold start. Product docs: [bitmacro-docs `03-produtos/signer.md`](https://github.com/bitmacro/bitmacro-docs/blob/main/03-produtos/signer.md) (*Comportamento esperado (MVP)*).
+
 ### Web image on GHCR (Next.js standalone)
 
 [`.github/workflows/web.yml`](.github/workflows/web.yml) builds **`linux/amd64`** from [`Dockerfile`](Dockerfile) and pushes:
