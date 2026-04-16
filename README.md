@@ -39,7 +39,7 @@ Implementation is not finalized. The app will combine **`nostr-tools`**, **`@bit
 ```bash
 cp .env.example .env
 # Set at minimum NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_APP_URL
-# For the NIP-46 daemon (self-host): DAEMON_IDENTITY_IDS, DAEMON_VAULT_PASSPHRASE, NEXT_PUBLIC_RELAY_URL, SUPABASE_SERVICE_ROLE_KEY
+# For the NIP-46 daemon (self-host): DAEMON_INTERNAL_TOKEN, RELAY_URL (or NEXT_PUBLIC_RELAY_URL), SUPABASE_SERVICE_ROLE_KEY; signer-web adds DAEMON_INTERNAL_URL when calling the daemon over Docker
 docker compose up --build
 ```
 
@@ -79,7 +79,7 @@ echo YOUR_GITHUB_PAT | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-s
 
 ```bash
 docker pull ghcr.io/bitmacro/bitmacro-signer-daemon:latest
-# Configure env (see .env.example): DAEMON_IDENTITY_IDS, DAEMON_VAULT_PASSPHRASE, Supabase, NEXT_PUBLIC_RELAY_URL, etc.
+# Configure env (see .env.example): DAEMON_INTERNAL_TOKEN, Supabase, RELAY_URL / NEXT_PUBLIC_RELAY_URL, etc.
 docker run --env-file .env ghcr.io/bitmacro/bitmacro-signer-daemon:latest
 ```
 

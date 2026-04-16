@@ -19,9 +19,11 @@ RUN npm run build:daemon
 
 FROM base AS runner
 ENV NODE_ENV=production
+RUN apk add --no-cache wget
 RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nodejs
 WORKDIR /app
 COPY --from=builder --chown=nodejs:nodejs /app/dist/daemon ./dist/daemon
 USER nodejs
+EXPOSE 47777
 CMD ["node", "dist/daemon/index.js"]

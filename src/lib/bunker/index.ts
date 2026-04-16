@@ -5,6 +5,7 @@
 export {
   isRunning,
   startBunker,
+  stopAllBunkers,
   stopBunker,
 } from "./nip46-loop";
 
