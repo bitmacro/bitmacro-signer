@@ -22,7 +22,7 @@
 
 ## Status
 
-The repository currently contains **project scaffolding** (layout and intention comments). Application logic will land after review.
+**MVP in progress:** vault client-side (AES-GCM), API vault/sessions, auth cookies, onboarding, NIP-46 bunker loop in a **daemon** process, GHCR images for `signer-web` and `signer-daemon`. Product semantics (NIP-46 session keys vs profile `npub`, one-time bunker secrets, optional session labels) are documented in [bitmacro-docs `03-produtos/signer.md`](https://github.com/bitmacro/bitmacro-docs/blob/main/03-produtos/signer.md).
 
 ## Install
 
@@ -34,7 +34,7 @@ npm install @bitmacro/bitmacro-signer
 
 ## Usage
 
-Implementation is not finalized. The app will combine **`nostr-tools`**, **`@bitmacro/relay-connect`**, Supabase, and Zod; self-host via Docker is supported (see below).
+The app combines **`nostr-tools`**, **`@bitmacro/relay-connect`**, Supabase, and Zod; self-host via Docker is supported (see below). For **operator-facing** behaviour (bunker URI, sessions, relay), prefer the [Signer product doc](https://github.com/bitmacro/bitmacro-docs/blob/main/03-produtos/signer.md) in `bitmacro-docs`.
 
 ```bash
 cp .env.example .env
