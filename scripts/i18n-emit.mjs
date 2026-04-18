@@ -1,6 +1,12 @@
 /**
  * Generates src/messages/{en,pt-BR,es}.json from inline catalogs.
- * Run: node scripts/i18n-emit.mjs
+ * Run: `npm run i18n:emit` (same as `node scripts/i18n-emit.mjs`).
+ *
+ * ⚠️ Do NOT run `npm run i18n:emit` until `recover.*` and `onboarding.backup.*`
+ * are integrated into `buildMessages()` below. The script overwrites the JSON
+ * files and will wipe those hand-maintained namespaces. Until then, edit
+ * `src/messages/{en,pt-BR,es}.json` directly; if you already ran emit, restore
+ * those sections from git or re-merge from a branch that has them.
  */
 import fs from "node:fs";
 import path from "node:path";

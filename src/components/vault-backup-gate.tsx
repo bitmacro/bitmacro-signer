@@ -2,8 +2,9 @@
 
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
-import { AlertTriangle, Download, Loader2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Download, Loader2, Lock } from "lucide-react";
 
+import { getPublicSiteUrl } from "@/lib/public-site-url";
 import type { VaultPayload } from "@/lib/vault";
 import {
   buildVaultBackupPdfBlob,
@@ -45,7 +46,7 @@ export function VaultBackupGate({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [code] = useState(() => generateBackupCode());
   const [downloaded, setDownloaded] = useState(false);
-  const [ackSafeStorage, setAckSafeStorage] = useState(false);
+  const [ackPassphraseUnderstanding, setAckPassphraseUnderstanding] = useState(false);
   const [confirmInput, setConfirmInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [genErr, setGenErr] = useState<string | null>(null);
@@ -103,6 +104,7 @@ export function VaultBackupGate({
       qrTitle: t("pdf.qrTitle"),
       jsonTitle: t("pdf.jsonTitle"),
       recoveryTitle: t("pdf.recoveryTitle"),
+      recoveryWebStep: t("pdf.recoveryWebStep"),
       recoverySteps: t("pdf.recoverySteps").split("|"),
       footer: t("pdf.footer"),
     }),
@@ -119,6 +121,7 @@ export function VaultBackupGate({
         identityId,
         vault,
         confirmationCode: code,
+        recoverUrl: `${getPublicSiteUrl()}/recover`,
         copy: pdfCopy,
       });
       const safePrefix = pdfCopy.fileNamePrefix.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -132,7 +135,7 @@ export function VaultBackupGate({
   }, [vault, npub, identityId, code, pdfCopy, t]);
 
   const codeOk = confirmInput.trim().toLowerCase() === code.toLowerCase();
-  const confirmOk = downloaded && ackSafeStorage && codeOk;
+  const confirmOk = downloaded && ackPassphraseUnderstanding && codeOk;
 
   const handleContinue = () => {
     if (!confirmOk) return;
@@ -185,15 +188,20 @@ export function VaultBackupGate({
         </code>
       </div>
 
-      <div className="mt-6 rounded-xl border border-zinc-800 bg-zinc-950/60 p-5">
-        <p className="text-sm font-semibold text-white">{t("codeInstruction")}</p>
-        <p
-          className="mt-3 text-center font-mono text-3xl font-bold tracking-[0.2em] text-white"
-          aria-live="polite"
-        >
-          {code}
-        </p>
-        <p className="mt-3 text-sm text-zinc-400">{t("codeHint")}</p>
+      <div className="mt-6 flex gap-3 rounded-xl border border-zinc-800 bg-zinc-950/60 p-5">
+        <Lock
+          className="size-6 shrink-0 text-[#0066FF]"
+          aria-hidden
+        />
+        <p className="text-sm leading-relaxed text-zinc-200">{t("vaultPassphraseBlock")}</p>
+      </div>
+
+      <div className="mt-4 flex gap-3 rounded-xl border border-zinc-800 bg-zinc-950/60 p-5">
+        <CheckCircle2
+          className="size-6 shrink-0 text-emerald-500"
+          aria-hidden
+        />
+        <p className="text-sm leading-relaxed text-zinc-200">{t("confirmationCodeBlock")}</p>
       </div>
 
       <div className="mt-6">
@@ -229,11 +237,11 @@ export function VaultBackupGate({
         <label className="flex cursor-pointer items-start gap-3 text-sm text-zinc-300">
           <input
             type="checkbox"
-            checked={ackSafeStorage}
-            onChange={(e) => setAckSafeStorage(e.target.checked)}
+            checked={ackPassphraseUnderstanding}
+            onChange={(e) => setAckPassphraseUnderstanding(e.target.checked)}
             className="mt-1 size-4 rounded border-zinc-600"
           />
-          <span>{t("confirmSafeStorage")}</span>
+          <span>{t("confirmPassphraseUnderstanding")}</span>
         </label>
 
         <div>

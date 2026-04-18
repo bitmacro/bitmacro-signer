@@ -36,3 +36,49 @@ export function buildOfflineVaultBundle(
 export function serializeOfflineBundleForQr(bundle: OfflineVaultBundle): string {
   return JSON.stringify(bundle);
 }
+
+/** Fields required to decrypt + identify an offline vault bundle (v1). */
+export type OfflineBundleDecryptFields = {
+  payload: VaultPayload;
+  npub: string;
+};
+
+/**
+ * Parses and validates pasted JSON for local recovery ({@link decryptNsec}).
+ * Requires `blob`, `salt`, `iv`, `npub`, `kind` and matching {@link OFFLINE_BUNDLE_KIND}.
+ */
+export function tryParseOfflineVaultBundleJson(
+  raw: string,
+): { ok: true; data: OfflineBundleDecryptFields } | { ok: false } {
+  let obj: unknown;
+  try {
+    obj = JSON.parse(raw);
+  } catch {
+    return { ok: false };
+  }
+  if (!obj || typeof obj !== "object") return { ok: false };
+  const o = obj as Record<string, unknown>;
+  const { blob, salt, iv, npub, kind } = o;
+  if (
+    typeof blob !== "string" ||
+    typeof salt !== "string" ||
+    typeof iv !== "string" ||
+    typeof npub !== "string" ||
+    typeof kind !== "string" ||
+    !blob ||
+    !salt ||
+    !iv ||
+    !npub
+  ) {
+    return { ok: false };
+  }
+  if (kind !== OFFLINE_BUNDLE_KIND) return { ok: false };
+  if (o.v !== undefined && o.v !== OFFLINE_BUNDLE_VERSION) return { ok: false };
+  return {
+    ok: true,
+    data: {
+      payload: { blob, salt, iv },
+      npub,
+    },
+  };
+}

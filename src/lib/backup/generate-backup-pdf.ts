@@ -22,6 +22,8 @@ export type BackupPdfCopy = {
   qrTitle: string;
   jsonTitle: string;
   recoveryTitle: string;
+  /** First recovery method; `{url}` is replaced with the full `/recover` URL. */
+  recoveryWebStep: string;
   recoverySteps: string[];
   footer: string;
 };
@@ -39,10 +41,12 @@ export async function buildVaultBackupPdfBlob(
     identityId: string;
     vault: VaultPayload;
     confirmationCode: string;
+    /** Full URL to the public recover page (e.g. from {@link getPublicSiteUrl}). */
+    recoverUrl: string;
     copy: BackupPdfCopy;
   },
 ): Promise<Blob> {
-  const { npub, identityId, vault, confirmationCode, copy } = args;
+  const { npub, identityId, vault, confirmationCode, recoverUrl, copy } = args;
   const bundle = buildOfflineVaultBundle(identityId, npub, vault);
   const qrPayload = serializeOfflineBundleForQr(bundle);
 
@@ -173,6 +177,12 @@ export async function buildVaultBackupPdfBlob(
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   let n = 1;
+  const webStepText = copy.recoveryWebStep.replace(/\{url\}/g, recoverUrl);
+  for (const line of splitLines(doc, `${n}. ${webStepText}`, maxW)) {
+    doc.text(line, margin, y);
+    y += 4.5;
+  }
+  n += 1;
   for (const step of copy.recoverySteps) {
     for (const line of splitLines(doc, `${n}. ${step}`, maxW)) {
       doc.text(line, margin, y);

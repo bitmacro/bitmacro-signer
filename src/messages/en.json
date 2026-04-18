@@ -3,6 +3,25 @@
     "locale": "Language",
     "brand": "BitMacro Signer"
   },
+  "recover": {
+    "title": "Recover nsec (local)",
+    "subtitle": "Zero-knowledge — nothing is sent to BitMacro servers. Decryption runs only in your browser.",
+    "jsonLabel": "Backup JSON (bitmacro-signer-offline-vault v1)",
+    "jsonPlaceholder": "{ … }",
+    "passphraseLabel": "Vault passphrase",
+    "decrypt": "Decrypt locally",
+    "decrypting": "Decrypting…",
+    "error": "Wrong passphrase or invalid JSON",
+    "warningTitle": "Treat as a secret",
+    "warningBody": "Anyone with this nsec can sign as you. Do not share it or store it in plaintext in the cloud.",
+    "importHint": "Import this nsec into your Nostr client.",
+    "copy": "Copy nsec",
+    "copied": "Copied",
+    "copyFailed": "Could not copy. Copy manually.",
+    "cleared": "Sensitive content cleared for your safety.",
+    "autoClear": "The nsec is hidden after 60 seconds or when you leave this page.",
+    "navHome": "← Home"
+  },
   "landing": {
     "nav": {
       "howItWorks": "How it works",
@@ -153,7 +172,7 @@
       "createVault": "Create vault and activate bunker"
     },
     "step2": {
-      "title": "Import nsec (first vault)",
+      "title": "Back up your vault",
       "body": "There is no encrypted vault for this npub yet. Paste the nsec that matches your npub and choose a passphrase to encrypt the vault.",
       "nsecLabel": "nsec (bech32)",
       "encryptPassLabel": "Passphrase to encrypt the vault",
@@ -185,11 +204,11 @@
       "bulletStorage": "Store the PDF offline (USB, printed paper in a safe). Avoid cloud folders if you want stronger security.",
       "bulletNoCloud": "Anyone with this file and your passphrase controls your Nostr identity. Do not share.",
       "yourNpub": "Your public key (npub)",
-      "codeInstruction": "Confirmation code (also inside the PDF)",
-      "codeHint": "After downloading, type this code to prove you have the file. You never need to paste your nsec.",
+      "vaultPassphraseBlock": "Your vault passphrase is the only key that decrypts this PDF. Store it separately from the PDF.",
+      "confirmationCodeBlock": "A 6-character code appears inside the PDF — only to confirm you saved the file. It does not replace the passphrase.",
       "downloadPdf": "Download encrypted backup PDF",
-      "confirmSafeStorage": "I confirm I saved the PDF in a safe place I control.",
-      "confirmTypeCode": "Type the confirmation code from the PDF or from above",
+      "confirmPassphraseUnderstanding": "I understand I need the passphrase to recover my nsec. The 6-letter code does not replace it.",
+      "confirmTypeCode": "Type the 6-letter code from the PDF (after downloading)",
       "confirmPlaceholder": "6 characters",
       "continueAfterBackup": "Continue to bunker link",
       "loadVaultFailed": "Could not load vault data for backup.",
@@ -204,12 +223,13 @@
         "npubLabel": "Public key (npub)",
         "passphraseReminder": "Decrypt the vault fields below with the same passphrase you use to unlock BitMacro Signer.",
         "codeTitle": "Confirmation code (type this in Signer to continue)",
-        "codeBody": "Signer shows this code to ensure you opened or saved this document. It is not a cryptographic secret.",
+        "codeBody": "Type this code in Signer to confirm you opened or saved the PDF. It is not shown on the website — only in this document. It is not a cryptographic secret.",
         "downloadCheck": "",
         "qrTitle": "QR — encrypted vault export (scan or transcribe JSON below if QR fails)",
         "jsonTitle": "Encrypted vault JSON (same data as QR)",
         "recoveryTitle": "How to recover without BitMacro",
-        "recoverySteps": "Use any tool that implements the same decryption (PBKDF2-SHA256, 600000 iterations, AES-GCM-256) with your passphrase on blob/salt/iv.|Decode your nsec from the decrypted material (bech32 nsec1…).|Import that nsec into any Nostr client.",
+        "recoveryWebStep": "Open {url}, paste the JSON below, and enter your passphrase. Your nsec is shown only in the browser.",
+        "recoverySteps": "Or use any tool that implements the same decryption (PBKDF2-SHA256, 600000 iterations, AES-GCM-256) with your passphrase on blob/salt/iv.|Decode your nsec from the decrypted material (bech32 nsec1…).|Import that nsec into any Nostr client.",
         "footer": "Format: bitmacro-signer-offline-vault v1. Open source: github.com/bitmacro/bitmacro-signer"
       }
     },

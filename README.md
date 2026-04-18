@@ -98,6 +98,10 @@ npm run lint
 
 `npm run dev` uses **Turbopack** (`next dev --turbopack`).
 
+### i18n emit (`npm run i18n:emit`)
+
+Do **not** run `npm run i18n:emit` until the `recover.*` and `onboarding.backup.*` namespaces are wired into `buildMessages()` in [`scripts/i18n-emit.mjs`](scripts/i18n-emit.mjs). The script overwrites `src/messages/{en,pt-BR,es}.json` and would remove those translations. Prefer editing the JSON files directly until that work is done. See the comment at the top of `i18n-emit.mjs`.
+
 ## Contributing
 
 Issues and pull requests are welcome — NIP-46 flows, security hardening, and operator UX.

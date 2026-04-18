@@ -3,6 +3,25 @@
     "locale": "Idioma",
     "brand": "BitMacro Signer"
   },
+  "recover": {
+    "title": "Recuperar nsec (local)",
+    "subtitle": "Cero conocimiento — no se envía nada a los servidores BitMacro. El descifrado ocurre solo en tu navegador.",
+    "jsonLabel": "JSON de copia (bitmacro-signer-offline-vault v1)",
+    "jsonPlaceholder": "{ … }",
+    "passphraseLabel": "Frase de paso del cofre",
+    "decrypt": "Descifrar localmente",
+    "decrypting": "Descifrando…",
+    "error": "Frase incorrecta o JSON no válido",
+    "warningTitle": "Trátalo como secreto",
+    "warningBody": "Cualquiera con esta nsec puede firmar como tú. No la compartas ni la guardes en claro en la nube.",
+    "importHint": "Importa esta nsec en tu cliente Nostr.",
+    "copy": "Copiar nsec",
+    "copied": "Copiado",
+    "copyFailed": "No se pudo copiar. Cópiala manualmente.",
+    "cleared": "Contenido sensible borrado por seguridad.",
+    "autoClear": "La nsec deja de mostrarse a los 60 segundos o al salir de esta página.",
+    "navHome": "← Inicio"
+  },
   "landing": {
     "nav": {
       "howItWorks": "Cómo funciona",
@@ -153,7 +172,7 @@
       "createVault": "Crear bóveda y activar bunker"
     },
     "step2": {
-      "title": "Importar nsec (primera bóveda)",
+      "title": "Respaldo del cofre",
       "body": "Aún no hay bóveda cifrada para este npub. Pega la nsec que coincide con tu npub y elige una frase para cifrar la bóveda.",
       "nsecLabel": "nsec (bech32)",
       "encryptPassLabel": "Frase para cifrar la bóveda",
@@ -185,11 +204,11 @@
       "bulletStorage": "Guarda el PDF sin conexión (USB, papel en lugar seguro). Evita carpetas en la nube si quieres más seguridad.",
       "bulletNoCloud": "Quien tenga este archivo y la frase controla tu identidad Nostr. No lo compartas.",
       "yourNpub": "Clave pública (npub)",
-      "codeInstruction": "Código de confirmación (también en el PDF)",
-      "codeHint": "Tras descargar, escribe este código para demostrar que tienes el archivo. Nunca necesitas pegar la nsec.",
+      "vaultPassphraseBlock": "La frase del cofre es la única clave que descifra este PDF. Guárdala aparte del PDF.",
+      "confirmationCodeBlock": "Hay un código de 6 letras dentro del PDF — solo para confirmar que guardaste el archivo. No sustituye la frase.",
       "downloadPdf": "Descargar PDF de backup cifrado",
-      "confirmSafeStorage": "Confirmo que guardé el PDF en un lugar seguro bajo mi control.",
-      "confirmTypeCode": "Escribe el código de confirmación del PDF o de arriba",
+      "confirmPassphraseUnderstanding": "Entiendo que necesito la frase para recuperar la nsec. El código de 6 letras no la sustituye.",
+      "confirmTypeCode": "Escribe el código de 6 letras que aparece en el PDF (tras descargar)",
       "confirmPlaceholder": "6 caracteres",
       "continueAfterBackup": "Continuar al enlace del bunker",
       "loadVaultFailed": "No se pudo cargar la bóveda para el backup.",
@@ -204,12 +223,13 @@
         "npubLabel": "Clave pública (npub)",
         "passphraseReminder": "Descifra los campos con la misma frase que usas en BitMacro Signer.",
         "codeTitle": "Código de confirmación (escríbelo en Signer para continuar)",
-        "codeBody": "Signer muestra este código para asegurar que abriste o guardaste el documento. No es un secreto criptográfico.",
+        "codeBody": "Escribe este código en Signer para confirmar que abriste o guardaste el PDF. No aparece en la web — solo en este documento. No es un secreto criptográfico.",
         "downloadCheck": "",
         "qrTitle": "QR — export cifrado (o usa el JSON inferior)",
         "jsonTitle": "JSON del cofre cifrado (mismos datos que el QR)",
         "recoveryTitle": "Recuperar sin BitMacro",
-        "recoverySteps": "Usa una herramienta con el mismo descifrado (PBKDF2-SHA256, 600000 iteraciones, AES-GCM-256) con la frase sobre blob/salt/iv.|Obtén la nsec en bech32 del texto descifrado.|Importa la nsec en cualquier cliente Nostr.",
+        "recoveryWebStep": "Abre {url}, pega el JSON inferior e introduce tu frase. La nsec solo se muestra en el navegador.",
+        "recoverySteps": "O usa una herramienta con el mismo descifrado (PBKDF2-SHA256, 600000 iteraciones, AES-GCM-256) con la frase sobre blob/salt/iv.|Obtén la nsec en bech32 del texto descifrado.|Importa la nsec en cualquier cliente Nostr.",
         "footer": "Formato: bitmacro-signer-offline-vault v1. Código abierto: github.com/bitmacro/bitmacro-signer"
       }
     },
