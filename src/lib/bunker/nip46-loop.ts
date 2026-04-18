@@ -167,34 +167,68 @@ export async function startBunker(
         }
 
         const req = parseNip46RpcPayload(plaintext);
+        const clientPk = event.pubkey.slice(0, 12);
+        const connectExtra =
+          req.method === "connect"
+            ? {
+                connectParamsCount: req.params.length,
+                bunkerClaimLen: (req.params[0] ?? "").length,
+                secretParamLen: (req.params[1] ?? "").length,
+                permsParamLen: (req.params[2] ?? "").length,
+              }
+            : {};
+
+        const inboundLog = {
+          identityId,
+          method: req.method,
+          rpcId: req.id,
+          clientPk,
+          eventCreatedAt: event.created_at,
+          ...connectExtra,
+        };
+        if (req.method === "sign_event") {
+          log("debug", "NIP-46 inbound", inboundLog);
+        } else {
+          log("info", "NIP-46 inbound", inboundLog);
+        }
+
         const res = await runNip46Method(event.pubkey, req, {
           bunkerSecretKey: secretKey,
           bunkerPubkeyHex,
-          completeConnect: (appPubkey, secret) =>
-            completeConnect(identityId, appPubkey, secret),
+          completeConnect: (appPubkey, secret, trace) =>
+            completeConnect(identityId, appPubkey, secret, trace),
           assertAppMayUseSigner: (appPubkey) =>
             assertAppMayUseSigner(identityId, appPubkey),
         });
 
         if (req.method === "connect") {
-          const clientPk = event.pubkey.slice(0, 12);
           if (res.error) {
             log("warn", "NIP-46 connect RPC error response", {
               identityId,
               rpcId: res.id,
               clientPk,
-              errorPreview: res.error.slice(0, 120),
+              errorPreview: res.error.slice(0, 160),
             });
           } else {
             log("info", "NIP-46 connect RPC ok", {
               identityId,
               rpcId: res.id,
               clientPk,
+              resultPreview: (res.result ?? "").slice(0, 24),
             });
           }
         }
 
-        await publishResponse(relay, relayUrl, secretKey, event.pubkey, res);
+        await publishResponse(
+          relay,
+          relayUrl,
+          secretKey,
+          event.pubkey,
+          res,
+          identityId,
+          req.id,
+          req.method,
+        );
       } catch (e) {
         log("error", "onevent handler failed", {
           identityId,
@@ -233,6 +267,9 @@ async function publishResponse(
   bunkerSecretKey: Uint8Array,
   appPubkey: string,
   res: Nip46RpcResult,
+  identityId: string,
+  rpcId: string,
+  method: string,
 ): Promise<void> {
   const convKey = nip44.getConversationKey(bunkerSecretKey, appPubkey);
   const content = nip44.encrypt(JSON.stringify(res), convKey);
@@ -248,8 +285,20 @@ async function publishResponse(
 
   try {
     await relay.publish(ev);
+    log("debug", "NIP-46 response published", {
+      identityId,
+      method,
+      rpcId,
+      responseTo: appPubkey.slice(0, 12),
+      eventId: ev.id,
+      relay: relayUrl,
+      ok: !res.error,
+    });
   } catch (e) {
     log("error", "publish response failed", {
+      identityId,
+      method,
+      rpcId,
       err: e instanceof Error ? e.message : String(e),
       relay: relayUrl,
     });

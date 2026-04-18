@@ -126,18 +126,39 @@ export async function authorizeApp(
   return { sessionId: data.id, secret };
 }
 
+function connectSecretDiagnostics(secret: string): {
+  secretCharLen: number;
+  trimmedCharLen: number;
+  looksEmpty: boolean;
+  base64urlDecodedByteLen: number;
+} {
+  const trimmed = secret.trim();
+  const buf = Buffer.from(trimmed, "base64url");
+  return {
+    secretCharLen: secret.length,
+    trimmedCharLen: trimmed.length,
+    looksEmpty: trimmed.length === 0,
+    base64urlDecodedByteLen: buf.length,
+  };
+}
+
 /**
  * NIP-46 `connect`: validates one-time secret, marks session `used`, then signing RPCs rely on
  * {@link assertAppMayUseSigner} until `expires_at`.
+ *
+ * If the same client retries `connect` with an already-consumed secret (same app pubkey), succeeds
+ * idempotently so Welshman/Primal retries do not surface as bunker errors.
  */
 export async function completeConnect(
   identityId: string,
   appPubkey: string,
   secret: string,
+  trace?: { rpcId?: string },
 ): Promise<void> {
   const supabase = createServiceRoleClient();
   const vaultId = await getVaultIdForIdentity(supabase, identityId);
   const appPkNorm = appPubkey.trim().toLowerCase();
+  const diag = connectSecretDiagnostics(secret);
   let secret_hash: string;
   try {
     secret_hash = hashSecretFromPlaintext(secret);
@@ -145,8 +166,10 @@ export async function completeConnect(
     relayConnectLog("warn", "completeConnect: invalid secret encoding", {
       component: "app-keys",
       identityId,
+      rpcId: trace?.rpcId,
       failureCode: "INVALID_SECRET_ENCODING" as const,
       eventAppPrefix: appPkNorm.slice(0, 12),
+      ...diag,
     });
     throw new Error("connect: invalid secret");
   }
@@ -167,11 +190,34 @@ export async function completeConnect(
   if (!row?.id) {
     const { data: consumed } = await supabase
       .from("signer_sessions")
-      .select("id")
+      .select("id, app_pubkey")
       .eq("vault_id", vaultId)
       .eq("secret_hash", secret_hash)
       .eq("used", true)
       .maybeSingle();
+
+    const consumedPk = consumed?.app_pubkey?.trim().toLowerCase() ?? "";
+    const sameClientRetry =
+      Boolean(consumed?.id) &&
+      consumedPk === appPkNorm &&
+      !consumedPk.startsWith(PENDING_APP_PUBKEY_PREFIX);
+
+    if (sameClientRetry && consumed?.id) {
+      relayConnectLog(
+        "info",
+        "completeConnect: idempotent (duplicate connect, same client pubkey)",
+        {
+          component: "app-keys",
+          identityId,
+          rpcId: trace?.rpcId,
+          failureCode: "CONNECT_IDEMPOTENT_OK" as const,
+          sessionId: consumed.id,
+          eventAppPrefix: appPkNorm.slice(0, 12),
+          secretHashPrefix: secret_hash.slice(0, 12),
+        },
+      );
+      return;
+    }
 
     relayConnectLog(
       "warn",
@@ -179,12 +225,16 @@ export async function completeConnect(
       {
         component: "app-keys",
         identityId,
+        rpcId: trace?.rpcId,
         failureCode: consumed?.id
           ? ("SECRET_ALREADY_USED" as const)
           : ("NO_PENDING_SESSION" as const),
         eventAppPrefix: appPkNorm.slice(0, 12),
         secretHashPrefix: secret_hash.slice(0, 12),
         consumedSessionId: consumed?.id ?? null,
+        consumedClientMatches:
+          consumed?.id != null ? consumedPk === appPkNorm : null,
+        ...diag,
       },
     );
 
@@ -238,9 +288,11 @@ export async function completeConnect(
   relayConnectLog("info", "completeConnect: session bound (NIP-46 connect ok)", {
     component: "app-keys",
     identityId,
+    rpcId: trace?.rpcId,
     sessionId: row.id,
     eventAppPrefix: appPkNorm.slice(0, 12),
     wasPendingPlaceholder: isPendingPlaceholder,
+    secretHashPrefix: secret_hash.slice(0, 12),
   });
 }
 

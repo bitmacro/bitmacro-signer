@@ -23,11 +23,20 @@ export type Nip46RpcResult = {
   error?: string;
 };
 
+/** Optional tracing for `completeConnect` logs (no secrets). */
+export type Nip46ConnectTrace = {
+  rpcId: string;
+};
+
 export type Nip46MethodDeps = {
   bunkerSecretKey: Uint8Array;
   /** Hex-encoded secp256k1 pubkey of the bunker (user signing key). */
   bunkerPubkeyHex: string;
-  completeConnect: (appPubkey: string, secret: string) => Promise<void>;
+  completeConnect: (
+    appPubkey: string,
+    secret: string,
+    trace?: Nip46ConnectTrace,
+  ) => Promise<void>;
   assertAppMayUseSigner: (appPubkey: string) => Promise<void>;
 };
 
@@ -75,7 +84,7 @@ export async function runNip46Method(
         if (claimedBunker.toLowerCase() !== deps.bunkerPubkeyHex.toLowerCase()) {
           throw new Error("connect: bunker pubkey mismatch");
         }
-        await deps.completeConnect(appPubkey, secret);
+        await deps.completeConnect(appPubkey, secret, { rpcId: id });
         // NIP-46: result should be "ack" (or empty). Welshman/Coracle only treat
         // `result === "ack"` or `result === connectSecret` as success — not remote-signer hex.
         return { id, result: "ack" };

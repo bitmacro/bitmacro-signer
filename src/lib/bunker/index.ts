@@ -14,6 +14,7 @@ export {
   formatNip46RpcResponse,
   parseNip46RpcPayload,
   runNip46Method,
+  type Nip46ConnectTrace,
   type Nip46MethodDeps,
   type Nip46RpcRequest,
   type Nip46RpcResult,

@@ -64,7 +64,9 @@ describe("runNip46Method", () => {
       deps,
     );
     expect(out.result).toBe("ack");
-    expect(completeConnect).toHaveBeenCalledWith("b".repeat(64), secret);
+    expect(completeConnect).toHaveBeenCalledWith("b".repeat(64), secret, {
+      rpcId: "2",
+    });
   });
 
   it("connect accepts Welshman-style third param (perms)", async () => {
@@ -86,7 +88,9 @@ describe("runNip46Method", () => {
       deps,
     );
     expect(out.result).toBe("ack");
-    expect(completeConnect).toHaveBeenCalledWith("b".repeat(64), "sec");
+    expect(completeConnect).toHaveBeenCalledWith("b".repeat(64), "sec", {
+      rpcId: "2b",
+    });
   });
 
   it("connect fails on bunker mismatch", async () => {
