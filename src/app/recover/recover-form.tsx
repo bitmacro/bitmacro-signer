@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useEffect, useId, useState } from "react";
 import { AlertTriangle, Check, Copy, Loader2 } from "lucide-react";
 
-import { tryParseOfflineVaultBundleJson } from "@/lib/backup/offline-bundle";
+import { parseOfflineVaultBundleFromPaste } from "@/lib/backup/offline-bundle";
+import { decryptedNsecMatchesNpub } from "@/lib/backup/recover-verify";
 import { decryptNsec, VaultDecryptError } from "@/lib/vault";
 
 const ACCENT = "#0066FF";
@@ -41,20 +42,24 @@ export function RecoverForm() {
     setError(null);
     setClearedNotice(false);
     setNsec(null);
-    const parsed = tryParseOfflineVaultBundleJson(jsonText.trim());
+    const parsed = parseOfflineVaultBundleFromPaste(jsonText);
     if (!parsed.ok) {
-      setError(t("error"));
+      setError(t("errorJson"));
       return;
     }
     setBusy(true);
     try {
       const out = await decryptNsec(parsed.data.payload, passphrase);
+      if (!decryptedNsecMatchesNpub(out, parsed.data.npub)) {
+        setError(t("errorNpubMismatch"));
+        return;
+      }
       setNsec(out);
     } catch (e) {
       if (e instanceof VaultDecryptError) {
-        setError(t("error"));
+        setError(t("errorDecrypt"));
       } else {
-        setError(t("error"));
+        setError(t("errorDecrypt"));
       }
     } finally {
       setBusy(false);
@@ -108,6 +113,7 @@ export function RecoverForm() {
             className="bm-input mt-2 min-h-[160px] w-full resize-y border-zinc-700 bg-zinc-900/50 font-mono text-sm text-zinc-100"
             placeholder={t("jsonPlaceholder")}
           />
+          <p className="mt-2 text-xs leading-relaxed text-zinc-500">{t("pasteHint")}</p>
         </div>
 
         <div>

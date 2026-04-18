@@ -82,3 +82,30 @@ export function tryParseOfflineVaultBundleJson(
     },
   };
 }
+
+/**
+ * PDF renderers wrap long lines when drawing JSON; copy-paste often inserts
+ * newlines *inside* string values, which breaks JSON.parse. Collapsing line
+ * breaks repairs typical PDF paste without changing valid minified JSON.
+ */
+export function normalizeBundleJsonPaste(raw: string): string {
+  return raw
+    .replace(/^\uFEFF/, "")
+    .replace(/\u00a0/g, " ")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .replace(/\n/g, "");
+}
+
+/**
+ * Parses pasted text from PDF or file: strict JSON first, then normalized paste.
+ */
+export function parseOfflineVaultBundleFromPaste(
+  raw: string,
+): { ok: true; data: OfflineBundleDecryptFields } | { ok: false } {
+  const trimmed = raw.trim();
+  const strict = tryParseOfflineVaultBundleJson(trimmed);
+  if (strict.ok) return strict;
+  const normalized = normalizeBundleJsonPaste(trimmed);
+  return tryParseOfflineVaultBundleJson(normalized);
+}

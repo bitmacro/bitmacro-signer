@@ -6,6 +6,7 @@ import type { VaultPayload } from "@/lib/vault";
 import {
   buildOfflineVaultBundle,
   serializeOfflineBundleForQr,
+  type OfflineVaultBundle,
 } from "./offline-bundle";
 
 export type BackupPdfCopy = {
@@ -14,12 +15,18 @@ export type BackupPdfCopy = {
   subtitle: string;
   criticalTitle: string;
   criticalBullets: string[];
+  /** Short “what’s in this PDF” section (3 bullets, pipe-separated). */
+  didacticTitle: string;
+  didacticBullets: string[];
   npubLabel: string;
   passphraseReminder: string;
   codeTitle: string;
   codeBody: string;
   downloadCheck: string;
+  qrSectionLead: string;
   qrTitle: string;
+  jsonSectionTitle: string;
+  jsonSectionWarning: string;
   jsonTitle: string;
   recoveryTitle: string;
   /** First recovery method; `{url}` is replaced with the full `/recover` URL. */
@@ -32,8 +39,61 @@ function splitLines(doc: jsPDF, text: string, maxWidth: number): string[] {
   return doc.splitTextToSize(text, maxWidth);
 }
 
+/** Draw one monospace line; shrink font until it fits, or wrap as last resort. */
+function drawCourierLine(
+  doc: jsPDF,
+  line: string,
+  margin: number,
+  y: number,
+  maxW: number,
+): number {
+  let fs = 7;
+  doc.setFont("courier", "normal");
+  while (fs >= 4) {
+    doc.setFontSize(fs);
+    const w = doc.getTextWidth(line);
+    if (w <= maxW) {
+      doc.text(line, margin, y);
+      return y + Math.max(3.2, fs * 0.45);
+    }
+    fs -= 0.5;
+  }
+  doc.setFontSize(6);
+  const wrapped = doc.splitTextToSize(line, maxW);
+  let yy = y;
+  for (const wline of wrapped) {
+    doc.text(wline, margin, yy);
+    yy += 3;
+  }
+  return yy + 1;
+}
+
+function drawPrettyBundleJson(
+  doc: jsPDF,
+  bundle: OfflineVaultBundle,
+  margin: number,
+  yStart: number,
+  maxW: number,
+  pageH: number,
+  marginBottom: number,
+): number {
+  const pretty = JSON.stringify(bundle, null, 2);
+  const lines = pretty.split("\n");
+  let y = yStart;
+  for (const line of lines) {
+    if (y > pageH - marginBottom) {
+      doc.addPage();
+      y = 14;
+    }
+    y = drawCourierLine(doc, line, margin, y, maxW);
+  }
+  return y;
+}
+
 /**
- * Builds a client-side PDF with npub, warnings, confirmation code, QR of encrypted bundle, and full JSON text.
+ * Builds a client-side PDF: warnings, didactic blocks, npub, confirmation code,
+ * QR (preferred path), then pretty-printed JSON (line-by-line, avoids mid-string
+ * wraps from the old single-block splitTextToSize approach).
  */
 export async function buildVaultBackupPdfBlob(
   args: {
@@ -56,6 +116,11 @@ export async function buildVaultBackupPdfBlob(
       .width ??
     doc.internal.pageSize.getWidth?.() ??
     210;
+  const pageH =
+    (doc.internal.pageSize as { height?: number; getHeight?: () => number })
+      .height ??
+    doc.internal.pageSize.getHeight?.() ??
+    297;
   const margin = 14;
   const maxW = pageW - margin * 2;
   let y = margin;
@@ -94,6 +159,22 @@ export async function buildVaultBackupPdfBlob(
   y += 8;
 
   doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(30, 30, 120);
+  doc.text(copy.didacticTitle, margin, y);
+  y += 6;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(0, 0, 0);
+  for (const bullet of copy.didacticBullets) {
+    for (const line of splitLines(doc, `• ${bullet}`, maxW - 2)) {
+      doc.text(line, margin + 2, y);
+      y += 4.2;
+    }
+  }
+  y += 6;
+
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.text(copy.npubLabel, margin, y);
   y += 6;
@@ -128,44 +209,62 @@ export async function buildVaultBackupPdfBlob(
     doc.text(line, margin, y);
     y += 4;
   }
-  y += 6;
+  y += 8;
 
-  if (y > 240) {
+  if (y > 210) {
     doc.addPage();
     y = margin;
   }
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
+  doc.setFontSize(11);
   doc.text(copy.qrTitle, margin, y);
-  y += 6;
+  y += 5;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  for (const line of splitLines(doc, copy.qrSectionLead, maxW)) {
+    doc.text(line, margin, y);
+    y += 4;
+  }
+  y += 4;
 
   const qrDataUrl = await QRCode.toDataURL(qrPayload, {
     errorCorrectionLevel: "M",
     margin: 1,
     width: 320,
   });
-  const qrSize = 55;
+  const qrSize = 58;
   doc.addImage(qrDataUrl, "PNG", margin, y, qrSize, qrSize);
-  y += qrSize + 8;
+  y += qrSize + 10;
+
+  if (y > 230) {
+    doc.addPage();
+    y = margin;
+  }
 
   doc.setFont("helvetica", "bold");
-  doc.text(copy.jsonTitle, margin, y);
-  y += 6;
-  doc.setFont("courier", "normal");
-  doc.setFontSize(7);
-  const jsonLines = splitLines(doc, qrPayload, maxW);
-  for (const line of jsonLines) {
-    if (y > 285) {
-      doc.addPage();
-      y = margin;
-    }
+  doc.setFontSize(10);
+  doc.text(copy.jsonSectionTitle, margin, y);
+  y += 5;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(60, 60, 60);
+  for (const line of splitLines(doc, copy.jsonSectionWarning, maxW)) {
     doc.text(line, margin, y);
-    y += 3.2;
+    y += 4;
   }
-  y += 6;
+  doc.setTextColor(0, 0, 0);
+  y += 4;
 
-  if (y > 250) {
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.text(copy.jsonTitle, margin, y);
+  y += 5;
+
+  y = drawPrettyBundleJson(doc, bundle, margin, y, maxW, pageH, 18);
+
+  y += 8;
+  if (y > 240) {
     doc.addPage();
     y = margin;
   }
