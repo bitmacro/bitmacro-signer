@@ -197,6 +197,11 @@
     "genericError": "Error",
     "empty": "No client sessions.",
     "back": "← Back to onboarding",
-    "onboardingLink": "Onboarding"
+    "onboardingLink": "Onboarding",
+    "sessionIdLabel": "Session id (for logs)",
+    "remove": "Remove session",
+    "removeConfirm": "Remove this client session? You will need a new QR or bunker link to connect again.",
+    "removing": "Removing…",
+    "removeError": "Could not remove session"
   }
 }

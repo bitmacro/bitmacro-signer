@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
-import { Check, Copy, Loader2 } from "lucide-react";
+import { Check, Copy, Loader2, Trash2 } from "lucide-react";
 
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { nostrHexPubkeyToNpub } from "@/lib/session/ttl";
@@ -31,10 +31,14 @@ function SessionCard({
   row,
   copiedKey,
   onCopied,
+  onRemove,
+  removing,
 }: {
   row: SessionRow;
   copiedKey: string | null;
   onCopied: (key: string) => void;
+  onRemove: (id: string) => void;
+  removing: boolean;
 }) {
   const t = useTranslations("sessions");
   let clientNpub: string | null = null;
@@ -113,9 +117,27 @@ function SessionCard({
           {copiedKey === kHex ? t("copied") : t("copyHex")}
         </button>
       </div>
-      <div className="mt-4 text-sm leading-[1.5] text-zinc-400">
-        {t("expires")} {new Date(row.expires_at).toLocaleString()}{" "}
-        {row.used ? `· ${t("used")}` : `· ${t("pending")}`}
+      <p className="mt-3 font-mono text-xs text-zinc-500" title={row.id}>
+        {t("sessionIdLabel")}: {row.id}
+      </p>
+      <div className="mt-4 flex flex-wrap items-center gap-3 text-sm leading-[1.5] text-zinc-400">
+        <span>
+          {t("expires")} {new Date(row.expires_at).toLocaleString()}{" "}
+          {row.used ? `· ${t("used")}` : `· ${t("pending")}`}
+        </span>
+        <button
+          type="button"
+          disabled={removing}
+          onClick={() => onRemove(row.id)}
+          className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-red-900/60 bg-red-950/30 px-3 text-sm font-semibold text-red-200 hover:bg-red-950/50 disabled:opacity-50"
+        >
+          {removing ? (
+            <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
+          ) : (
+            <Trash2 className="size-4 shrink-0" aria-hidden />
+          )}
+          {removing ? t("removing") : t("remove")}
+        </button>
       </div>
     </li>
   );
@@ -128,6 +150,8 @@ export default function SessionsPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [removeError, setRemoveError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -165,6 +189,32 @@ export default function SessionsPage() {
     void load();
   }, [load]);
 
+  const handleRemove = useCallback(
+    async (sessionId: string) => {
+      if (!window.confirm(t("removeConfirm"))) {
+        return;
+      }
+      setRemoveError(null);
+      setRemovingId(sessionId);
+      try {
+        const res = await fetch(
+          `/api/sessions/${encodeURIComponent(sessionId)}`,
+          { method: "DELETE", credentials: "include" },
+        );
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        if (!res.ok) {
+          throw new Error(j.error ?? t("removeError"));
+        }
+        await load();
+      } catch (e) {
+        setRemoveError(e instanceof Error ? e.message : t("removeError"));
+      } finally {
+        setRemovingId(null);
+      }
+    },
+    [load, t],
+  );
+
   return (
     <div
       className="min-h-screen text-zinc-200 antialiased"
@@ -189,6 +239,12 @@ export default function SessionsPage() {
           <div className="flex min-h-12 items-center gap-3 text-base text-zinc-300">
             <Loader2 className="size-5 shrink-0 animate-spin" aria-hidden />
             {t("loading")}
+          </div>
+        ) : null}
+
+        {removeError ? (
+          <div className="mb-6 rounded-lg border border-red-900/50 bg-red-950/30 px-4 py-3 text-base leading-[1.5] text-red-100">
+            {removeError}
           </div>
         ) : null}
 
@@ -220,6 +276,8 @@ export default function SessionsPage() {
                   setCopiedKey(key);
                   window.setTimeout(() => setCopiedKey(null), 2000);
                 }}
+                onRemove={handleRemove}
+                removing={removingId === r.id}
               />
             ))}
           </ul>

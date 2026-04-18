@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { getSessionCookie } from "@/lib/auth/session-cookie";
 import { sessionCreateBodySchema } from "@/lib/schemas/session";
 import {
   authorizeApp,
@@ -39,6 +40,16 @@ function toPublicSession(s: Session): SessionListItem {
  * POST /api/sessions — authorize app, return session_id, secret, bunker_uri.
  */
 export async function POST(request: Request) {
+  let cookieIdentityId: string | null;
+  try {
+    cookieIdentityId = await getSessionCookie();
+  } catch {
+    return jsonError("Server misconfigured: session support unavailable", 503);
+  }
+  if (!cookieIdentityId) {
+    return jsonError("Unauthorized", 401);
+  }
+
   let supabase: ReturnType<typeof createServiceRoleClient>;
   try {
     supabase = createServiceRoleClient();
@@ -56,6 +67,10 @@ export async function POST(request: Request) {
   const parsed = sessionCreateBodySchema.safeParse(body);
   if (!parsed.success) {
     return jsonError("Validation failed", 400, parsed.error.flatten());
+  }
+
+  if (parsed.data.identity_id !== cookieIdentityId) {
+    return jsonError("Forbidden", 403);
   }
 
   const { identity_id, app_name, ttl_hours } = parsed.data;
@@ -116,8 +131,19 @@ export async function POST(request: Request) {
 
 /**
  * GET /api/sessions?identity_id=<uuid> — list sessions for vault (no secret_hash).
+ * Requires the session cookie to match `identity_id`.
  */
 export async function GET(request: Request) {
+  let cookieIdentityId: string | null;
+  try {
+    cookieIdentityId = await getSessionCookie();
+  } catch {
+    return jsonError("Server misconfigured: session support unavailable", 503);
+  }
+  if (!cookieIdentityId) {
+    return jsonError("Unauthorized", 401);
+  }
+
   try {
     createServiceRoleClient();
   } catch {
@@ -133,6 +159,10 @@ export async function GET(request: Request) {
   const idResult = sessionCreateBodySchema.shape.identity_id.safeParse(rawId);
   if (!idResult.success) {
     return jsonError("Invalid identity_id", 400);
+  }
+
+  if (idResult.data !== cookieIdentityId) {
+    return jsonError("Forbidden", 403);
   }
 
   let rows: Session[];

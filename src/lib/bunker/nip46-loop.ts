@@ -176,6 +176,24 @@ export async function startBunker(
             assertAppMayUseSigner(identityId, appPubkey),
         });
 
+        if (req.method === "connect") {
+          const clientPk = event.pubkey.slice(0, 12);
+          if (res.error) {
+            log("warn", "NIP-46 connect RPC error response", {
+              identityId,
+              rpcId: res.id,
+              clientPk,
+              errorPreview: res.error.slice(0, 120),
+            });
+          } else {
+            log("info", "NIP-46 connect RPC ok", {
+              identityId,
+              rpcId: res.id,
+              clientPk,
+            });
+          }
+        }
+
         await publishResponse(relay, relayUrl, secretKey, event.pubkey, res);
       } catch (e) {
         log("error", "onevent handler failed", {

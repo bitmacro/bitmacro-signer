@@ -11,5 +11,5 @@ export {
   completeConnect,
   hashSecretFromPlaintext,
   listSessions,
-  revokeApp,
+  revokeSessionForIdentity,
 } from "./app-keys";

@@ -197,6 +197,11 @@
     "genericError": "Error",
     "empty": "No hay sesiones de cliente.",
     "back": "← Volver al onboarding",
-    "onboardingLink": "Onboarding"
+    "onboardingLink": "Onboarding",
+    "sessionIdLabel": "Id de sesión (para logs)",
+    "remove": "Eliminar sesión",
+    "removeConfirm": "¿Eliminar esta sesión de cliente? Necesitarás un nuevo QR o enlace bunker para conectar de nuevo.",
+    "removing": "Eliminando…",
+    "removeError": "No se pudo eliminar la sesión"
   }
 }

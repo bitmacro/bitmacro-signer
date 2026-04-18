@@ -142,6 +142,12 @@ export async function completeConnect(
   try {
     secret_hash = hashSecretFromPlaintext(secret);
   } catch {
+    relayConnectLog("warn", "completeConnect: invalid secret encoding", {
+      component: "app-keys",
+      identityId,
+      failureCode: "INVALID_SECRET_ENCODING" as const,
+      eventAppPrefix: appPkNorm.slice(0, 12),
+    });
     throw new Error("connect: invalid secret");
   }
 
@@ -173,8 +179,12 @@ export async function completeConnect(
       {
         component: "app-keys",
         identityId,
+        failureCode: consumed?.id
+          ? ("SECRET_ALREADY_USED" as const)
+          : ("NO_PENDING_SESSION" as const),
         eventAppPrefix: appPkNorm.slice(0, 12),
-        secretAlreadyUsed: Boolean(consumed?.id),
+        secretHashPrefix: secret_hash.slice(0, 12),
+        consumedSessionId: consumed?.id ?? null,
       },
     );
 
@@ -201,8 +211,10 @@ export async function completeConnect(
       {
         component: "app-keys",
         identityId,
+        failureCode: "APP_PUBKEY_MISMATCH" as const,
         eventAppPrefix: appPkNorm.slice(0, 12),
         sessionAppPrefix: row.app_pubkey.slice(0, 12),
+        sessionId: row.id,
       },
     );
     throw new Error(
@@ -222,6 +234,14 @@ export async function completeConnect(
   if (upd) {
     throw new Error(`completeConnect: ${upd.message}`);
   }
+
+  relayConnectLog("info", "completeConnect: session bound (NIP-46 connect ok)", {
+    component: "app-keys",
+    identityId,
+    sessionId: row.id,
+    eventAppPrefix: appPkNorm.slice(0, 12),
+    wasPendingPlaceholder: isPendingPlaceholder,
+  });
 }
 
 /**
@@ -252,17 +272,26 @@ export async function assertAppMayUseSigner(
   }
 }
 
-export async function revokeApp(sessionId: string): Promise<boolean> {
+/**
+ * Deletes a client session row if it belongs to this Identity’s vault.
+ * Used by the Signer UI after cookie auth (do not expose unscoped delete by id).
+ */
+export async function revokeSessionForIdentity(
+  identityId: string,
+  sessionId: string,
+): Promise<boolean> {
   const supabase = createServiceRoleClient();
+  const vaultId = await getVaultIdForIdentity(supabase, identityId);
   const { data, error } = await supabase
     .from("signer_sessions")
     .delete()
     .eq("id", sessionId)
+    .eq("vault_id", vaultId)
     .select("id")
     .maybeSingle();
 
   if (error) {
-    throw new Error(`revokeApp: ${error.message}`);
+    throw new Error(`revokeSessionForIdentity: ${error.message}`);
   }
   return data != null;
 }

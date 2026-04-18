@@ -1,18 +1,29 @@
 import { NextResponse } from "next/server";
 
-import { revokeApp } from "@/lib/session/app-keys";
+import { getSessionCookie } from "@/lib/auth/session-cookie";
+import { revokeSessionForIdentity } from "@/lib/session/app-keys";
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
 }
 
 /**
- * DELETE /api/sessions/:id — revoke session by id.
+ * DELETE /api/sessions/:id — remove a client session for the signed-in Identity (cookie).
  */
 export async function DELETE(
   _request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
+  let identityId: string | null;
+  try {
+    identityId = await getSessionCookie();
+  } catch {
+    return jsonError("Server misconfigured: session support unavailable", 503);
+  }
+  if (!identityId) {
+    return jsonError("Unauthorized", 401);
+  }
+
   const { id } = await context.params;
   if (!id?.trim()) {
     return jsonError("Session id is required", 400);
@@ -20,7 +31,7 @@ export async function DELETE(
 
   let revoked: boolean;
   try {
-    revoked = await revokeApp(id);
+    revoked = await revokeSessionForIdentity(identityId, id);
   } catch (e: unknown) {
     if (
       e instanceof Error &&
