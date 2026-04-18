@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "BitMacro Signer — bunker NIP-46 gerido";
+export const alt = "BitMacro Signer — managed NIP-46 bunker";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -78,7 +78,7 @@ export default function OpenGraphImage() {
                   'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif',
               }}
             >
-              Bunker NIP-46 gerido · assinatura remota sem expor a nsec
+              Managed NIP-46 bunker · remote signing without exposing nsec
             </p>
           </div>
         </div>

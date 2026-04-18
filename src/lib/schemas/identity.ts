@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { NPUB_REGEX } from "./auth";
 
-/** POST /api/identities/bootstrap — cria ou resolve identity por npub (Signer-only bootstrap). */
+/** POST /api/identities/bootstrap — create or resolve identity by npub (Signer-only bootstrap). */
 export const identityBootstrapBodySchema = z.object({
   npub: z
     .string()

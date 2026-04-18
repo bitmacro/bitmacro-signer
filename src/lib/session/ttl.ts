@@ -13,8 +13,8 @@ function bytesToHexLower(bytes: Uint8Array): string {
 }
 
 /**
- * Normaliza npub1… ou 64-char hex para hex minúsculo (chave pública Nostr).
- * Usado no bunker URI, `app_pubkey` em sessões, etc.
+ * Normalize npub1… or 64-char hex to lowercase hex (Nostr public key).
+ * Used in bunker URI, session `app_pubkey`, etc.
  */
 export function nostrPubkeyInputToHex(input: string): string {
   const t = input.trim();
@@ -38,7 +38,7 @@ export function nostrPubkeyInputToHex(input: string): string {
     }
     throw new Error("Invalid npub decoded payload");
   }
-  throw new Error("Esperado npub1… ou 64 caracteres hex (chave pública Nostr).");
+  throw new Error("Expected npub1… or 64 hex characters (Nostr public key).");
 }
 
 /**
@@ -52,7 +52,7 @@ export function bunkerPubkeyToHex(bunkerPubkey: string): string {
   }
 }
 
-/** 64-char hex secp256k1 pubkey → `npub1…` (para mostrar a chave de sessão NIP-46 no cliente). */
+/** 64-char hex secp256k1 pubkey → `npub1…` (to display the NIP-46 client session key). */
 export function nostrHexPubkeyToNpub(hex: string): string {
   const t = hex.trim().toLowerCase();
   if (!/^[0-9a-f]{64}$/.test(t)) {

@@ -11,8 +11,8 @@ function jsonError(message: string, status: number, details?: unknown) {
 }
 
 /**
- * POST /api/identities/bootstrap — garante uma linha em `identities` para o npub (idempotente).
- * Usado pelo fluxo «Não tenho npub ainda» no onboarding antes de POST /api/vault.
+ * POST /api/identities/bootstrap — ensures an `identities` row for the npub (idempotent).
+ * Used by the “I don’t have an npub yet” onboarding flow before POST /api/vault.
  */
 export async function POST(request: Request) {
   let supabase: ReturnType<typeof createServiceRoleClient>;

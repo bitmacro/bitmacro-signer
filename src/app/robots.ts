@@ -1,5 +1,5 @@
 /**
- * Intenção: política robots para produção (permitir indexação da landing pública; restringir rotas privadas se necessário).
+ * Robots policy for production (allow indexing the public landing; restrict private routes if needed).
  */
 import type { MetadataRoute } from "next";
 

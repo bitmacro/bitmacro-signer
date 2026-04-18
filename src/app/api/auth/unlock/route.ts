@@ -21,7 +21,7 @@ function jsonError(message: string, status: number, details?: unknown) {
 
 /**
  * POST /api/auth/unlock — resolve identity by npub, decrypt vault with passphrase, start bunker, session cookie.
- * Self-host com DAEMON_INTERNAL_URL: envia nsec ao signer-daemon (HTTP interno); caso contrário startBunker in-process (dev).
+ * Self-host with DAEMON_INTERNAL_URL: forwards nsec to signer-daemon (internal HTTP); otherwise startBunker in-process (dev).
  */
 export async function POST(request: Request) {
   let supabase: ReturnType<typeof createServiceRoleClient>;
@@ -96,7 +96,7 @@ export async function POST(request: Request) {
     );
   } catch (e) {
     if (e instanceof VaultDecryptError) {
-      return jsonError("Passphrase incorrecta", 401);
+      return jsonError("Incorrect passphrase", 401);
     }
     throw e;
   }

@@ -1,6 +1,6 @@
 /**
- * HTTP interno (rede Docker): signer-web → signer-daemon.
- * Não expor à Internet; autenticação obrigatória Bearer.
+ * Internal HTTP (Docker network): signer-web → signer-daemon.
+ * Do not expose to the internet; Bearer auth required.
  */
 
 import http from "node:http";

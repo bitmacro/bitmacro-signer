@@ -1,5 +1,5 @@
 /**
- * Intenção: endpoint de liveness/readiness para Docker e balanceadores — validar Supabase/relay quando existir lógica.
+ * Liveness/readiness endpoint for Docker and load balancers — validate Supabase/relay when logic is added.
  */
 export async function GET() {
   return Response.json({ ok: true });

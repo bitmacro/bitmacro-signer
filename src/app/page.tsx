@@ -39,16 +39,16 @@ function Header() {
         </Link>
         <nav className="flex max-w-[min(100%,20rem)] flex-wrap items-center justify-end gap-x-1 gap-y-2 text-sm sm:max-w-none sm:gap-x-2 sm:text-sm">
           <a
-            href="#como-funciona"
+            href="#how-it-works"
             className="inline-flex min-h-11 items-center whitespace-nowrap rounded-md px-2.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
           >
-            Como funciona
+            How it works
           </a>
           <a
-            href="#comparacao"
+            href="#compare"
             className="inline-flex min-h-11 items-center whitespace-nowrap rounded-md px-2.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
           >
-            Comparação
+            Compare
           </a>
           <a
             href="#self-host"
@@ -80,23 +80,23 @@ function Hero() {
             NIP-46 · Nostr Connect
           </p>
           <p className="font-mono text-xs uppercase tracking-wider text-muted-foreground sm:text-sm">
-            Bunker gerido · relay BitMacro
+            Managed bunker · BitMacro relay
           </p>
         </div>
         <h1 className="mb-5 max-w-3xl text-[clamp(1.75rem,5.2vw+0.85rem,2.75rem)] font-bold leading-[1.15] tracking-tight text-foreground md:text-[2.5rem] lg:text-[2.75rem]">
-          O teu bunker NIP-46, sempre disponível.
+          Your NIP-46 bunker, always on.
         </h1>
         <p className="mb-10 max-w-2xl text-base leading-[1.5] text-muted-foreground md:text-[17px] md:leading-[1.55]">
-          Assina eventos Nostr à distância. A <span className="text-foreground/95">nsec</span>{" "}
-          permanece encriptada no cofre; o servidor nunca a armazena em texto claro — apenas um
-          blob cifrado, com sessão activa opcional em memória (TTL configurável).
+          Sign Nostr events remotely. Your <span className="text-foreground/95">nsec</span> stays
+          encrypted in the vault; the server never stores it in plaintext — only an encrypted blob,
+          with an optional in-memory session (configurable TTL).
         </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <Link
             href="/onboarding"
             className="glow-primary hover:glow-primary-strong bm-btn-primary hover:scale-[1.01] active:scale-[0.99]"
           >
-            Começar grátis
+            Get started free
             <ArrowRight className="size-5 shrink-0" aria-hidden />
           </Link>
           <a
@@ -106,16 +106,16 @@ function Hero() {
             className="bm-btn-secondary font-semibold"
           >
             <Github className="size-5 shrink-0" aria-hidden />
-            Ver no GitHub
+            View on GitHub
           </a>
         </div>
         <p className="mt-8 max-w-xl text-sm leading-[1.5] text-muted-foreground">
-          Para quem prefere controlar a infraestrutura:{" "}
+          Prefer to run your own stack?{" "}
           <a
             href="#self-host"
             className="font-medium text-primary underline-offset-2 transition-colors hover:underline"
           >
-            Docker e repositório open source (MIT)
+            Docker and MIT-licensed open source repo
           </a>
           .
         </p>
@@ -128,32 +128,32 @@ function HowItWorks() {
   const steps = [
     {
       icon: KeyRound,
-      title: "Gera o keypair",
-      body: "No browser, o cofre cria o par de chaves e prepara o URI Nostr Connect (NIP-46).",
+      title: "Generate the keypair",
+      body: "In the browser, the vault creates the keypair and prepares the Nostr Connect URI (NIP-46).",
     },
     {
       icon: QrCode,
-      title: "Copia o QR",
-      body: "Mostra o QR ou o bunker URI ao teu cliente Nostr (telefone ou desktop).",
+      title: "Show the QR",
+      body: "Display the QR or bunker URI to your Nostr client (phone or desktop).",
     },
     {
       icon: Plug,
-      title: "Cola no app Nostr",
-      body: "Liga ao relay BitMacro para pedidos de assinatura estáveis, 24/7, sem expor a nsec.",
+      title: "Paste in your Nostr app",
+      body: "Connect via the BitMacro relay for stable signing requests, 24/7, without exposing your nsec.",
     },
   ];
 
   return (
     <section
-      id="como-funciona"
+      id="how-it-works"
       className="section-glow-divider relative border-t border-border/60 px-5 py-12 sm:px-6 md:py-20 lg:px-8 lg:py-24"
     >
       <div className="landing-content mx-auto max-w-6xl">
         <h2 className="mb-3 text-[clamp(1.375rem,3vw+0.75rem,1.75rem)] font-bold tracking-tight text-foreground md:text-[28px]">
-          Como funciona
+          How it works
         </h2>
         <p className="mb-10 max-w-2xl text-base leading-[1.5] text-muted-foreground md:mb-12">
-          Três passos — do keypair à assinatura remota no ecossistema BitMacro.
+          Three steps — from keypair to remote signing in the BitMacro ecosystem.
         </p>
         <ol className="grid gap-6 md:grid-cols-3 md:gap-8">
           {steps.map(({ icon: Icon, title, body }, i) => (
@@ -207,7 +207,7 @@ function CompareCellContent({ cell }: { cell: CompareCell }) {
     case "no":
       return <X className="size-4 shrink-0 text-red-400" strokeWidth={2.5} aria-hidden />;
     case "partial":
-      return <span className={COMPARE_PILL}>Parcial</span>;
+      return <span className={COMPARE_PILL}>Partial</span>;
     case "pill":
       return (
         <span className={COMPARE_PILL} title={cell.text}>
@@ -218,7 +218,7 @@ function CompareCellContent({ cell }: { cell: CompareCell }) {
       return (
         <span className="flex flex-wrap items-center gap-1.5">
           <Check className="size-4 shrink-0 text-emerald-400" strokeWidth={2.5} aria-hidden />
-          <span className={COMPARE_PILL}>fase 2</span>
+          <span className={COMPARE_PILL}>phase 2</span>
         </span>
       );
     case "yesPill":
@@ -234,69 +234,69 @@ function CompareCellContent({ cell }: { cell: CompareCell }) {
 }
 
 const COMPARISON_ROWS: CompareRow[] = [
-  { type: "category", title: "Plataforma" },
+  { type: "category", title: "Platform" },
   {
     type: "row",
-    feature: "Dispositivos suportados",
+    feature: "Supported devices",
     amber: { kind: "pill", text: "Android" },
     alby: { kind: "pill", text: "Desktop" },
-    signer: { kind: "pill", text: "Qualquer" },
+    signer: { kind: "pill", text: "Any" },
   },
   {
     type: "row",
-    feature: "Sem instalação necessária",
+    feature: "No installation required",
     amber: { kind: "no" },
     alby: { kind: "no" },
     signer: { kind: "yes" },
   },
   {
     type: "row",
-    feature: "Funciona em iOS",
+    feature: "Works on iOS",
     amber: { kind: "no" },
     alby: { kind: "no" },
     signer: { kind: "yes" },
   },
   {
     type: "row",
-    feature: "Funciona sem extensão browser",
+    feature: "Works without a browser extension",
     amber: { kind: "no" },
     alby: { kind: "no" },
     signer: { kind: "yes" },
   },
-  { type: "category", title: "Identidade" },
+  { type: "category", title: "Identity" },
   {
     type: "row",
-    feature: "Geração de keypair integrada",
+    feature: "Integrated keypair generation",
     amber: { kind: "yes" },
     alby: { kind: "yes" },
     signer: { kind: "yes" },
   },
   {
     type: "row",
-    feature: "NIP-05 incluído no plano",
+    feature: "NIP-05 included in plan",
     amber: { kind: "no" },
-    alby: { kind: "pill", text: "pago extra" },
+    alby: { kind: "pill", text: "paid add-on" },
     signer: { kind: "yes" },
   },
   {
     type: "row",
-    feature: "Lightning Address incluída",
+    feature: "Lightning Address included",
     amber: { kind: "no" },
-    alby: { kind: "pill", text: "pago extra" },
+    alby: { kind: "pill", text: "paid add-on" },
     signer: { kind: "yes" },
   },
   {
     type: "row",
-    feature: "Onboarding unificado",
-    detail: "(keypair + NIP-05 + relay + bunker num único flow)",
+    feature: "Unified onboarding",
+    detail: "(keypair + NIP-05 + relay + bunker in one flow)",
     amber: { kind: "no" },
     alby: { kind: "no" },
     signer: { kind: "yes" },
   },
-  { type: "category", title: "Segurança" },
+  { type: "category", title: "Security" },
   {
     type: "row",
-    feature: "nsec nunca exposta ao app",
+    feature: "nsec never exposed to the app",
     amber: { kind: "yes" },
     alby: { kind: "yes" },
     signer: { kind: "yes" },
@@ -310,21 +310,21 @@ const COMPARISON_ROWS: CompareRow[] = [
   },
   {
     type: "row",
-    feature: "Zero-knowledge no hosted",
+    feature: "Zero-knowledge on hosted",
     amber: { kind: "pill", text: "N/A" },
     alby: { kind: "no" },
     signer: { kind: "yes" },
   },
   {
     type: "row",
-    feature: "Recuperação via Shamir SSS",
+    feature: "Recovery via Shamir SSS",
     amber: { kind: "no" },
     alby: { kind: "no" },
     signer: { kind: "yesPhase2" },
   },
   {
     type: "row",
-    feature: "Código auditável (open source)",
+    feature: "Auditable open source code",
     amber: { kind: "yes" },
     alby: { kind: "yes" },
     signer: { kind: "yes" },
@@ -336,109 +336,109 @@ const COMPARISON_ROWS: CompareRow[] = [
     alby: { kind: "no" },
     signer: { kind: "yesPhase2" },
   },
-  { type: "category", title: "Bunker NIP-46" },
+  { type: "category", title: "NIP-46 bunker" },
   {
     type: "row",
-    feature: "Bunker remoto NIP-46",
+    feature: "Remote NIP-46 bunker",
     amber: { kind: "yes" },
     alby: { kind: "partial" },
     signer: { kind: "yes" },
   },
   {
     type: "row",
-    feature: "24/7 sem device ligado",
+    feature: "24/7 without a device online",
     amber: { kind: "no" },
     alby: { kind: "partial" },
     signer: { kind: "yes" },
   },
   {
     type: "row",
-    feature: "Policy automática de assinatura",
+    feature: "Automatic signing policy",
     amber: { kind: "no" },
     alby: { kind: "no" },
     signer: { kind: "yes" },
   },
   {
     type: "row",
-    feature: "TTL de sessão configurável",
+    feature: "Configurable session TTL",
     amber: { kind: "no" },
     alby: { kind: "no" },
     signer: { kind: "yes" },
   },
   {
     type: "row",
-    feature: "Revogação de sessão imediata",
+    feature: "Immediate session revocation",
     amber: { kind: "no" },
     alby: { kind: "no" },
     signer: { kind: "yes" },
   },
   {
     type: "row",
-    feature: "Log de assinaturas auditável",
+    feature: "Auditable signature log",
     amber: { kind: "no" },
     alby: { kind: "no" },
     signer: { kind: "yes" },
   },
   {
     type: "row",
-    feature: "Interface web de gestão",
+    feature: "Web management UI",
     amber: { kind: "no" },
     alby: { kind: "partial" },
     signer: { kind: "yes" },
   },
   {
     type: "row",
-    feature: "QR code do bunker URI",
+    feature: "Bunker URI QR code",
     amber: { kind: "yes" },
     alby: { kind: "no" },
     signer: { kind: "yes" },
   },
   {
     type: "row",
-    feature: "Managed hosted (sem ops)",
+    feature: "Managed hosted (zero ops)",
     amber: { kind: "no" },
     alby: { kind: "no" },
     signer: { kind: "yes" },
   },
   {
     type: "row",
-    feature: "Self-host disponível (Docker)",
+    feature: "Self-host available (Docker)",
     amber: { kind: "yes" },
     alby: { kind: "no" },
     signer: { kind: "yes" },
   },
-  { type: "category", title: "Ecossistema" },
+  { type: "category", title: "Ecosystem" },
   {
     type: "row",
-    feature: "Relay Nostr incluído",
+    feature: "Nostr relay included",
     amber: { kind: "no" },
     alby: { kind: "no" },
     signer: { kind: "yes" },
   },
   {
     type: "row",
-    feature: "Lightning integrado",
+    feature: "Lightning integrated",
     amber: { kind: "no" },
     alby: { kind: "yes" },
     signer: { kind: "yes" },
   },
   {
     type: "row",
-    feature: "Pagamentos nativos Lightning",
+    feature: "Native Lightning payments",
     amber: { kind: "no" },
     alby: { kind: "yes" },
     signer: { kind: "yes" },
   },
   {
     type: "row",
-    feature: "SDK para developers",
+    feature: "Developer SDK",
     amber: { kind: "no" },
     alby: { kind: "no" },
     signer: { kind: "yesPill", pill: "@bitmacro/relay-connect" },
   },
   {
     type: "row",
-    feature: "Stack completo num produto",
+    feature: "Full stack in one product",
     amber: { kind: "no" },
     alby: { kind: "no" },
     signer: { kind: "yes" },
@@ -454,16 +454,15 @@ function ComparisonTable() {
 
   return (
     <section
-      id="comparacao"
+      id="compare"
       className="section-glow-divider relative border-t border-border/60 px-5 py-12 sm:px-6 md:py-20 lg:px-8 lg:py-24"
     >
       <div className="landing-content mx-auto max-w-6xl">
         <h2 className="mb-3 text-[clamp(1.375rem,3vw+0.75rem,1.75rem)] font-bold tracking-tight text-foreground md:text-[28px]">
-          Comparação
+          Comparison
         </h2>
         <p className="mb-10 max-w-2xl text-base leading-[1.5] text-muted-foreground">
-          BitMacro Signer frente a soluções conhecidas no ecossistema Nostr — funcionalidades por
-          categoria.
+          BitMacro Signer compared to familiar options in the Nostr ecosystem — features by category.
         </p>
         <div className="glass-card elevation-1 overflow-x-auto rounded-xl border border-border">
           <table className="w-full min-w-[720px] border-collapse text-left text-sm md:text-[15px]">
@@ -473,7 +472,7 @@ function ComparisonTable() {
                   scope="col"
                   className="border-b border-border px-3 py-4 text-left text-sm font-semibold text-muted-foreground"
                 >
-                  Característica
+                  Feature
                 </th>
                 <th
                   scope="col"
@@ -492,7 +491,7 @@ function ComparisonTable() {
                   className="border-b border-border bg-[rgba(0,102,255,0.09)] px-3 py-4 text-center align-bottom text-sm font-semibold text-foreground"
                 >
                   <span className="mb-2 inline-flex rounded-full border border-blue-500/35 bg-blue-500/15 px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-blue-200 sm:text-xs">
-                    recomendado
+                    Recommended
                   </span>
                   <span className="mt-1 block text-sm font-semibold text-foreground sm:text-base">
                     BitMacro Signer
@@ -551,12 +550,12 @@ function ComparisonTable() {
         </div>
         <div className="mt-6 space-y-3 text-sm leading-[1.5] text-muted-foreground">
           <p>
-            <span className="font-medium text-foreground/90">fase 2</span> = roadmap previsto, não
-            disponível no MVP.
+            <span className="font-medium text-foreground/90">phase 2</span> = on the roadmap, not
+            in the MVP.
           </p>
           <p>
-            Amber e Alby são projectos independentes — comparação baseada em funcionalidades
-            típicas do modelo, não ranking absoluto.
+            Amber and Alby are independent projects — this compares typical product capabilities, not
+            an absolute ranking.
           </p>
         </div>
       </div>
@@ -578,23 +577,23 @@ function SelfHost() {
               Self-host
             </div>
             <h2 className="mb-3 text-[clamp(1.375rem,3vw+0.75rem,1.75rem)] font-bold tracking-tight text-foreground md:text-[28px]">
-              Corre na tua infraestrutura
+              Run on your infrastructure
             </h2>
             <p className="mb-6 text-base leading-[1.5] text-muted-foreground">
-              Imagem Docker com Next.js em modo <code className="font-mono text-sm text-primary">standalone</code>.
-              Copia as variáveis de ambiente, constrói e sobe — sem passos extra além do{" "}
+              Docker image with Next.js in <code className="font-mono text-sm text-primary">standalone</code>{" "}
+              mode. Copy environment variables, build, and run — no extra steps beyond{" "}
               <code className="font-mono text-sm text-foreground/95">.env</code>.
             </p>
             <ul className="mb-8 space-y-4 text-base leading-[1.5] text-muted-foreground">
               <li className="flex gap-3">
                 <Lock className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
-                <span>Secrets só no host — nunca commits de chaves.</span>
+                <span>Secrets stay on the host — never commit keys.</span>
               </li>
               <li className="flex gap-3">
                 <Server className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
                 <span>
-                  Healthcheck em <code className="font-mono text-sm text-foreground/90">/api/health</code> para
-                  orquestração.
+                  <code className="font-mono text-sm text-foreground/90">/api/health</code> for
+                  orchestration health checks.
                 </span>
               </li>
             </ul>
@@ -604,7 +603,7 @@ function SelfHost() {
               rel="noopener noreferrer"
               className="inline-flex min-h-11 items-center gap-2 rounded-md text-base font-semibold text-primary underline-offset-2 transition-colors hover:underline"
             >
-              Dockerfile, compose e README no GitHub
+              Dockerfile, Compose, and README on GitHub
               <ArrowRight className="size-5 shrink-0" aria-hidden />
             </a>
           </div>
@@ -642,10 +641,10 @@ function Footer() {
             GitHub
           </a>
           {" · "}
-          <span className="text-muted-foreground">Licença MIT</span>
+          <span className="text-muted-foreground">MIT License</span>
         </p>
         <p className="text-center text-sm leading-normal text-muted-foreground sm:text-right">
-          signer.bitmacro.io — bunker NIP-46 gerido
+          signer.bitmacro.io — managed NIP-46 bunker
         </p>
       </div>
     </footer>

@@ -1,4 +1,4 @@
 /**
- * Intenção: cliente Supabase para browser (`createBrowserClient` de `@supabase/ssr`) — sessão e dados partilhados do ecossistema.
+ * Browser Supabase client (`createBrowserClient` from `@supabase/ssr`) — session and shared ecosystem data.
  */
 export {};

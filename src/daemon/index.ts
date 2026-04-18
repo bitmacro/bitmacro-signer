@@ -1,6 +1,6 @@
 /**
- * Standalone bunker process (Server / Docker). NIP-46 via HTTP interno (signer-web → daemon).
- * Arranca a frio: sem DAEMON_VAULT_PASSPHRASE; nsec entra só por POST /internal/unlock.
+ * Standalone bunker process (Server / Docker). NIP-46 via internal HTTP (signer-web → daemon).
+ * Cold start: no DAEMON_VAULT_PASSPHRASE; nsec is supplied only via POST /internal/unlock.
  */
 
 import type http from "node:http";
@@ -61,7 +61,7 @@ async function shutdown(signal: string): Promise<void> {
 }
 
 function main(): void {
-  /** Sem isto, `relayConnectLog` no nip46-loop não escreve lado algum — docker logs ficavam mudos. */
+  /** Without this, `relayConnectLog` in nip46-loop writes nowhere — Docker logs would stay silent. */
   setRelayConnectLogSink(
     (entry) => {
       const ctx = entry.context ? ` ${JSON.stringify(entry.context)}` : "";

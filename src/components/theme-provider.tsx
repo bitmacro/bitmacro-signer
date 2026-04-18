@@ -1,4 +1,4 @@
 /**
- * Intenção: wrapper fino em torno de `ThemeProvider` do `next-themes` (attribute class, defaultTheme, enableSystem).
+ * Thin wrapper around `next-themes` `ThemeProvider` (attribute class, defaultTheme, enableSystem).
  */
 export {};

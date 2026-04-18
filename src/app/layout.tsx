@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     template: "%s · BitMacro Signer",
   },
   description:
-    "Bunker NIP-46 gerido pela BitMacro — assinatura remota Nostr sem expor a nsec ao servidor.",
+    "BitMacro-managed NIP-46 bunker — remote Nostr signing without exposing nsec to the server.",
   applicationName: "BitMacro Signer",
   metadataBase: new URL("https://signer.bitmacro.io"),
   manifest: "/site.webmanifest",
@@ -67,17 +67,17 @@ export const metadata: Metadata = {
   openGraph: {
     title: "BitMacro Signer",
     description:
-      "Bunker NIP-46 gerido — cofre encriptado, assinatura remota via relay BitMacro.",
+      "Managed NIP-46 bunker — encrypted vault, remote signing via BitMacro relay.",
     url: "https://signer.bitmacro.io",
     siteName: "BitMacro Signer",
-    locale: "pt_PT",
+    locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "BitMacro Signer",
     description:
-      "Bunker NIP-46 gerido — cofre encriptado, assinatura remota via relay BitMacro.",
+      "Managed NIP-46 bunker — encrypted vault, remote signing via BitMacro relay.",
   },
 };
 
@@ -88,7 +88,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="pt"
+      lang="en"
       className={`${fontSans.variable} ${fontMono.variable} dark`}
       suppressHydrationWarning
     >

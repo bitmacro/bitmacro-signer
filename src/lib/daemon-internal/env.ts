@@ -1,6 +1,6 @@
 /**
- * Self-host: signer-web chama o processo signer-daemon na rede Docker (HTTP interno).
- * Se DAEMON_INTERNAL_URL não estiver definido, o bunker corre no mesmo processo Next (dev local).
+ * Self-host: signer-web calls signer-daemon over the Docker network (internal HTTP).
+ * If DAEMON_INTERNAL_URL is unset, the bunker runs in the same Next process (local dev).
  */
 
 export type DaemonInternalConfig = {
@@ -9,8 +9,8 @@ export type DaemonInternalConfig = {
 };
 
 /**
- * @returns null se o bunker NIP-46 deve correr in-process (sem daemon remoto).
- * @throws Error se DAEMON_INTERNAL_URL está definido mas falta token (config inválida).
+ * @returns null if the NIP-46 bunker should run in-process (no remote daemon).
+ * @throws Error if DAEMON_INTERNAL_URL is set but the token is missing (invalid config).
  */
 export function getDaemonInternalConfig(): DaemonInternalConfig | null {
   const baseUrl = process.env.DAEMON_INTERNAL_URL?.trim();

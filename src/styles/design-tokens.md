@@ -1,31 +1,31 @@
-# BitMacro Signer — design tokens (referência ecossistema)
+# BitMacro Signer — design tokens (ecosystem reference)
 
-Este documento descreve os tokens visuais e padrões **mobile-first** usados no `bitmacro-signer`. Serve de referência alinhada para **relay-panel**, **bitmacro-app**, **bitmacro-id** e futuras apps BitMacro.
+This document describes the visual tokens and **mobile-first** patterns used in `bitmacro-signer`. It is the aligned reference for **relay-panel**, **bitmacro-app**, **bitmacro-id**, and future BitMacro apps.
 
-**Princípios:** fundo `#080808`, texto principal branco, acento `#0066FF`; alvo de toque mínimo **44×44px**; **16px** mínimo em campos de formulário (evita zoom em iOS); corpo com **line-height ≥ 1.5** em mobile.
+**Principles:** background `#080808`, primary text white, accent `#0066FF`; minimum touch target **44×44px**; **16px** minimum on form fields (avoids iOS zoom); body **line-height ≥ 1.5** on mobile.
 
 ---
 
-## 1. Tipografia responsiva
+## 1. Responsive typography
 
-### Hierarquia
+### Hierarchy
 
-| Papel        | Mobile (≈390px) | Tablet / desktop | Peso        | Line-height (corpo) |
-|-------------|-----------------|------------------|------------|---------------------|
+| Role        | Mobile (≈390px) | Tablet / desktop | Weight     | Line-height (body) |
+|-------------|-----------------|------------------|------------|--------------------|
 | Display / H1 | `clamp(1.75rem, 5.2vw + 0.85rem, 2.75rem)` (~28–44px) | `md:` ~40px, `lg:` ~44px | 700 (bold) | 1.15–1.2 |
-| H2 / secção | `clamp(1.375rem, 3vw + 0.75rem, 1.75rem)` (~22–28px) | `md:text-[28px]` | 700 | 1.2–1.25 |
-| H3 / cartão | `text-lg` (18px) | `text-lg`–`xl` | 600 | 1.3 |
-| Body        | `text-base` (16px) | `md:text-[17px]` opcional | 400–500 | **≥ 1.5** |
-| Label / UI  | `text-sm` (14px) | idem | 500–600 | 1.4–1.5 |
-| Eyebrow / mono | `text-xs` (12px) | `sm:text-sm` opcional | 500–600 | 1.4 |
+| H2 / section | `clamp(1.375rem, 3vw + 0.75rem, 1.75rem)` (~22–28px) | `md:text-[28px]` | 700 | 1.2–1.25 |
+| H3 / card   | `text-lg` (18px) | `text-lg`–`xl` | 600 | 1.3 |
+| Body        | `text-base` (16px) | optional `md:text-[17px]` | 400–500 | **≥ 1.5** |
+| Label / UI  | `text-sm` (14px) | same | 500–600 | 1.4–1.5 |
+| Eyebrow / mono | `text-xs` (12px) | optional `sm:text-sm` | 500–600 | 1.4 |
 
-### Regras
+### Rules
 
-- **Inputs e textareas editáveis:** sempre `text-base` (16px) ou superior.
-- **Texto corrido em mobile:** `text-base leading-[1.5]` (ou `leading-normal` se o design system fixar 1.5 no `body`).
-- Títulos podem usar `tracking-tight`; corpo mantém tracking normal.
+- **Editable inputs and textareas:** always `text-base` (16px) or larger.
+- **Body copy on mobile:** `text-base leading-[1.5]` (or `leading-normal` if the design system fixes 1.5 on `body`).
+- Headings may use `tracking-tight`; body keeps default tracking.
 
-### Exemplos Tailwind
+### Tailwind examples
 
 ```html
 <h1 class="text-[clamp(1.75rem,5.2vw+0.85rem,2.75rem)] font-bold leading-[1.15] tracking-tight text-foreground md:text-[2.5rem] lg:text-[2.75rem]">
@@ -35,48 +35,48 @@ Este documento descreve os tokens visuais e padrões **mobile-first** usados no 
 
 ---
 
-## 2. Paleta e contraste (WCAG 2.2)
+## 2. Color palette and contrast (WCAG 2.2)
 
-Valores abaixo assumem **fundo `#080808`** (ou equivalente `--background`). Razões **aproximadas** (AA: texto normal ≥ **4.5:1**, texto grande ≥ **3:1**; UI não textual ≥ **3:1** onde aplicável).
+Values below assume **background `#080808`** (or `--background`). Ratios are **approximate** (AA: normal text ≥ **4.5:1**, large text ≥ **3:1**; non-text UI ≥ **3:1** where applicable).
 
-| Token / uso | Hex | Notas de contraste vs `#080808` |
-|-------------|-----|----------------------------------|
+| Token / use | Hex | Contrast notes vs `#080808` |
+|-------------|-----|------------------------------|
 | **Background** | `#080808` | Base |
-| **Foreground** | `#FFFFFF` | Texto principal — ~**19:1** |
-| **Foreground suave** | `#F4F4F5` | Cartões / títulos secundários — muito alto |
-| **Muted (secundário)** | `#A8B4C8` (`--muted-foreground`) | Corpo secundário — ~**8:1** (AA normal) |
-| **Primary / acento** | `#0066FF` | Links e marca; sobre fundo escuro cumpre melhor como **grande** ou com **sublinhado** + peso 600; botões preenchidos usam **texto branco sobre `#0066FF`** (~**4.7:1**) |
-| **Primary foreground** | `#FFFFFF` | Sobre botão primário |
-| **Border** | `#2A2E38` | Separadores — contraste de **UI** |
-| **Card** | `#101012` | Superfície elevada |
-| **Muted surface** | `#1C1C20` | Listas / secções |
+| **Foreground** | `#FFFFFF` | Primary text — ~**19:1** |
+| **Soft foreground** | `#F4F4F5` | Cards / secondary headings — very high |
+| **Muted (secondary)** | `#A8B4C8` (`--muted-foreground`) | Secondary body — ~**8:1** (AA normal) |
+| **Primary / accent** | `#0066FF` | Brand / links; on dark backgrounds works best as **large** text or with **underline** + weight 600; filled buttons use **white on `#0066FF`** (~**4.7:1**) |
+| **Primary foreground** | `#FFFFFF` | On primary button |
+| **Border** | `#2A2E38` | Dividers — UI contrast |
+| **Card** | `#101012` | Elevated surface |
+| **Muted surface** | `#1C1C20` | Lists / sections |
 
-### Boas práticas
+### Practices
 
-- Evitar cinzentos tipo `zinc-500` em texto longo sobre `#080808`; preferir **`zinc-300`–`zinc-400`** ou o token `muted-foreground`.
-- **Links** em linha: `text-primary` + `underline-offset-2` + `font-semibold` quando o azul isolado não for suficiente para leitura contínua.
-- Estados de foco: `focus:ring-2 focus:ring-ring` com `ring-offset-background`.
+- Avoid `zinc-500`-style grays for long text on `#080808`; prefer **`zinc-300`–`zinc-400`** or `muted-foreground`.
+- **Inline links:** `text-primary` + `underline-offset-2` + `font-semibold` when blue alone is not enough for continuous reading.
+- Focus: `focus:ring-2 focus:ring-ring` with `ring-offset-background`.
 
-### CSS (referência)
+### CSS reference
 
-Definido em `src/app/globals.css` (`:root` + `@theme inline`). Preferir `bg-background`, `text-foreground`, `text-muted-foreground`, `border-border`, `bg-primary`, `text-primary-foreground`.
+Defined in `src/app/globals.css` (`:root` + `@theme inline`). Prefer `bg-background`, `text-foreground`, `text-muted-foreground`, `border-border`, `bg-primary`, `text-primary-foreground`.
 
 ---
 
-## 3. Espaçamento
+## 3. Spacing
 
-| Token / regra | Valor | Uso |
-|---------------|-------|-----|
-| **Gutter horizontal mobile** | **20px** | `px-5` em contentores principais |
-| **Gutter sm+** | 24px | `sm:px-6` |
-| **Gutter lg+** | 32px | `lg:px-8` (landing) |
-| **Secção vertical mobile** | **48px+** | `py-12` mínimo entre secções |
-| **Secção desktop** | 80–96px | `md:py-20`, `lg:py-24` |
-| **Stack interno (form / cartão)** | 16–20px | `gap-3`–`gap-5`, `space-y-4`–`space-y-5` |
-| **Padding cartão mobile** | **20px** | `p-5` |
-| **Raio base** | 8px (`0.5rem`) | `--radius`; cartões `rounded-xl` / `rounded-2xl` conforme contexto |
+| Token / rule | Value | Use |
+|--------------|-------|-----|
+| **Mobile horizontal gutter** | **20px** | `px-5` on main containers |
+| **sm+ gutter** | 24px | `sm:px-6` |
+| **lg+ gutter** | 32px | `lg:px-8` (landing) |
+| **Mobile section vertical** | **48px+** | at least `py-12` between sections |
+| **Desktop section** | 80–96px | `md:py-20`, `lg:py-24` |
+| **Inner stack (form / card)** | 16–20px | `gap-3`–`gap-5`, `space-y-4`–`space-y-5` |
+| **Mobile card padding** | **20px** | `p-5` |
+| **Base radius** | 8px (`0.5rem`) | `--radius`; cards `rounded-xl` / `rounded-2xl` by context |
 
-### Exemplos Tailwind
+### Tailwind examples
 
 ```html
 <section class="px-5 py-12 sm:px-6 md:py-20 lg:px-8 lg:py-24">
@@ -86,67 +86,67 @@ Definido em `src/app/globals.css` (`:root` + `@theme inline`). Preferir `bg-back
 
 ---
 
-## 4. Componentes interactivos (mínimos)
+## 4. Interactive components (minimums)
 
-| Componente | Altura mín. | Texto | Peso | Largura |
-|------------|-------------|-------|------|---------|
-| **Botão primário** | **52px** | `text-base` (16px) | **600** | `w-full` mobile, `sm:w-auto` + `sm:max-w-md` ou natural |
-| **Botão secundário / outline** | **52px** | `text-base` | **600** | Idem |
+| Component | Min height | Text | Weight | Width |
+|-----------|------------|------|--------|-------|
+| **Primary button** | **52px** | `text-base` (16px) | **600** | `w-full` mobile, `sm:w-auto` + `sm:max-w-md` or intrinsic |
+| **Secondary / outline** | **52px** | `text-base` | **600** | Same |
 | **Input / select** | **48px** | `text-base` | — | `w-full` |
-| **Área de toque secundária** (links nav) | **44px** | `text-sm`+ | — | `inline-flex min-h-11 items-center px-2.5` |
-| **Passo / chip circular** | **44px** | `text-base` | 600 | `size-11` |
+| **Secondary touch** (nav links) | **44px** | `text-sm`+ | — | `inline-flex min-h-11 items-center px-2.5` |
+| **Step / circular chip** | **44px** | `text-base` | 600 | `size-11` |
 
-### Classes utilitárias (globals)
+### Utility classes (globals)
 
-- **`bm-btn-primary`** — CTA primário (full width até `sm`).
-- **`bm-btn-secondary`** — outline / secundário.
-- **`bm-input`** — campo com altura e tipo legível em mobile.
-- **`bm-label`** — legenda de formulário.
+- **`bm-btn-primary`** — primary CTA (full width until `sm`).
+- **`bm-btn-secondary`** — outline / secondary.
+- **`bm-input`** — field with mobile-friendly height and type size.
+- **`bm-label`** — form label.
 
 ```html
-<a class="bm-btn-primary glow-primary">Começar</a>
-<button type="button" class="bm-btn-secondary">Cancelar</button>
+<a class="bm-btn-primary glow-primary">Get started</a>
+<button type="button" class="bm-btn-secondary">Cancel</button>
 <label class="bm-label" for="email">Email</label>
 <input id="email" class="bm-input" autocomplete="email" />
 ```
 
 ---
 
-## 5. Layout responsivo (mobile → tablet → desktop)
+## 5. Responsive layout (mobile → tablet → desktop)
 
-| Breakpoint | Largura típica | Padrão |
-|------------|----------------|--------|
-| **Base** | 0–639px | Uma coluna; botões full width; `px-5`; secções `py-12` |
-| **sm** | ≥640px | Mesmo conteúdo; pode manter gutters `px-6`; CTAs `sm:flex-row` |
-| **md** | ≥768px | Grelhas 2–3 colunas; tipografia de secção maior; `md:py-20` |
-| **lg** | ≥1024px | `max-w-6xl` centrado; comparativos em tabela com scroll horizontal se necessário |
+| Breakpoint | Typical width | Pattern |
+|------------|---------------|---------|
+| **Base** | 0–639px | Single column; full-width buttons; `px-5`; sections `py-12` |
+| **sm** | ≥640px | Same content; gutters `px-6`; CTAs `sm:flex-row` |
+| **md** | ≥768px | 2–3 column grids; larger section type; `md:py-20` |
+| **lg** | ≥1024px | Centered `max-w-6xl`; wide tables with horizontal scroll if needed |
 
 ### Landing
 
-- Conteúdo em `landing-content` + `max-w-6xl` + gutters progressivos.
-- Tabelas largas: `overflow-x-auto` + `min-w-[720px]` na `<table>`.
+- Content in `landing-content` + `max-w-6xl` + progressive gutters.
+- Wide tables: `overflow-x-auto` + `min-w-[720px]` on `<table>`.
 
-### App (onboarding / sessões)
+### App (onboarding / sessions)
 
-- Coluna única `max-w-lg` / `max-w-3xl`; mesmo gutter `px-5`.
-- Cartões de sessão: `p-5`, `rounded-xl`, stacks `gap-3`–`gap-4`.
-
----
-
-## 6. Alinhamento com Tailwind 4
-
-- Tokens de cor vêm de `@theme inline` mapeados a variáveis `:root`.
-- Preferir **classes semânticas** (`bg-background`, `text-muted-foreground`) na landing; páginas com zinc explícito devem migrar gradualmente para estes tokens para contraste consistente.
-- Para tipografia fluida, combinar `clamp()` em `text-[…]` com prefixos `md:` / `lg:` onde necessário.
+- Single column `max-w-lg` / `max-w-3xl`; same `px-5` gutter.
+- Session cards: `p-5`, `rounded-xl`, stacks `gap-3`–`gap-4`.
 
 ---
 
-## 7. Referências
+## 6. Tailwind 4 alignment
+
+- Color tokens come from `@theme inline` mapped to `:root` variables.
+- Prefer **semantic classes** (`bg-background`, `text-muted-foreground`) on the landing; pages using raw `zinc` should migrate toward these tokens for consistent contrast.
+- For fluid type, combine `clamp()` in `text-[…]` with `md:` / `lg:` where needed.
+
+---
+
+## 7. References
 
 - [WCAG 2.2 Contrast (1.4.3)](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html)
-- [WCAG 2.2 Target Size (2.5.5)](https://www.w3.org/WAI/WCAG22/Understanding/target-size-enhanced.html) — mínimo recomendado **44×44px**.
-- Apple HIG — alvos de toque semelhantes.
+- [WCAG 2.2 Target Size (2.5.5)](https://www.w3.org/WAI/WCAG22/Understanding/target-size-enhanced.html) — recommended minimum **44×44px**.
+- Apple HIG — similar touch target guidance.
 
 ---
 
-*Última revisão: auditoria mobile-first do BitMacro Signer (landing, onboarding, sessões).*
+*Last updated: BitMacro Signer mobile-first audit (landing, onboarding, sessions).*

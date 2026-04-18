@@ -1,7 +1,7 @@
 {
   "name": "BitMacro Signer",
   "short_name": "Signer",
-  "description": "Bunker NIP-46 gerido — assinatura remota Nostr",
+  "description": "Managed NIP-46 bunker — remote Nostr signing",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#080808",

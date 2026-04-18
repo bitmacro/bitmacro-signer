@@ -1,4 +1,4 @@
 /**
- * Intenção: tipos auxiliares Nostr / NIP-46 não cobertos por `nostr-tools` — extensões mínimas para o bunker.
+ * Auxiliary Nostr / NIP-46 types not covered by `nostr-tools` — minimal extensions for the bunker.
  */
 export {};

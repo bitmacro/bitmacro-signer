@@ -80,7 +80,7 @@ export async function authorizeApp(
       resolvedAppPk = nostrPubkeyInputToHex(appPubkey.trim());
     } catch (e) {
       throw new Error(
-        e instanceof Error ? e.message : "app_pubkey: npub ou hex inválido",
+        e instanceof Error ? e.message : "app_pubkey: invalid npub or hex",
       );
     }
   } else {

@@ -1,4 +1,4 @@
 /**
- * Intenção: agregador de providers do cliente — ThemeProvider e futuros contextos mínimos (sem Radix por defeito).
+ * Client provider aggregator — ThemeProvider and future minimal contexts (no Radix by default).
  */
 export {};

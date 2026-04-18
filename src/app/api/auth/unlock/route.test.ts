@@ -160,7 +160,7 @@ describe("POST /api/auth/unlock", () => {
     );
     expect(res.status).toBe(401);
     const j = (await res.json()) as { error: string };
-    expect(j.error).toBe("Passphrase incorrecta");
+      expect(j.error).toBe("Incorrect passphrase");
     expect(mocks.startBunker).not.toHaveBeenCalled();
   });
 

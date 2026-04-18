@@ -61,11 +61,11 @@ function SessionCard({
         <p className="text-lg font-semibold leading-snug text-white">{row.app_name}</p>
       ) : (
         <p className="text-base leading-[1.5] text-zinc-400">
-          Sem etiqueta — definida ao gerar o QR no onboarding
+          No label — set when generating the QR in onboarding
         </p>
       )}
       <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-zinc-400">
-        Chave de sessão no cliente (NIP-46)
+        Client session key (NIP-46)
       </p>
       {clientNpub ? (
         <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-stretch sm:justify-between">
@@ -85,12 +85,12 @@ function SessionCard({
             ) : (
               <Copy className="size-4" aria-hidden />
             )}
-            {copiedKey === kNpub ? "Copiado" : "Copiar npub"}
+            {copiedKey === kNpub ? "Copied" : "Copy npub"}
           </button>
         </div>
       ) : null}
       <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-zinc-400">
-        Hex (técnico)
+        Hex (technical)
       </p>
       <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-stretch sm:justify-between">
         <code
@@ -109,12 +109,12 @@ function SessionCard({
           ) : (
             <Copy className="size-4" aria-hidden />
           )}
-          {copiedKey === kHex ? "Copiado" : "Copiar hex"}
+          {copiedKey === kHex ? "Copied" : "Copy hex"}
         </button>
       </div>
       <div className="mt-4 text-sm leading-[1.5] text-zinc-400">
-        expira {new Date(row.expires_at).toLocaleString()}{" "}
-        {row.used ? "· usada" : "· pendente"}
+        expires {new Date(row.expires_at).toLocaleString()}{" "}
+        {row.used ? "· used" : "· pending"}
       </div>
     </li>
   );
@@ -135,7 +135,7 @@ export default function SessionsPage() {
       if (!st.ok) {
         setIdentityId(null);
         setRows(null);
-        setError("Sessão necessária");
+        setError("Session required");
         return;
       }
       const { identity_id } = (await st.json()) as { identity_id: string };
@@ -147,12 +147,12 @@ export default function SessionsPage() {
       );
       if (!res.ok) {
         const j = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(j.error ?? "Erro ao listar sessões");
+        throw new Error(j.error ?? "Failed to list sessions");
       }
       const data = (await res.json()) as SessionRow[];
       setRows(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro");
+      setError(e instanceof Error ? e.message : "Error");
       setRows(null);
     } finally {
       setLoading(false);
@@ -174,22 +174,22 @@ export default function SessionsPage() {
             BitMacro Signer
           </p>
           <h1 className="mt-2 text-[clamp(1.5rem,3vw+0.85rem,1.875rem)] font-bold leading-tight text-white">
-            Sessões activas
+            Active sessions
           </h1>
           {identityId ? (
             <p className="mt-3 break-all font-mono text-sm text-zinc-400">{identityId}</p>
           ) : null}
           <p className="mt-4 max-w-2xl text-base leading-[1.5] text-zinc-300">
-            O NIP-46 não envia o nome da app: usa a <strong className="font-semibold text-zinc-100">chave de sessão</strong>{" "}
-            (npub/hex abaixo). Se definires uma <strong className="font-semibold text-zinc-100">etiqueta</strong> ao gerar o
-            QR, ela aparece em destaque.
+            NIP-46 does not send the app name: use the <strong className="font-semibold text-zinc-100">session key</strong>{" "}
+            (npub/hex below). If you set a <strong className="font-semibold text-zinc-100">label</strong> when generating the
+            QR, it is shown prominently.
           </p>
         </header>
 
         {loading ? (
           <div className="flex min-h-12 items-center gap-3 text-base text-zinc-300">
             <Loader2 className="size-5 shrink-0 animate-spin" aria-hidden />
-            A carregar…
+            Loading…
           </div>
         ) : null}
 
@@ -207,7 +207,7 @@ export default function SessionsPage() {
         ) : null}
 
         {rows && rows.length === 0 ? (
-          <p className="text-base leading-[1.5] text-zinc-400">Nenhuma sessão de cliente.</p>
+          <p className="text-base leading-[1.5] text-zinc-400">No client sessions.</p>
         ) : null}
 
         {rows && rows.length > 0 ? (
@@ -232,7 +232,7 @@ export default function SessionsPage() {
             className="inline-flex min-h-11 items-center font-semibold underline-offset-2 hover:underline"
             style={{ color: ACCENT }}
           >
-            ← Voltar ao onboarding
+            ← Back to onboarding
           </Link>
         </p>
       </div>

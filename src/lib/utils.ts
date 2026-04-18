@@ -1,4 +1,4 @@
 /**
- * Intenção: `cn()` com `clsx` + `tailwind-merge` (padrão BitMacro) e pequenos helpers de formatação.
+ * `cn()` with `clsx` + `tailwind-merge` (BitMacro default) and small formatting helpers.
  */
 export {};

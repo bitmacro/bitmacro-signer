@@ -25,7 +25,7 @@ async function fetchWithAuth(
 }
 
 /**
- * Envia nsec ao daemon (rede interna). O caller deve zerar a string após sucesso/erro.
+ * Sends nsec to the daemon (internal network). The caller should clear the string after success/failure.
  */
 export async function notifyDaemonUnlock(
   cfg: DaemonInternalConfig,

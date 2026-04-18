@@ -1,5 +1,5 @@
 /**
- * Bunker NIP-46 — relay loop (`nip46-loop`) e métodos puros (`nip46-methods`) para interop com `nostr-tools` / BitMacro Connect.
+ * NIP-46 bunker — relay loop (`nip46-loop`) and pure helpers (`nip46-methods`) for `nostr-tools` / BitMacro Connect interop.
  */
 
 export {

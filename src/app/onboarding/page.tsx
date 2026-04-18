@@ -37,15 +37,15 @@ function truncateMiddle(s: string, keep = 14): string {
 }
 
 async function parseUnlockError(res: Response): Promise<string> {
-  if (res.status === 401) return "Passphrase incorrecta";
-  if (res.status === 404) return "Npub não registado nesta Identity";
+  if (res.status === 401) return "Incorrect passphrase";
+  if (res.status === 404) return "Npub not registered for this Identity";
   try {
     const j = (await res.json()) as { error?: string };
     if (j.error) return j.error;
   } catch {
     /* ignore */
   }
-  return "Erro ao desbloquear";
+  return "Failed to unlock";
 }
 
 export default function OnboardingPage() {
@@ -65,7 +65,7 @@ export default function OnboardingPage() {
   const [encryptPassword, setEncryptPassword] = useState("");
 
   const [bunkerUri, setBunkerUri] = useState<string | null>(null);
-  /** Etiqueta humana para esta ligação (guardada como app_name; o NIP-46 não envia o nome da app). */
+  /** Human-readable label for this connection (stored as app_name; NIP-46 does not send the app name). */
   const [sessionLabel, setSessionLabel] = useState("");
   const [copied, setCopied] = useState(false);
 
@@ -125,7 +125,7 @@ export default function OnboardingPage() {
       try {
         body.app_pubkey = nostrPubkeyInputToHex(clientPubkeyRaw.trim());
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Pubkey do cliente inválido");
+        setError(e instanceof Error ? e.message : "Invalid client pubkey");
         setLoading(false);
         return;
       }
@@ -142,15 +142,15 @@ export default function OnboardingPage() {
         error?: string;
       };
       if (!res.ok) {
-        throw new Error(data.error ?? "Não foi possível criar a sessão");
+        throw new Error(data.error ?? "Could not create session");
       }
       if (!data.bunker_uri) {
-        throw new Error("Resposta sem bunker_uri");
+        throw new Error("Response missing bunker_uri");
       }
       setBunkerUri(data.bunker_uri);
       setPhase(3);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro");
+      setError(err instanceof Error ? err.message : "Error");
     } finally {
       setLoading(false);
     }
@@ -190,7 +190,7 @@ export default function OnboardingPage() {
       setBunkerUri(null);
       setPhase(3);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro");
+      setError(err instanceof Error ? err.message : "Error");
     } finally {
       setLoading(false);
     }
@@ -202,11 +202,11 @@ export default function OnboardingPage() {
     const npub = npubDisplay.trim();
     const nsecRef = vaultNsecRef.current;
     if (!npub || !nsecRef) {
-      setError("Gera o par ou recarrega a opção «Não tenho npub ainda».");
+      setError("Generate the keypair or reload the “I don’t have an npub yet” option.");
       return;
     }
     if (!encryptPassword) {
-      setError("Indica a passphrase do cofre.");
+      setError("Enter the vault passphrase.");
       return;
     }
 
@@ -223,11 +223,11 @@ export default function OnboardingPage() {
         error?: string;
       };
       if (!bootRes.ok) {
-        throw new Error(bootJson.error ?? "Não foi possível criar a identidade");
+        throw new Error(bootJson.error ?? "Could not create identity");
       }
       const id = bootJson.identity_id?.trim();
       if (!id) {
-        throw new Error("Resposta sem identity_id");
+        throw new Error("Response missing identity_id");
       }
       setIdentityId(id);
 
@@ -250,7 +250,7 @@ export default function OnboardingPage() {
         error?: string;
       };
       if (!vaultRes.ok) {
-        throw new Error(vJson.error ?? "Erro ao guardar o cofre");
+        throw new Error(vJson.error ?? "Failed to save vault");
       }
 
       const unlockRes = await fetch("/api/auth/unlock", {
@@ -269,7 +269,7 @@ export default function OnboardingPage() {
       setBunkerUri(null);
       setPhase(3);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro");
+      setError(err instanceof Error ? err.message : "Error");
     } finally {
       setLoading(false);
     }
@@ -280,7 +280,7 @@ export default function OnboardingPage() {
     setError(null);
     const id = identityId.trim();
     if (!id) {
-      setError("identity_id em falta — volta ao passo 1.");
+      setError("Missing identity_id — go back to step 1.");
       return;
     }
 
@@ -288,13 +288,13 @@ export default function OnboardingPage() {
     try {
       const raw = nsecImport.trim();
       if (!raw) {
-        setError("Cola a tua nsec.");
+        setError("Paste your nsec.");
         setLoading(false);
         return;
       }
       const dec = nip19.decode(raw);
       if (dec.type !== "nsec") {
-        setError("Formato nsec inválido (esperado nsec1…).");
+        setError("Invalid nsec format (expected nsec1…).");
         setLoading(false);
         return;
       }
@@ -302,13 +302,13 @@ export default function OnboardingPage() {
       const derived = nip19.npubEncode(getPublicKey(sk));
       sk.fill(0);
       if (derived !== npubInput.trim()) {
-        setError("Esta nsec não corresponde ao teu npub");
+        setError("This nsec does not match your npub");
         setLoading(false);
         return;
       }
 
       if (!encryptPassword) {
-        setError("Indica a passphrase do cofre.");
+        setError("Enter the vault passphrase.");
         setLoading(false);
         return;
       }
@@ -332,7 +332,7 @@ export default function OnboardingPage() {
         error?: string;
       };
       if (!vaultRes.ok) {
-        throw new Error(vJson.error ?? "Erro ao guardar o cofre");
+        throw new Error(vJson.error ?? "Failed to save vault");
       }
 
       const unlockRes = await fetch("/api/auth/unlock", {
@@ -351,7 +351,7 @@ export default function OnboardingPage() {
       setBunkerUri(null);
       setPhase(3);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro");
+      setError(err instanceof Error ? err.message : "Error");
     } finally {
       setLoading(false);
     }
@@ -378,7 +378,7 @@ export default function OnboardingPage() {
       setNpubDisplay("");
       await refreshStatus();
     } catch {
-      setError("Erro ao bloquear");
+      setError("Failed to lock");
     } finally {
       setLoading(false);
     }
@@ -402,11 +402,10 @@ export default function OnboardingPage() {
             BitMacro Signer
           </p>
           <h1 className="text-[clamp(1.5rem,4vw+0.75rem,1.75rem)] font-bold leading-tight tracking-tight text-white">
-            Activar o bunker
+            Activate the bunker
           </h1>
           <p className="text-base leading-[1.5] text-zinc-300">
-            Usa o npub da tua Identity BitMacro, a passphrase do cofre, e obtém o QR
-            NIP-46.
+            Use your BitMacro Identity npub and vault passphrase to get the NIP-46 QR code.
           </p>
 
           <div className="mt-1 flex flex-col gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 text-base">
@@ -419,14 +418,14 @@ export default function OnboardingPage() {
               <span className="text-zinc-300">Bunker:</span>
               {statusIdentity ? (
                 statusRunning ? (
-                  <span className="font-semibold text-emerald-400">Activo</span>
+                  <span className="font-semibold text-emerald-400">Active</span>
                 ) : (
                   <span className="max-w-[min(100%,16rem)] font-medium leading-snug text-sky-200 sm:max-w-none">
-                    Sessão activa — bunker em modo managed (Server)
+                    Session active — bunker in managed (server) mode
                   </span>
                 )
               ) : (
-                <span className="text-zinc-400">Inactivo</span>
+                <span className="text-zinc-400">Inactive</span>
               )}
               {statusIdentity ? (
                 <button
@@ -436,12 +435,12 @@ export default function OnboardingPage() {
                   className="ml-auto inline-flex min-h-11 items-center gap-2 rounded-lg border border-zinc-600 px-3 text-sm font-semibold text-zinc-100 transition-colors hover:bg-zinc-800 disabled:opacity-50 sm:ml-0 sm:px-4"
                 >
                   <LogOut className="size-4 shrink-0" aria-hidden />
-                  Bloquear bunker
+                  Lock bunker
                 </button>
               ) : null}
             </div>
             <p className="text-sm leading-[1.5] text-zinc-400">
-              O bunker corre no servidor — não depende desta janela estar aberta.
+              The bunker runs on the server — it does not depend on this tab staying open.
             </p>
             {statusIdentity && phase === 1 && step1Path === "have_npub" ? (
               <button
@@ -455,7 +454,7 @@ export default function OnboardingPage() {
                 className="min-h-[52px] w-full rounded-lg px-4 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
                 style={{ backgroundColor: ACCENT }}
               >
-                Retomar: passo 3 — gerar QR NIP-46
+                Resume: step 3 — generate NIP-46 QR
               </button>
             ) : null}
           </div>
@@ -463,7 +462,7 @@ export default function OnboardingPage() {
 
         <nav
           className="mb-10 flex items-center justify-center gap-2 text-sm text-zinc-400"
-          aria-label="Passos"
+          aria-label="Steps"
         >
           {([1, 2, 3] as const).map((n) => (
             <div key={n} className="flex items-center gap-2">
@@ -498,7 +497,7 @@ export default function OnboardingPage() {
           <div className="mb-5 flex items-center gap-2">
             <Shield className="size-5" style={{ color: ACCENT }} aria-hidden />
             <h2 className="text-lg font-semibold leading-snug text-white sm:text-xl">
-              1. Identificação
+              1. Identity
             </h2>
           </div>
 
@@ -515,9 +514,9 @@ export default function OnboardingPage() {
                   : "border-zinc-600 hover:bg-zinc-800"
               }`}
             >
-              <span className="font-semibold text-white">Já tenho npub</span>
+              <span className="font-semibold text-white">I already have an npub</span>
               <span className="mt-1 block text-sm leading-[1.5] text-zinc-400">
-                Npub BitMacro Identity + passphrase do cofre
+                BitMacro Identity npub + vault passphrase
               </span>
             </button>
             <button
@@ -533,9 +532,9 @@ export default function OnboardingPage() {
                   : "border-zinc-600 hover:bg-zinc-800"
               }`}
             >
-              <span className="font-semibold text-white">Não tenho npub ainda</span>
+              <span className="font-semibold text-white">I don’t have an npub yet</span>
               <span className="mt-1 block text-sm leading-[1.5] text-zinc-400">
-                Gera um par no browser e cria o cofre sem passar pelo unlock
+                Generate a keypair in the browser and create the vault without unlock first
               </span>
             </button>
           </div>
@@ -544,7 +543,7 @@ export default function OnboardingPage() {
             <form onSubmit={(e) => void handleUnlock(e)} className="space-y-5">
               <div>
                 <label htmlFor="npub" className="bm-label text-zinc-300">
-                  Chave pública Nostr (npub)
+                  Nostr public key (npub)
                 </label>
                 <input
                   id="npub"
@@ -558,7 +557,7 @@ export default function OnboardingPage() {
               </div>
               <div>
                 <label htmlFor="passphrase" className="bm-label text-zinc-300">
-                  Passphrase do cofre
+                  Vault passphrase
                 </label>
                 <input
                   id="passphrase"
@@ -581,17 +580,17 @@ export default function OnboardingPage() {
                 ) : (
                   <Lock className="size-4" aria-hidden />
                 )}
-                Desbloquear
+                Unlock
               </button>
             </form>
           ) : (
             <form onSubmit={(e) => void handleFreshCreate(e)} className="space-y-5">
               <p className="rounded-lg border border-amber-900/40 bg-amber-950/20 px-4 py-3 text-sm leading-[1.5] text-amber-100">
-                Guarda este npub — é a tua identidade Nostr no bunker. Depois do cofre,
-                podes associá-la à BitMacro Identity se quiseres.
+                Save this npub — it is your Nostr identity for the bunker. After the vault is set up,
+                you can link it to BitMacro Identity if you want.
               </p>
               <div>
-                <span className="bm-label text-zinc-300">npub gerado (readonly)</span>
+                <span className="bm-label text-zinc-300">Generated npub (read-only)</span>
                 <textarea
                   readOnly
                   value={npubDisplay}
@@ -601,7 +600,7 @@ export default function OnboardingPage() {
               </div>
               <div>
                 <label htmlFor="enc_fresh" className="bm-label text-zinc-300">
-                  Passphrase do cofre
+                  Vault passphrase
                 </label>
                 <input
                   id="enc_fresh"
@@ -624,19 +623,19 @@ export default function OnboardingPage() {
                 ) : (
                   <KeyRound className="size-4" aria-hidden />
                 )}
-                Criar cofre e activar bunker
+                Create vault and activate bunker
               </button>
             </form>
           )}
         </section>
 
-        {/* Step 2 — import nsec (após unlock sem vault, fluxo «Já tenho npub») */}
+        {/* Step 2 — import nsec after unlock with no vault (“I already have an npub” flow) */}
         {phase >= 2 ? (
           <section className="mb-14 scroll-mt-8 opacity-100">
             <div className="mb-5 flex items-center gap-2">
               <KeyRound className="size-5" style={{ color: ACCENT }} aria-hidden />
               <h2 className="text-lg font-semibold leading-snug text-white sm:text-xl">
-                2. Keypair e cofre
+                2. Keypair and vault
               </h2>
             </div>
             {phase === 2 ? (
@@ -645,8 +644,8 @@ export default function OnboardingPage() {
                 className="space-y-5"
               >
                 <p className="text-base leading-[1.5] text-zinc-300">
-                  Ainda não há cofre no Signer para este npub. Cola a nsec que corresponde
-                  ao npub do passo 1 e define a passphrase para encriptar o cofre.
+                  There is no vault in Signer for this npub yet. Paste the nsec that matches
+                  the npub from step 1 and set a passphrase to encrypt the vault.
                 </p>
                 <div>
                   <label htmlFor="nsec_import" className="bm-label text-zinc-300">
@@ -664,7 +663,7 @@ export default function OnboardingPage() {
                 </div>
                 <div>
                   <label htmlFor="enc_pw_import" className="bm-label text-zinc-300">
-                    Passphrase para encriptar o cofre
+                    Passphrase to encrypt the vault
                   </label>
                   <input
                     id="enc_pw_import"
@@ -685,12 +684,12 @@ export default function OnboardingPage() {
                   {loading ? (
                     <Loader2 className="size-4 animate-spin" aria-hidden />
                   ) : (
-                    "Guardar cofre e continuar"
+                    "Save vault and continue"
                   )}
                 </button>
               </form>
             ) : (
-              <p className="text-base leading-[1.5] text-zinc-400">Cofre já criado — passo concluído.</p>
+              <p className="text-base leading-[1.5] text-zinc-400">Vault already created — step complete.</p>
             )}
           </section>
         ) : null}
@@ -701,20 +700,20 @@ export default function OnboardingPage() {
             <div className="mb-5 flex items-center gap-2">
               <KeyRound className="size-5" style={{ color: ACCENT }} aria-hidden />
               <h2 className="text-lg font-semibold leading-snug text-white sm:text-xl">
-                3. Sessão NIP-46
+                3. NIP-46 session
               </h2>
             </div>
 
             {!bunkerUri ? (
               <div className="space-y-5">
                 <p className="text-base leading-[1.5] text-zinc-300">
-                  O NIP-46 usa uma <strong className="font-semibold text-zinc-100">chave temporária no cliente</strong>{" "}
-                  (não o npub do teu perfil). Gera o QR e cola-o na app — na primeira ligação o cliente
-                  envia essa chave e a sessão fica associada automaticamente.
+                  NIP-46 uses a <strong className="font-semibold text-zinc-100">temporary client key</strong>{" "}
+                  (not your profile npub). Generate the QR and paste it in the app — on first connect the client
+                  sends that key and the session is bound automatically.
                 </p>
                 <div>
                   <label htmlFor="session_label" className="bm-label text-zinc-300">
-                    Etiqueta (opcional)
+                    Label (optional)
                   </label>
                   <input
                     id="session_label"
@@ -722,12 +721,12 @@ export default function OnboardingPage() {
                     onChange={(e) => setSessionLabel(e.target.value)}
                     maxLength={120}
                     autoComplete="off"
-                    placeholder="ex.: Nostrudel · Coracle no telemóvel"
+                    placeholder="e.g. Nostrudel · Coracle on phone"
                     className="bm-input border-zinc-700 bg-zinc-900/50 text-white ring-offset-[#080808] placeholder:text-zinc-500 focus:ring-[#0066ff]"
                   />
                   <p className="mt-2 text-sm leading-[1.5] text-zinc-400">
-                    O protocolo <strong className="font-semibold text-zinc-300">não envia</strong> o nome da
-                    app (Nostrudel, Coracle, …). Esta etiqueta aparece nas sessões para te orientares.
+                    The protocol <strong className="font-semibold text-zinc-300">does not send</strong> the
+                    app name (Nostrudel, Coracle, …). This label is shown in sessions so you can tell them apart.
                   </p>
                 </div>
                 <button
@@ -744,21 +743,21 @@ export default function OnboardingPage() {
                   ) : (
                     <Radio className="size-4" aria-hidden />
                   )}
-                  Gerar QR / link bunker
+                  Generate QR / bunker link
                 </button>
               </div>
             ) : (
               <>
                 <p className="mb-8 space-y-3 text-base leading-[1.5] text-zinc-300">
                   <span className="block">
-                    Cola este QR no cliente ou copia o link completo. Cada QR é de uso único: depois de
-                    uma app ligar com sucesso, esse link deixa de servir.
+                    Paste this QR in the client or copy the full link. Each QR is single-use: after an
+                    app connects successfully, that link stops working.
                   </span>
                   <span className="block text-zinc-400">
-                    Para <strong className="font-semibold text-zinc-200">outra app</strong> (ex. Coracle
-                    depois de Nostrudel), gera um <strong className="font-semibold text-zinc-200">novo</strong>{" "}
-                    QR e cola-o aí — remove ligações antigas ao bunker na app se ainda estiver a usar um
-                    link em cache.
+                    For <strong className="font-semibold text-zinc-200">another app</strong> (e.g. Coracle
+                    after Nostrudel), generate a <strong className="font-semibold text-zinc-200">new</strong>{" "}
+                    QR and paste it there — remove old bunker connections in the app if it still caches a
+                    previous link.
                   </span>
                 </p>
                 <div className="mb-8 flex justify-center rounded-xl border border-zinc-800 bg-white p-5">
@@ -778,7 +777,7 @@ export default function OnboardingPage() {
                     ) : (
                       <Copy className="size-5" aria-hidden />
                     )}
-                    {copied ? "Copiado" : "Copiar"}
+                    {copied ? "Copied" : "Copy"}
                   </button>
                 </div>
                 <button
@@ -789,13 +788,13 @@ export default function OnboardingPage() {
                   }}
                   className="inline-flex min-h-[52px] w-full items-center justify-center rounded-lg border border-zinc-600 px-4 text-base font-semibold text-zinc-100 transition-colors hover:bg-zinc-900 disabled:opacity-60"
                 >
-                  Gerar outro QR (invalida o deste ecrã)
+                  Generate another QR (invalidates the one on this screen)
                 </button>
                 <Link
                   href="/sessions"
                   className="mt-3 inline-flex min-h-[52px] w-full items-center justify-center rounded-lg border border-zinc-600 px-4 text-base font-semibold text-zinc-100 transition-colors hover:bg-zinc-900"
                 >
-                  Ver sessões activas
+                  View active sessions
                 </Link>
               </>
             )}
@@ -804,7 +803,7 @@ export default function OnboardingPage() {
 
         <p className="mt-12 text-center text-sm leading-[1.5] text-zinc-400">
           <Link href="/" className="font-semibold underline-offset-2 hover:underline" style={{ color: ACCENT }}>
-            ← Página inicial
+            ← Home
           </Link>
         </p>
       </div>
