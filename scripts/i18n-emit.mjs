@@ -409,9 +409,10 @@ function buildMessages(features, lang) {
             missingIdentityId: "Response missing identity_id",
             saveVaultFailed: "Failed to save vault",
             generateOrReload:
-              "Generate the keypair or reload the “I don’t have an npub yet” option.",
+              "Generate the keypair again from the bottom link on the identity section.",
             enterPassphrase: "Enter the vault passphrase.",
-            missingIdentityStep1: "Missing identity_id — go back to step 1.",
+            missingIdentityStep1:
+              "Missing identity_id — unlock again with your npub.",
             pasteNsec: "Paste your nsec.",
             invalidNsec: "Invalid nsec format (expected nsec1…).",
             nsecMismatch: "This nsec does not match your npub",
@@ -431,49 +432,52 @@ function buildMessages(features, lang) {
             lockBunker: "Lock bunker",
             serverNote:
               "The bunker runs on the server — it does not depend on this tab staying open.",
-            resumeStep3: "Resume: step 3 — generate NIP-46 QR",
           },
-          steps: { aria: "Steps" },
+          loadingAuth: "Checking session…",
+          identity: {
+            vaultOpen: "Vault unlocked for this npub.",
+          },
           step1: {
-            title: "1. Identity",
-            haveNpub: "I already have an npub",
-            haveNpubHint: "BitMacro Identity npub + vault passphrase",
-            freshNpub: "I don’t have an npub yet",
-            freshNpubHint:
-              "Generate a keypair in the browser and create the vault without unlock first",
+            title: "Identity",
             npubLabel: "Nostr public key (npub)",
             passphraseLabel: "Vault passphrase",
             unlock: "Unlock",
+            freshNpubLink:
+              "Don’t have an npub yet? Generate a keypair in the browser",
+            backToUnlock: "← Back to unlock with existing npub",
             warnSaveNpub:
               "Save this npub — it is your Nostr identity for the bunker. After the vault is set up, you can link it to BitMacro Identity if you want.",
             npubReadonly: "Generated npub (read-only)",
             createVault: "Create vault and activate bunker",
           },
           step2: {
-            title: "2. Keypair and vault",
-            body: "There is no vault in Signer for this npub yet. Paste the nsec that matches the npub from step 1 and set a passphrase to encrypt the vault.",
+            title: "Back up your vault",
+            body: "There is no encrypted vault for this npub yet. Paste the nsec that matches your npub and choose a passphrase to encrypt the vault.",
             nsecLabel: "nsec (bech32)",
             encryptPassLabel: "Passphrase to encrypt the vault",
             saveContinue: "Save vault and continue",
-            done: "Vault already created — step complete.",
+          },
+          sessionsPreview: {
+            title: "Client sessions",
+            manage: "Details & remove",
+            empty: "No sessions yet — generate a bunker link below for your first app.",
           },
           step3: {
-            title: "3. NIP-46 session",
+            title: "Connect an app",
             explain:
               "NIP-46 uses a temporary client key (not your profile npub). Generate the QR and paste it in the app — on first connect the client sends that key and the session is bound automatically.",
             labelOptional: "Label (optional)",
-            labelPlaceholder: "e.g. Nostrudel · Coracle on phone",
+            labelPlaceholder: "e.g. Primal · Coracle · Nostrudel",
             labelHint:
-              "The protocol does not send the app name (Nostrudel, Coracle, …). This label is shown in sessions so you can tell them apart.",
+              "The protocol does not send the app name (Primal, Coracle, Nostrudel, …). This label is shown in sessions so you can tell them apart.",
             generateQr: "Generate QR / bunker link",
             qrHelp1:
-              "Paste this QR in the client or copy the full link. Each QR is single-use: after an app connects successfully, that link stops working.",
+              "Paste this QR in the client or copy the full link. Each link is single-use: after an app connects successfully, it stops working.",
             qrHelp2:
-              "For another app (e.g. Coracle after Nostrudel), generate a new QR and paste it there — remove old bunker connections in the app if it still caches a previous link.",
+              "Another device or app needs a new link. Remove stale bunker connections in the client if it cached an old URI.",
             copy: "Copy",
             copied: "Copied",
-            regenerateQr: "Generate another QR (invalidates the one on this screen)",
-            viewSessions: "View active sessions",
+            newLinkInline: "Need a new link for another app?",
           },
           homeLink: "← Home",
         }
@@ -490,10 +494,10 @@ function buildMessages(features, lang) {
               missingIdentityId: "Resposta sem identity_id",
               saveVaultFailed: "Erro ao guardar o cofre",
               generateOrReload:
-                "Gera o par ou recarrega a opção «Não tenho npub ainda».",
+                "Gera o par outra vez a partir da ligação no fim da secção Identidade.",
               enterPassphrase: "Indica a passphrase do cofre.",
               missingIdentityStep1:
-                "identity_id em falta — volta ao passo 1.",
+                "identity_id em falta — desbloqueia outra vez com o teu npub.",
               pasteNsec: "Cola a tua nsec.",
               invalidNsec: "Formato nsec inválido (esperado nsec1…).",
               nsecMismatch: "Esta nsec não corresponde ao teu npub",
@@ -513,50 +517,52 @@ function buildMessages(features, lang) {
               lockBunker: "Bloquear bunker",
               serverNote:
                 "O bunker corre no servidor — não depende desta janela estar aberta.",
-              resumeStep3: "Retomar: passo 3 — gerar QR NIP-46",
             },
-            steps: { aria: "Passos" },
+            loadingAuth: "A verificar sessão…",
+            identity: {
+              vaultOpen: "Cofre desbloqueado para este npub.",
+            },
             step1: {
-              title: "1. Identificação",
-              haveNpub: "Já tenho npub",
-              haveNpubHint: "Npub BitMacro Identity + passphrase do cofre",
-              freshNpub: "Não tenho npub ainda",
-              freshNpubHint:
-                "Gera um par no browser e cria o cofre sem passar pelo unlock",
+              title: "Identidade",
               npubLabel: "Chave pública Nostr (npub)",
               passphraseLabel: "Passphrase do cofre",
               unlock: "Desbloquear",
+              freshNpubLink: "Ainda não tens npub? Gera um par no browser",
+              backToUnlock: "← Voltar ao unlock com npub existente",
               warnSaveNpub:
                 "Guarda este npub — é a tua identidade Nostr no bunker. Depois do cofre, podes associá-la à BitMacro Identity se quiseres.",
               npubReadonly: "npub gerado (readonly)",
               createVault: "Criar cofre e activar bunker",
             },
             step2: {
-              title: "2. Keypair e cofre",
-              body: "Ainda não há cofre no Signer para este npub. Cola a nsec que corresponde ao npub do passo 1 e define a passphrase para encriptar o cofre.",
+              title: "Cofre encriptado",
+              body: "Ainda não há cofre encriptado para este npub. Cola a nsec que corresponde ao teu npub e define uma passphrase para encriptar o cofre.",
               nsecLabel: "nsec (bech32)",
               encryptPassLabel: "Passphrase para encriptar o cofre",
               saveContinue: "Guardar cofre e continuar",
-              done: "Cofre já criado — passo concluído.",
+            },
+            sessionsPreview: {
+              title: "Sessões de cliente",
+              manage: "Detalhes e remover",
+              empty:
+                "Ainda não há sessões — gera um link bunker abaixo para a primeira app.",
             },
             step3: {
-              title: "3. Sessão NIP-46",
+              title: "Ligar uma app",
               explain:
                 "O NIP-46 usa uma chave temporária no cliente (não o npub do teu perfil). Gera o QR e cola-o na app — na primeira ligação o cliente envia essa chave e a sessão fica associada automaticamente.",
               labelOptional: "Etiqueta (opcional)",
-              labelPlaceholder: "ex.: Nostrudel · Coracle no telemóvel",
+              labelPlaceholder: "ex.: Primal · Coracle · Nostrudel",
               labelHint:
-                "O protocolo não envia o nome da app (Nostrudel, Coracle, …). Esta etiqueta aparece nas sessões para te orientares.",
+                "O protocolo não envia o nome da app (Primal, Coracle, Nostrudel, …). Esta etiqueta aparece nas sessões para te orientares.",
               generateQr: "Gerar QR / link bunker",
               qrHelp1:
-                "Cola este QR no cliente ou copia o link completo. Cada QR é de uso único: depois de uma app ligar com sucesso, esse link deixa de servir.",
+                "Cola este QR no cliente ou copia o link completo. Cada link é de uso único: depois de uma app ligar com sucesso, deixa de servir.",
               qrHelp2:
-                "Para outra app (ex. Coracle depois de Nostrudel), gera um novo QR e cola-o aí — remove ligações antigas ao bunker na app se ainda estiver a usar um link em cache.",
+                "Outro dispositivo ou app precisa de um link novo. Remove ligações antigas ao bunker no cliente se ainda estiver em cache.",
               copy: "Copiar",
               copied: "Copiado",
-              regenerateQr:
-                "Gerar outro QR (invalida o deste ecrã)",
-              viewSessions: "Ver sessões activas",
+              newLinkInline: "Precisas de um link novo para outra app?",
             },
             homeLink: "← Página inicial",
           }
@@ -572,10 +578,10 @@ function buildMessages(features, lang) {
               missingIdentityId: "Respuesta sin identity_id",
               saveVaultFailed: "Error al guardar la bóveda",
               generateOrReload:
-                "Genera el par o recarga la opción «Aún no tengo npub».",
+                "Genera el par otra vez desde el enlace al final de la sección Identidad.",
               enterPassphrase: "Introduce la frase de paso de la bóveda.",
               missingIdentityStep1:
-                "Falta identity_id — vuelve al paso 1.",
+                "Falta identity_id — desbloquea de nuevo con tu npub.",
               pasteNsec: "Pega tu nsec.",
               invalidNsec: "Formato nsec inválido (se espera nsec1…).",
               nsecMismatch: "Esta nsec no coincide con tu npub",
@@ -595,50 +601,53 @@ function buildMessages(features, lang) {
               lockBunker: "Bloquear bunker",
               serverNote:
                 "El bunker corre en el servidor — no depende de que esta pestaña siga abierta.",
-              resumeStep3: "Reanudar: paso 3 — generar QR NIP-46",
             },
-            steps: { aria: "Pasos" },
+            loadingAuth: "Comprobando sesión…",
+            identity: {
+              vaultOpen: "Bóveda desbloqueada para este npub.",
+            },
             step1: {
-              title: "1. Identidad",
-              haveNpub: "Ya tengo npub",
-              haveNpubHint: "Npub BitMacro Identity + frase de paso de la bóveda",
-              freshNpub: "Aún no tengo npub",
-              freshNpubHint:
-                "Genera un par en el navegador y crea la bóveda sin unlock primero",
+              title: "Identidad",
               npubLabel: "Clave pública Nostr (npub)",
               passphraseLabel: "Frase de paso de la bóveda",
               unlock: "Desbloquear",
+              freshNpubLink:
+                "¿Aún no tienes npub? Genera un par en el navegador",
+              backToUnlock: "← Volver al desbloqueo con npub existente",
               warnSaveNpub:
                 "Guarda este npub — es tu identidad Nostr en el bunker. Tras la bóveda, puedes vincularla a BitMacro Identity si quieres.",
               npubReadonly: "npub generado (solo lectura)",
               createVault: "Crear bóveda y activar bunker",
             },
             step2: {
-              title: "2. Par de claves y bóveda",
-              body: "Aún no hay bóveda en Signer para este npub. Pega la nsec que coincide con el npub del paso 1 y define una frase para cifrar la bóveda.",
+              title: "Respaldo del cofre",
+              body: "Aún no hay bóveda cifrada para este npub. Pega la nsec que coincide con tu npub y elige una frase para cifrar la bóveda.",
               nsecLabel: "nsec (bech32)",
               encryptPassLabel: "Frase para cifrar la bóveda",
               saveContinue: "Guardar bóveda y continuar",
-              done: "Bóveda ya creada — paso completado.",
+            },
+            sessionsPreview: {
+              title: "Sesiones de cliente",
+              manage: "Detalles y eliminar",
+              empty:
+                "Aún no hay sesiones — genera un enlace bunker abajo para la primera app.",
             },
             step3: {
-              title: "3. Sesión NIP-46",
+              title: "Conectar una app",
               explain:
                 "NIP-46 usa una clave temporal en el cliente (no el npub de tu perfil). Genera el QR y pégalo en la app — en el primer enlace el cliente envía esa clave y la sesión se asocia automáticamente.",
               labelOptional: "Etiqueta (opcional)",
-              labelPlaceholder: "p. ej. Nostrudel · Coracle en el móvil",
+              labelPlaceholder: "p. ej. Primal · Coracle · Nostrudel",
               labelHint:
-                "El protocolo no envía el nombre de la app (Nostrudel, Coracle, …). Esta etiqueta aparece en sesiones para orientarte.",
+                "El protocolo no envía el nombre de la app (Primal, Coracle, Nostrudel, …). Esta etiqueta aparece en sesiones para orientarte.",
               generateQr: "Generar QR / enlace bunker",
               qrHelp1:
-                "Pega este QR en el cliente o copia el enlace completo. Cada QR es de un solo uso: tras conectar una app con éxito, ese enlace deja de valer.",
+                "Pega este QR en el cliente o copia el enlace completo. Cada enlace es de un solo uso: tras conectar una app con éxito, deja de valer.",
               qrHelp2:
-                "Para otra app (p. ej. Coracle tras Nostrudel), genera un QR nuevo y pégalo allí — elimina conexiones antiguas al bunker en la app si aún cachea un enlace previo.",
+                "Otro dispositivo o app necesita un enlace nuevo. Elimina conexiones antiguas al bunker en el cliente si aún cachea un URI previo.",
               copy: "Copiar",
               copied: "Copiado",
-              regenerateQr:
-                "Generar otro QR (invalida el de esta pantalla)",
-              viewSessions: "Ver sesiones activas",
+              newLinkInline: "¿Necesitas un enlace nuevo para otra app?",
             },
             homeLink: "← Inicio",
           };
@@ -665,6 +674,12 @@ function buildMessages(features, lang) {
           empty: "No client sessions.",
           back: "← Back to onboarding",
           onboardingLink: "Onboarding",
+          sessionIdLabel: "Session id (for logs)",
+          remove: "Remove session",
+          removeConfirm:
+            "Remove this client session? You will need a new QR or bunker link to connect again.",
+          removing: "Removing…",
+          removeError: "Could not remove session",
         }
       : lang === "pt"
         ? {
@@ -687,6 +702,12 @@ function buildMessages(features, lang) {
             empty: "Nenhuma sessão de cliente.",
             back: "← Voltar ao onboarding",
             onboardingLink: "Onboarding",
+            sessionIdLabel: "Id da sessão (para logs)",
+            remove: "Remover sessão",
+            removeConfirm:
+              "Remover esta sessão de cliente? Será preciso um novo QR ou link bunker para voltar a ligar.",
+            removing: "A remover…",
+            removeError: "Não foi possível remover a sessão",
           }
         : {
             brand: "BitMacro Signer",
@@ -708,6 +729,12 @@ function buildMessages(features, lang) {
             empty: "No hay sesiones de cliente.",
             back: "← Volver al onboarding",
             onboardingLink: "Onboarding",
+            sessionIdLabel: "Id de sesión (para logs)",
+            remove: "Eliminar sesión",
+            removeConfirm:
+              "¿Eliminar esta sesión de cliente? Necesitarás un nuevo QR o enlace bunker para conectar de nuevo.",
+            removing: "Eliminando…",
+            removeError: "No se pudo eliminar la sesión",
           };
 
   const common =

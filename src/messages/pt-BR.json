@@ -3,13 +3,6 @@
     "locale": "Idioma",
     "brand": "BitMacro Signer"
   },
-  "buildStamp": {
-    "prefix": "Signer",
-    "title": "Módulo web em execução: semver do package.json; o hash curto corresponde ao commit Git quando SIGNER_GIT_COMMIT ou env Vercel está definido. Clique para abrir essa revisão no GitHub.",
-    "sourceLink": "Código-fonte",
-    "noCommitHint": "Nenhum commit Git embutido neste deploy — compare pela tag de versão ou defina SIGNER_GIT_COMMIT na CI/Docker.",
-    "metaUnavailable": "Metadados de build indisponíveis"
-  },
   "landing": {
     "nav": {
       "howItWorks": "Como funciona",
@@ -124,9 +117,9 @@
       "couldNotCreateIdentity": "Não foi possível criar a identidade",
       "missingIdentityId": "Resposta sem identity_id",
       "saveVaultFailed": "Erro ao guardar o cofre",
-      "generateOrReload": "Gera o par ou recarrega a opção «Não tenho npub ainda».",
+      "generateOrReload": "Gera o par outra vez a partir da ligação no fim da secção Identidade.",
       "enterPassphrase": "Indica a passphrase do cofre.",
-      "missingIdentityStep1": "identity_id em falta — volta ao passo 1.",
+      "missingIdentityStep1": "identity_id em falta — desbloqueia outra vez com o teu npub.",
       "pasteNsec": "Cola a tua nsec.",
       "invalidNsec": "Formato nsec inválido (esperado nsec1…).",
       "nsecMismatch": "Esta nsec não corresponde ao teu npub",
@@ -142,46 +135,47 @@
       "sessionManaged": "Sessão activa — bunker em modo managed (servidor)",
       "inactive": "Inactivo",
       "lockBunker": "Bloquear bunker",
-      "serverNote": "O bunker corre no servidor — não depende desta janela estar aberta.",
-      "resumeStep3": "Retomar: passo 3 — gerar QR NIP-46"
+      "serverNote": "O bunker corre no servidor — não depende desta janela estar aberta."
     },
-    "steps": {
-      "aria": "Passos"
+    "loadingAuth": "A verificar sessão…",
+    "identity": {
+      "vaultOpen": "Cofre desbloqueado para este npub."
     },
     "step1": {
-      "title": "1. Identificação",
-      "haveNpub": "Já tenho npub",
-      "haveNpubHint": "Npub BitMacro Identity + passphrase do cofre",
-      "freshNpub": "Não tenho npub ainda",
-      "freshNpubHint": "Gera um par no browser e cria o cofre sem passar pelo unlock",
+      "title": "Identidade",
       "npubLabel": "Chave pública Nostr (npub)",
       "passphraseLabel": "Passphrase do cofre",
       "unlock": "Desbloquear",
+      "freshNpubLink": "Ainda não tens npub? Gera um par no browser",
+      "backToUnlock": "← Voltar ao unlock com npub existente",
       "warnSaveNpub": "Guarda este npub — é a tua identidade Nostr no bunker. Depois do cofre, podes associá-la à BitMacro Identity se quiseres.",
       "npubReadonly": "npub gerado (readonly)",
       "createVault": "Criar cofre e activar bunker"
     },
     "step2": {
-      "title": "2. Keypair e cofre",
-      "body": "Ainda não há cofre no Signer para este npub. Cola a nsec que corresponde ao npub do passo 1 e define a passphrase para encriptar o cofre.",
+      "title": "Cofre encriptado",
+      "body": "Ainda não há cofre encriptado para este npub. Cola a nsec que corresponde ao teu npub e define uma passphrase para encriptar o cofre.",
       "nsecLabel": "nsec (bech32)",
       "encryptPassLabel": "Passphrase para encriptar o cofre",
-      "saveContinue": "Guardar cofre e continuar",
-      "done": "Cofre já criado — passo concluído."
+      "saveContinue": "Guardar cofre e continuar"
+    },
+    "sessionsPreview": {
+      "title": "Sessões de cliente",
+      "manage": "Detalhes e remover",
+      "empty": "Ainda não há sessões — gera um link bunker abaixo para a primeira app."
     },
     "step3": {
-      "title": "3. Sessão NIP-46",
+      "title": "Ligar uma app",
       "explain": "O NIP-46 usa uma chave temporária no cliente (não o npub do teu perfil). Gera o QR e cola-o na app — na primeira ligação o cliente envia essa chave e a sessão fica associada automaticamente.",
       "labelOptional": "Etiqueta (opcional)",
-      "labelPlaceholder": "ex.: Nostrudel · Coracle no telemóvel",
-      "labelHint": "O protocolo não envia o nome da app (Nostrudel, Coracle, …). Esta etiqueta aparece nas sessões para te orientares.",
+      "labelPlaceholder": "ex.: Primal · Coracle · Nostrudel",
+      "labelHint": "O protocolo não envia o nome da app (Primal, Coracle, Nostrudel, …). Esta etiqueta aparece nas sessões para te orientares.",
       "generateQr": "Gerar QR / link bunker",
-      "qrHelp1": "Cola este QR no cliente ou copia o link completo. Cada QR é de uso único: depois de uma app ligar com sucesso, esse link deixa de servir.",
-      "qrHelp2": "Para outra app (ex. Coracle depois de Nostrudel), gera um novo QR e cola-o aí — remove ligações antigas ao bunker na app se ainda estiver a usar um link em cache.",
+      "qrHelp1": "Cola este QR no cliente ou copia o link completo. Cada link é de uso único: depois de uma app ligar com sucesso, deixa de servir.",
+      "qrHelp2": "Outro dispositivo ou app precisa de um link novo. Remove ligações antigas ao bunker no cliente se ainda estiver em cache.",
       "copy": "Copiar",
       "copied": "Copiado",
-      "regenerateQr": "Gerar outro QR (invalida o deste ecrã)",
-      "viewSessions": "Ver sessões activas"
+      "newLinkInline": "Precisas de um link novo para outra app?"
     },
     "homeLink": "← Página inicial"
   },

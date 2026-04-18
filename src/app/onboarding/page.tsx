@@ -34,6 +34,13 @@ type UnlockOk = {
 type Phase = 1 | 2 | 3;
 type Step1Path = "have_npub" | "fresh_npub";
 
+type SessionPreviewRow = {
+  id: string;
+  app_name: string | null;
+  used: boolean;
+  expires_at: string;
+};
+
 function truncateMiddle(s: string, keep = 14): string {
   if (s.length <= keep * 2 + 3) return s;
   return `${s.slice(0, keep)}…${s.slice(-keep)}`;
@@ -41,6 +48,7 @@ function truncateMiddle(s: string, keep = 14): string {
 
 export default function OnboardingPage() {
   const t = useTranslations("onboarding");
+  const tSess = useTranslations("sessions");
 
   const parseUnlockError = useCallback(
     async (res: Response): Promise<string> => {
@@ -82,6 +90,32 @@ export default function OnboardingPage() {
 
   const [statusIdentity, setStatusIdentity] = useState<string | null>(null);
   const [statusRunning, setStatusRunning] = useState<boolean | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [sessionRows, setSessionRows] = useState<SessionPreviewRow[] | null>(
+    null,
+  );
+  const [sessionsLoading, setSessionsLoading] = useState(false);
+
+  const refreshSessions = useCallback(async (id: string) => {
+    if (!id.trim()) return;
+    setSessionsLoading(true);
+    try {
+      const res = await fetch(
+        `/api/sessions?identity_id=${encodeURIComponent(id)}`,
+        { credentials: "include" },
+      );
+      if (!res.ok) {
+        setSessionRows([]);
+        return;
+      }
+      const data = (await res.json()) as SessionPreviewRow[];
+      setSessionRows(data);
+    } catch {
+      setSessionRows([]);
+    } finally {
+      setSessionsLoading(false);
+    }
+  }, []);
 
   const refreshStatus = useCallback(async () => {
     try {
@@ -89,20 +123,33 @@ export default function OnboardingPage() {
       if (!res.ok) {
         setStatusIdentity(null);
         setStatusRunning(null);
+        setPhase(1);
+        setSessionRows(null);
         return;
       }
       const j = (await res.json()) as {
         identity_id: string;
         is_running: boolean;
+        vault_exists?: boolean;
       };
       setStatusIdentity(j.identity_id);
       setStatusRunning(j.is_running);
       setIdentityId(j.identity_id);
+      if (j.vault_exists === false) {
+        setPhase(2);
+      } else {
+        setPhase(3);
+      }
+      void refreshSessions(j.identity_id);
     } catch {
       setStatusIdentity(null);
       setStatusRunning(null);
+      setPhase(1);
+      setSessionRows(null);
+    } finally {
+      setAuthChecked(true);
     }
-  }, []);
+  }, [refreshSessions]);
 
   useEffect(() => {
     void refreshStatus();
@@ -157,12 +204,13 @@ export default function OnboardingPage() {
       }
       setBunkerUri(data.bunker_uri);
       setPhase(3);
+      void refreshSessions(id);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("errors.generic"));
     } finally {
       setLoading(false);
     }
-  }, [sessionLabel, t]);
+  }, [sessionLabel, t, refreshSessions]);
 
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -449,48 +497,19 @@ export default function OnboardingPage() {
               ) : null}
             </div>
             <p className="text-sm leading-[1.5] text-zinc-400">{t("header.serverNote")}</p>
-            {statusIdentity && phase === 1 && step1Path === "have_npub" ? (
-              <button
-                type="button"
-                disabled={loading}
-                onClick={() => {
-                  setIdentityId(statusIdentity);
-                  setBunkerUri(null);
-                  setPhase(3);
-                }}
-                className="min-h-[52px] w-full rounded-lg px-4 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-                style={{ backgroundColor: ACCENT }}
-              >
-                {t("header.resumeStep3")}
-              </button>
-            ) : null}
           </div>
         </header>
 
-        <nav
-          className="mb-10 flex items-center justify-center gap-2 text-sm text-zinc-400"
-          aria-label={t("steps.aria")}
-        >
-          {([1, 2, 3] as const).map((n) => (
-            <div key={n} className="flex items-center gap-2">
-              <span
-                className="flex size-11 items-center justify-center rounded-full border text-base font-semibold"
-                style={{
-                  borderColor: phase >= n ? ACCENT : "#52525b",
-                  color: phase >= n ? ACCENT : "#d4d4d8",
-                  backgroundColor: phase === n ? "rgba(0,102,255,0.12)" : "transparent",
-                }}
-              >
-                {n}
-              </span>
-              {n < 3 ? (
-                <span className="h-px w-6 bg-zinc-700" aria-hidden />
-              ) : null}
-            </div>
-          ))}
-        </nav>
+        {!authChecked ? (
+          <div className="mb-10 flex justify-center py-16">
+            <Loader2
+              className="size-10 animate-spin text-zinc-500"
+              aria-label={t("loadingAuth")}
+            />
+          </div>
+        ) : null}
 
-        {error ? (
+        {authChecked && error ? (
           <div
             className="mb-6 rounded-lg border border-red-900/60 bg-red-950/40 px-4 py-3 text-base leading-[1.5] text-red-100"
             role="alert"
@@ -499,117 +518,184 @@ export default function OnboardingPage() {
           </div>
         ) : null}
 
-        {/* Step 1 */}
-        <section className="mb-14 scroll-mt-8">
-          <div className="mb-5 flex items-center gap-2">
-            <Shield className="size-5" style={{ color: ACCENT }} aria-hidden />
-            <h2 className="text-lg font-semibold leading-snug text-white sm:text-xl">
-              {t("step1.title")}
-            </h2>
-          </div>
+        {/* Identity — primary path: unlock with npub; fresh keypair is a secondary link */}
+        {authChecked ? (
+          <section className="mb-14 scroll-mt-8">
+            <div className="mb-5 flex items-center gap-2">
+              <Shield className="size-5" style={{ color: ACCENT }} aria-hidden />
+              <h2 className="text-lg font-semibold leading-snug text-white sm:text-xl">
+                {t("step1.title")}
+              </h2>
+            </div>
 
-          <div className="mb-6 flex flex-col gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                setError(null);
-                setStep1Path("have_npub");
-              }}
-              className={`min-h-[52px] rounded-xl border px-4 py-3 text-left text-base transition-colors ${
-                step1Path === "have_npub"
-                  ? "border-[#0066ff]/50 bg-[rgba(0,102,255,0.08)]"
-                  : "border-zinc-600 hover:bg-zinc-800"
-              }`}
-            >
-              <span className="font-semibold text-white">{t("step1.haveNpub")}</span>
-              <span className="mt-1 block text-sm leading-[1.5] text-zinc-400">
-                {t("step1.haveNpubHint")}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setError(null);
-                setStep1Path("fresh_npub");
-                ensureFreshKeypair();
-              }}
-              className={`min-h-[52px] rounded-xl border px-4 py-3 text-left text-base transition-colors ${
-                step1Path === "fresh_npub"
-                  ? "border-[#0066ff]/50 bg-[rgba(0,102,255,0.08)]"
-                  : "border-zinc-600 hover:bg-zinc-800"
-              }`}
-            >
-              <span className="font-semibold text-white">{t("step1.freshNpub")}</span>
-              <span className="mt-1 block text-sm leading-[1.5] text-zinc-400">
-                {t("step1.freshNpubHint")}
-              </span>
-            </button>
-          </div>
-
-          {step1Path === "have_npub" ? (
-            <form onSubmit={(e) => void handleUnlock(e)} className="space-y-5">
-              <div>
-                <label htmlFor="npub" className="bm-label text-zinc-300">
-                  {t("step1.npubLabel")}
-                </label>
-                <input
-                  id="npub"
-                  value={npubInput}
-                  onChange={(e) => setNpubInput(e.target.value)}
-                  autoComplete="off"
-                  className="bm-input border-zinc-700 bg-zinc-900/50 font-mono text-white ring-offset-[#080808] placeholder:text-zinc-500 focus:ring-[#0066ff]"
-                  placeholder="npub1…"
-                  required
-                />
+            {statusIdentity &&
+            (phase >= 3 || (phase === 2 && step1Path === "have_npub")) ? (
+              <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
+                <p className="text-sm leading-[1.5] text-zinc-400">
+                  {t("identity.vaultOpen")}
+                </p>
+                <code className="mt-2 block break-all font-mono text-sm leading-normal text-zinc-200">
+                  {(() => {
+                    const n = npubInput.trim() || npubDisplay.trim();
+                    return n ? truncateMiddle(n, 24) : "—";
+                  })()}
+                </code>
               </div>
-              <div>
-                <label htmlFor="passphrase" className="bm-label text-zinc-300">
-                  {t("step1.passphraseLabel")}
-                </label>
-                <input
-                  id="passphrase"
-                  type="password"
-                  value={passphraseStep1}
-                  onChange={(e) => setPassphraseStep1(e.target.value)}
-                  autoComplete="new-password"
-                  className="bm-input border-zinc-700 bg-zinc-900/50 text-white ring-offset-[#080808] focus:ring-[#0066ff]"
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-lg px-4 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-                style={{ backgroundColor: ACCENT }}
-              >
-                {loading ? (
-                  <Loader2 className="size-4 animate-spin" aria-hidden />
+            ) : !statusIdentity ? (
+              <>
+                {step1Path === "have_npub" ? (
+                  <>
+                    <form onSubmit={(e) => void handleUnlock(e)} className="space-y-5">
+                      <div>
+                        <label htmlFor="npub" className="bm-label text-zinc-300">
+                          {t("step1.npubLabel")}
+                        </label>
+                        <input
+                          id="npub"
+                          value={npubInput}
+                          onChange={(e) => setNpubInput(e.target.value)}
+                          autoComplete="off"
+                          className="bm-input border-zinc-700 bg-zinc-900/50 font-mono text-white ring-offset-[#080808] placeholder:text-zinc-500 focus:ring-[#0066ff]"
+                          placeholder="npub1…"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="passphrase" className="bm-label text-zinc-300">
+                          {t("step1.passphraseLabel")}
+                        </label>
+                        <input
+                          id="passphrase"
+                          type="password"
+                          value={passphraseStep1}
+                          onChange={(e) => setPassphraseStep1(e.target.value)}
+                          autoComplete="new-password"
+                          className="bm-input border-zinc-700 bg-zinc-900/50 text-white ring-offset-[#080808] focus:ring-[#0066ff]"
+                          required
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-lg px-4 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                        style={{ backgroundColor: ACCENT }}
+                      >
+                        {loading ? (
+                          <Loader2 className="size-4 animate-spin" aria-hidden />
+                        ) : (
+                          <Lock className="size-4" aria-hidden />
+                        )}
+                        {t("step1.unlock")}
+                      </button>
+                    </form>
+                    <p className="mt-6 text-center text-sm text-zinc-500">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setError(null);
+                          setStep1Path("fresh_npub");
+                          ensureFreshKeypair();
+                        }}
+                        className="text-zinc-400 underline-offset-2 transition-colors hover:text-zinc-300 hover:underline"
+                      >
+                        {t("step1.freshNpubLink")}
+                      </button>
+                    </p>
+                  </>
                 ) : (
-                  <Lock className="size-4" aria-hidden />
+                  <form onSubmit={(e) => void handleFreshCreate(e)} className="space-y-5">
+                    <p className="text-sm text-zinc-500">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setError(null);
+                          setStep1Path("have_npub");
+                        }}
+                        className="text-zinc-400 underline-offset-2 hover:underline"
+                      >
+                        {t("step1.backToUnlock")}
+                      </button>
+                    </p>
+                    <p className="rounded-lg border border-amber-900/40 bg-amber-950/20 px-4 py-3 text-sm leading-[1.5] text-amber-100">
+                      {t("step1.warnSaveNpub")}
+                    </p>
+                    <div>
+                      <span className="bm-label text-zinc-300">{t("step1.npubReadonly")}</span>
+                      <textarea
+                        readOnly
+                        value={npubDisplay}
+                        rows={3}
+                        className="bm-input min-h-[5.5rem] resize-none border-zinc-700 bg-zinc-950/80 py-3 font-mono text-zinc-200 ring-offset-[#080808] focus:ring-[#0066ff]"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="enc_fresh" className="bm-label text-zinc-300">
+                        {t("step1.passphraseLabel")}
+                      </label>
+                      <input
+                        id="enc_fresh"
+                        type="password"
+                        value={encryptPassword}
+                        onChange={(e) => setEncryptPassword(e.target.value)}
+                        autoComplete="new-password"
+                        className="bm-input border-zinc-700 bg-zinc-900/50 text-white ring-offset-[#080808] focus:ring-[#0066ff]"
+                        required
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-lg px-4 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                      style={{ backgroundColor: ACCENT }}
+                    >
+                      {loading ? (
+                        <Loader2 className="size-4 animate-spin" aria-hidden />
+                      ) : (
+                        <KeyRound className="size-4" aria-hidden />
+                      )}
+                      {t("step1.createVault")}
+                    </button>
+                  </form>
                 )}
-                {t("step1.unlock")}
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={(e) => void handleFreshCreate(e)} className="space-y-5">
-              <p className="rounded-lg border border-amber-900/40 bg-amber-950/20 px-4 py-3 text-sm leading-[1.5] text-amber-100">
-                {t("step1.warnSaveNpub")}
-              </p>
+              </>
+            ) : null}
+          </section>
+        ) : null}
+
+        {/* First-time vault: import nsec (only when session exists but no vault row yet) */}
+        {authChecked && phase === 2 ? (
+          <section className="mb-14 scroll-mt-8">
+            <div className="mb-5 flex items-center gap-2">
+              <KeyRound className="size-5" style={{ color: ACCENT }} aria-hidden />
+              <h2 className="text-lg font-semibold leading-snug text-white sm:text-xl">
+                {t("step2.title")}
+              </h2>
+            </div>
+            <form
+              onSubmit={(e) => void handleStep2ImportVault(e)}
+              className="space-y-5"
+            >
+              <p className="text-base leading-[1.5] text-zinc-300">{t("step2.body")}</p>
               <div>
-                <span className="bm-label text-zinc-300">{t("step1.npubReadonly")}</span>
+                <label htmlFor="nsec_import" className="bm-label text-zinc-300">
+                  {t("step2.nsecLabel")}
+                </label>
                 <textarea
-                  readOnly
-                  value={npubDisplay}
+                  id="nsec_import"
+                  value={nsecImport}
+                  onChange={(e) => setNsecImport(e.target.value)}
                   rows={3}
-                  className="bm-input min-h-[5.5rem] resize-none border-zinc-700 bg-zinc-950/80 py-3 font-mono text-zinc-200 ring-offset-[#080808] focus:ring-[#0066ff]"
+                  className="bm-input min-h-[5.5rem] resize-none border-zinc-700 bg-zinc-950/80 py-3 font-mono text-zinc-200 ring-offset-[#080808] placeholder:text-zinc-500 focus:ring-[#0066ff]"
+                  placeholder="nsec1…"
+                  autoComplete="off"
                 />
               </div>
               <div>
-                <label htmlFor="enc_fresh" className="bm-label text-zinc-300">
-                  {t("step1.passphraseLabel")}
+                <label htmlFor="enc_pw_import" className="bm-label text-zinc-300">
+                  {t("step2.encryptPassLabel")}
                 </label>
                 <input
-                  id="enc_fresh"
+                  id="enc_pw_import"
                   type="password"
                   value={encryptPassword}
                   onChange={(e) => setEncryptPassword(e.target.value)}
@@ -621,87 +707,79 @@ export default function OnboardingPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-lg px-4 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-lg px-4 text-base font-semibold text-white disabled:opacity-60"
                 style={{ backgroundColor: ACCENT }}
               >
                 {loading ? (
                   <Loader2 className="size-4 animate-spin" aria-hidden />
                 ) : (
-                  <KeyRound className="size-4" aria-hidden />
+                  t("step2.saveContinue")
                 )}
-                {t("step1.createVault")}
               </button>
             </form>
-          )}
-        </section>
-
-        {/* Step 2 — import nsec after unlock with no vault (“I already have an npub” flow) */}
-        {phase >= 2 ? (
-          <section className="mb-14 scroll-mt-8 opacity-100">
-            <div className="mb-5 flex items-center gap-2">
-              <KeyRound className="size-5" style={{ color: ACCENT }} aria-hidden />
-              <h2 className="text-lg font-semibold leading-snug text-white sm:text-xl">
-                {t("step2.title")}
-              </h2>
-            </div>
-            {phase === 2 ? (
-              <form
-                onSubmit={(e) => void handleStep2ImportVault(e)}
-                className="space-y-5"
-              >
-                <p className="text-base leading-[1.5] text-zinc-300">{t("step2.body")}</p>
-                <div>
-                  <label htmlFor="nsec_import" className="bm-label text-zinc-300">
-                    {t("step2.nsecLabel")}
-                  </label>
-                  <textarea
-                    id="nsec_import"
-                    value={nsecImport}
-                    onChange={(e) => setNsecImport(e.target.value)}
-                    rows={3}
-                    className="bm-input min-h-[5.5rem] resize-none border-zinc-700 bg-zinc-950/80 py-3 font-mono text-zinc-200 ring-offset-[#080808] placeholder:text-zinc-500 focus:ring-[#0066ff]"
-                    placeholder="nsec1…"
-                    autoComplete="off"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="enc_pw_import" className="bm-label text-zinc-300">
-                    {t("step2.encryptPassLabel")}
-                  </label>
-                  <input
-                    id="enc_pw_import"
-                    type="password"
-                    value={encryptPassword}
-                    onChange={(e) => setEncryptPassword(e.target.value)}
-                    autoComplete="new-password"
-                    className="bm-input border-zinc-700 bg-zinc-900/50 text-white ring-offset-[#080808] focus:ring-[#0066ff]"
-                    required
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-lg px-4 text-base font-semibold text-white disabled:opacity-60"
-                  style={{ backgroundColor: ACCENT }}
-                >
-                  {loading ? (
-                    <Loader2 className="size-4 animate-spin" aria-hidden />
-                  ) : (
-                    t("step2.saveContinue")
-                  )}
-                </button>
-              </form>
-            ) : (
-              <p className="text-base leading-[1.5] text-zinc-400">{t("step2.done")}</p>
-            )}
           </section>
         ) : null}
 
-        {/* Step 3 */}
-        {phase >= 3 ? (
+        {/* Sessions preview + NIP-46 connect */}
+        {authChecked && phase >= 3 ? (
           <section className="scroll-mt-8">
+            <div className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/30 p-4">
+              <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="text-base font-semibold text-white">
+                  {t("sessionsPreview.title")}
+                </h2>
+                <Link
+                  href="/sessions"
+                  className="text-sm font-medium underline-offset-2 hover:underline"
+                  style={{ color: ACCENT }}
+                >
+                  {t("sessionsPreview.manage")}
+                </Link>
+              </div>
+              {sessionsLoading ? (
+                <p className="flex items-center gap-2 text-sm text-zinc-500">
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                  {tSess("loading")}
+                </p>
+              ) : sessionRows && sessionRows.length > 0 ? (
+                <ul className="space-y-2 text-sm">
+                  {sessionRows.slice(0, 6).map((row) => (
+                    <li
+                      key={row.id}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-zinc-800/80 bg-zinc-950/50 px-3 py-2"
+                    >
+                      <span className="font-medium text-zinc-200">
+                        {row.app_name?.trim() || tSess("noLabel")}
+                      </span>
+                      <span className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                        <span
+                          className={
+                            row.used ? "text-amber-200/90" : "text-emerald-400/90"
+                          }
+                        >
+                          {row.used ? tSess("used") : tSess("pending")}
+                        </span>
+                        <span aria-hidden>·</span>
+                        <time dateTime={row.expires_at}>
+                          {tSess("expires")}{" "}
+                          {new Date(row.expires_at).toLocaleString(undefined, {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          })}
+                        </time>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm leading-[1.5] text-zinc-500">
+                  {t("sessionsPreview.empty")}
+                </p>
+              )}
+            </div>
+
             <div className="mb-5 flex items-center gap-2">
-              <KeyRound className="size-5" style={{ color: ACCENT }} aria-hidden />
+              <Radio className="size-5" style={{ color: ACCENT }} aria-hidden />
               <h2 className="text-lg font-semibold leading-snug text-white sm:text-xl">
                 {t("step3.title")}
               </h2>
@@ -751,7 +829,7 @@ export default function OnboardingPage() {
                 <div className="mb-8 flex justify-center rounded-xl border border-zinc-800 bg-white p-5">
                   <QRCodeSVG value={bunkerUri} size={200} level="M" />
                 </div>
-                <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-stretch">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-stretch">
                   <code className="flex min-h-12 flex-1 items-center break-all rounded-lg border border-zinc-800 bg-zinc-950/80 px-4 py-3 font-mono text-sm leading-normal text-zinc-300">
                     {truncateMiddle(bunkerUri, 18)}
                   </code>
@@ -768,22 +846,18 @@ export default function OnboardingPage() {
                     {copied ? t("step3.copied") : t("step3.copy")}
                   </button>
                 </div>
-                <button
-                  type="button"
-                  disabled={loading || !identityId.trim()}
-                  onClick={() => {
-                    setBunkerUri(null);
-                  }}
-                  className="inline-flex min-h-[52px] w-full items-center justify-center rounded-lg border border-zinc-600 px-4 text-base font-semibold text-zinc-100 transition-colors hover:bg-zinc-900 disabled:opacity-60"
-                >
-                  {t("step3.regenerateQr")}
-                </button>
-                <Link
-                  href="/sessions"
-                  className="mt-3 inline-flex min-h-[52px] w-full items-center justify-center rounded-lg border border-zinc-600 px-4 text-base font-semibold text-zinc-100 transition-colors hover:bg-zinc-900"
-                >
-                  {t("step3.viewSessions")}
-                </Link>
+                <p className="text-center text-sm text-zinc-500">
+                  <button
+                    type="button"
+                    disabled={loading || !identityId.trim()}
+                    onClick={() => {
+                      setBunkerUri(null);
+                    }}
+                    className="text-zinc-400 underline-offset-2 transition-colors hover:text-zinc-300 hover:underline disabled:opacity-50"
+                  >
+                    {t("step3.newLinkInline")}
+                  </button>
+                </p>
               </>
             )}
           </section>

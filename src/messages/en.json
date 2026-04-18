@@ -3,13 +3,6 @@
     "locale": "Language",
     "brand": "BitMacro Signer"
   },
-  "buildStamp": {
-    "prefix": "Signer",
-    "title": "Deployed web module: semver from package.json; short hash matches the Git commit when SIGNER_GIT_COMMIT or Vercel env is set. Click to open the exact revision on GitHub.",
-    "sourceLink": "Source",
-    "noCommitHint": "No git commit embedded in this deployment — compare by version tag or set SIGNER_GIT_COMMIT in CI/Docker.",
-    "metaUnavailable": "Build metadata unavailable"
-  },
   "landing": {
     "nav": {
       "howItWorks": "How it works",
@@ -124,9 +117,9 @@
       "couldNotCreateIdentity": "Could not create identity",
       "missingIdentityId": "Response missing identity_id",
       "saveVaultFailed": "Failed to save vault",
-      "generateOrReload": "Generate the keypair or reload the “I don’t have an npub yet” option.",
+      "generateOrReload": "Generate the keypair again from the bottom link on the identity section.",
       "enterPassphrase": "Enter the vault passphrase.",
-      "missingIdentityStep1": "Missing identity_id — go back to step 1.",
+      "missingIdentityStep1": "Missing identity_id — unlock again with your npub.",
       "pasteNsec": "Paste your nsec.",
       "invalidNsec": "Invalid nsec format (expected nsec1…).",
       "nsecMismatch": "This nsec does not match your npub",
@@ -142,46 +135,47 @@
       "sessionManaged": "Session active — bunker in managed (server) mode",
       "inactive": "Inactive",
       "lockBunker": "Lock bunker",
-      "serverNote": "The bunker runs on the server — it does not depend on this tab staying open.",
-      "resumeStep3": "Resume: step 3 — generate NIP-46 QR"
+      "serverNote": "The bunker runs on the server — it does not depend on this tab staying open."
     },
-    "steps": {
-      "aria": "Steps"
+    "loadingAuth": "Checking session…",
+    "identity": {
+      "vaultOpen": "Vault unlocked for this npub."
     },
     "step1": {
-      "title": "1. Identity",
-      "haveNpub": "I already have an npub",
-      "haveNpubHint": "BitMacro Identity npub + vault passphrase",
-      "freshNpub": "I don’t have an npub yet",
-      "freshNpubHint": "Generate a keypair in the browser and create the vault without unlock first",
+      "title": "Identity",
       "npubLabel": "Nostr public key (npub)",
       "passphraseLabel": "Vault passphrase",
       "unlock": "Unlock",
+      "freshNpubLink": "Don’t have an npub yet? Generate a keypair in the browser",
+      "backToUnlock": "← Back to unlock with existing npub",
       "warnSaveNpub": "Save this npub — it is your Nostr identity for the bunker. After the vault is set up, you can link it to BitMacro Identity if you want.",
       "npubReadonly": "Generated npub (read-only)",
       "createVault": "Create vault and activate bunker"
     },
     "step2": {
-      "title": "2. Keypair and vault",
-      "body": "There is no vault in Signer for this npub yet. Paste the nsec that matches the npub from step 1 and set a passphrase to encrypt the vault.",
+      "title": "Back up your vault",
+      "body": "There is no encrypted vault for this npub yet. Paste the nsec that matches your npub and choose a passphrase to encrypt the vault.",
       "nsecLabel": "nsec (bech32)",
       "encryptPassLabel": "Passphrase to encrypt the vault",
-      "saveContinue": "Save vault and continue",
-      "done": "Vault already created — step complete."
+      "saveContinue": "Save vault and continue"
+    },
+    "sessionsPreview": {
+      "title": "Client sessions",
+      "manage": "Details & remove",
+      "empty": "No sessions yet — generate a bunker link below for your first app."
     },
     "step3": {
-      "title": "3. NIP-46 session",
+      "title": "Connect an app",
       "explain": "NIP-46 uses a temporary client key (not your profile npub). Generate the QR and paste it in the app — on first connect the client sends that key and the session is bound automatically.",
       "labelOptional": "Label (optional)",
-      "labelPlaceholder": "e.g. Nostrudel · Coracle on phone",
-      "labelHint": "The protocol does not send the app name (Nostrudel, Coracle, …). This label is shown in sessions so you can tell them apart.",
+      "labelPlaceholder": "e.g. Primal · Coracle · Nostrudel",
+      "labelHint": "The protocol does not send the app name (Primal, Coracle, Nostrudel, …). This label is shown in sessions so you can tell them apart.",
       "generateQr": "Generate QR / bunker link",
-      "qrHelp1": "Paste this QR in the client or copy the full link. Each QR is single-use: after an app connects successfully, that link stops working.",
-      "qrHelp2": "For another app (e.g. Coracle after Nostrudel), generate a new QR and paste it there — remove old bunker connections in the app if it still caches a previous link.",
+      "qrHelp1": "Paste this QR in the client or copy the full link. Each link is single-use: after an app connects successfully, it stops working.",
+      "qrHelp2": "Another device or app needs a new link. Remove stale bunker connections in the client if it cached an old URI.",
       "copy": "Copy",
       "copied": "Copied",
-      "regenerateQr": "Generate another QR (invalidates the one on this screen)",
-      "viewSessions": "View active sessions"
+      "newLinkInline": "Need a new link for another app?"
     },
     "homeLink": "← Home"
   },
