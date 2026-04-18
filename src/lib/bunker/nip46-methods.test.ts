@@ -63,8 +63,30 @@ describe("runNip46Method", () => {
       { id: "2", method: "connect", params: [bunkerPk, secret] },
       deps,
     );
-    expect(out.result).toBe(bunkerPk);
+    expect(out.result).toBe("ack");
     expect(completeConnect).toHaveBeenCalledWith("b".repeat(64), secret);
+  });
+
+  it("connect accepts Welshman-style third param (perms)", async () => {
+    const sk = generateSecretKey();
+    const bunkerPk = getPublicKey(sk);
+    const completeConnect = vi.fn().mockResolvedValue(undefined);
+    const deps = testDeps({
+      bunkerSecretKey: sk,
+      bunkerPubkeyHex: bunkerPk,
+      completeConnect,
+    });
+    const out = await runNip46Method(
+      "b".repeat(64),
+      {
+        id: "2b",
+        method: "connect",
+        params: [bunkerPk, "sec", "nip44_encrypt,sign_event:1"],
+      },
+      deps,
+    );
+    expect(out.result).toBe("ack");
+    expect(completeConnect).toHaveBeenCalledWith("b".repeat(64), "sec");
   });
 
   it("connect fails on bunker mismatch", async () => {

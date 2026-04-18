@@ -71,11 +71,14 @@ export async function runNip46Method(
       case "connect": {
         const claimedBunker = params[0] ?? "";
         const secret = params[1] ?? "";
+        // params[2] may be requested perms (Welshman / Coracle send 3 strings).
         if (claimedBunker.toLowerCase() !== deps.bunkerPubkeyHex.toLowerCase()) {
           throw new Error("connect: bunker pubkey mismatch");
         }
         await deps.completeConnect(appPubkey, secret);
-        return { id, result: claimedBunker };
+        // NIP-46: result should be "ack" (or empty). Welshman/Coracle only treat
+        // `result === "ack"` or `result === connectSecret` as success — not remote-signer hex.
+        return { id, result: "ack" };
       }
       case "get_public_key": {
         await deps.assertAppMayUseSigner(appPubkey);
