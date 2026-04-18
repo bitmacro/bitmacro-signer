@@ -34,13 +34,12 @@ export function SignerBuildStamp({
 }: Props) {
   const t = useTranslations("buildStamp");
   const [info, setInfo] = useState<BuildInfoJson | null>(null);
-  const [loadState, setLoadState] = useState<"idle" | "loading" | "done" | "error">(
-    "idle",
+  const [loadState, setLoadState] = useState<"loading" | "done" | "error">(
+    "loading",
   );
 
   useEffect(() => {
     let cancelled = false;
-    setLoadState("loading");
     void (async () => {
       try {
         const r = await fetch("/api/build-info", { cache: "no-store" });
