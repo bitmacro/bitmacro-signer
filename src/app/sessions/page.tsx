@@ -56,19 +56,21 @@ function SessionCard({
   };
 
   return (
-    <li className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-3 text-[13px]">
+    <li className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-5 text-base">
       {row.app_name ? (
-        <p className="text-[15px] font-semibold leading-snug text-white">{row.app_name}</p>
+        <p className="text-lg font-semibold leading-snug text-white">{row.app_name}</p>
       ) : (
-        <p className="text-[13px] text-zinc-500">Sem etiqueta — definida ao gerar o QR no onboarding</p>
+        <p className="text-base leading-[1.5] text-zinc-400">
+          Sem etiqueta — definida ao gerar o QR no onboarding
+        </p>
       )}
-      <p className="mt-3 text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+      <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-zinc-400">
         Chave de sessão no cliente (NIP-46)
       </p>
       {clientNpub ? (
-        <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-stretch sm:justify-between">
           <code
-            className="break-all font-mono text-[11px] leading-relaxed text-zinc-200"
+            className="flex min-h-12 flex-1 items-center break-all rounded-lg border border-zinc-800 bg-zinc-950/80 px-3 py-2 font-mono text-sm leading-normal text-zinc-200"
             title={clientNpub}
           >
             {truncateHexMiddle(clientNpub, 18, 16)}
@@ -76,23 +78,23 @@ function SessionCard({
           <button
             type="button"
             onClick={() => void copyNpub()}
-            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md border border-zinc-600 px-2.5 py-1.5 text-[12px] text-zinc-200 hover:bg-zinc-800"
+            className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-lg border border-zinc-600 px-4 text-sm font-semibold text-zinc-100 hover:bg-zinc-800"
           >
             {copiedKey === kNpub ? (
-              <Check className="size-3.5 text-emerald-400" aria-hidden />
+              <Check className="size-4 text-emerald-400" aria-hidden />
             ) : (
-              <Copy className="size-3.5" aria-hidden />
+              <Copy className="size-4" aria-hidden />
             )}
             {copiedKey === kNpub ? "Copiado" : "Copiar npub"}
           </button>
         </div>
       ) : null}
-      <p className="mt-2 text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+      <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-zinc-400">
         Hex (técnico)
       </p>
-      <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-stretch sm:justify-between">
         <code
-          className="break-all font-mono text-[11px] leading-relaxed text-zinc-400"
+          className="flex min-h-12 flex-1 items-center break-all rounded-lg border border-zinc-800 bg-zinc-950/80 px-3 py-2 font-mono text-sm leading-normal text-zinc-300"
           title={row.app_pubkey}
         >
           {truncateHexMiddle(row.app_pubkey)}
@@ -100,17 +102,17 @@ function SessionCard({
         <button
           type="button"
           onClick={() => void copyHex()}
-          className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md border border-zinc-700 px-2.5 py-1.5 text-[12px] text-zinc-400 hover:bg-zinc-800"
+          className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-lg border border-zinc-600 px-4 text-sm font-semibold text-zinc-200 hover:bg-zinc-800"
         >
           {copiedKey === kHex ? (
-            <Check className="size-3.5 text-emerald-400" aria-hidden />
+            <Check className="size-4 text-emerald-400" aria-hidden />
           ) : (
-            <Copy className="size-3.5" aria-hidden />
+            <Copy className="size-4" aria-hidden />
           )}
           {copiedKey === kHex ? "Copiado" : "Copiar hex"}
         </button>
       </div>
-      <div className="mt-2 text-[12px] text-zinc-500">
+      <div className="mt-4 text-sm leading-[1.5] text-zinc-400">
         expira {new Date(row.expires_at).toLocaleString()}{" "}
         {row.used ? "· usada" : "· pendente"}
       </div>
@@ -166,35 +168,37 @@ export default function SessionsPage() {
       className="min-h-screen text-zinc-200 antialiased"
       style={{ backgroundColor: BG }}
     >
-      <div className="mx-auto max-w-3xl px-4 py-10 sm:py-14">
-        <header className="mb-8 border-b border-zinc-800 pb-6">
-          <p className="font-mono text-[11px] uppercase tracking-wider text-zinc-500">
+      <div className="mx-auto max-w-3xl px-5 py-10 sm:py-14">
+        <header className="mb-10 border-b border-zinc-800 pb-8">
+          <p className="font-mono text-xs uppercase tracking-wider text-zinc-400">
             BitMacro Signer
           </p>
-          <h1 className="mt-1 text-2xl font-bold text-white">Sessões activas</h1>
+          <h1 className="mt-2 text-[clamp(1.5rem,3vw+0.85rem,1.875rem)] font-bold leading-tight text-white">
+            Sessões activas
+          </h1>
           {identityId ? (
-            <p className="mt-2 font-mono text-[12px] text-zinc-500">{identityId}</p>
+            <p className="mt-3 break-all font-mono text-sm text-zinc-400">{identityId}</p>
           ) : null}
-          <p className="mt-3 max-w-2xl text-[13px] leading-relaxed text-zinc-500">
-            O NIP-46 não envia o nome da app: usa a <strong className="font-medium text-zinc-400">chave de sessão</strong>{" "}
-            (npub/hex abaixo). Se definires uma <strong className="font-medium text-zinc-400">etiqueta</strong> ao gerar o
+          <p className="mt-4 max-w-2xl text-base leading-[1.5] text-zinc-300">
+            O NIP-46 não envia o nome da app: usa a <strong className="font-semibold text-zinc-100">chave de sessão</strong>{" "}
+            (npub/hex abaixo). Se definires uma <strong className="font-semibold text-zinc-100">etiqueta</strong> ao gerar o
             QR, ela aparece em destaque.
           </p>
         </header>
 
         {loading ? (
-          <div className="flex items-center gap-2 text-zinc-400">
-            <Loader2 className="size-5 animate-spin" aria-hidden />
+          <div className="flex min-h-12 items-center gap-3 text-base text-zinc-300">
+            <Loader2 className="size-5 shrink-0 animate-spin" aria-hidden />
             A carregar…
           </div>
         ) : null}
 
         {error ? (
-          <div className="mb-6 rounded-lg border border-amber-900/50 bg-amber-950/30 px-3 py-2 text-[13px] text-amber-100">
+          <div className="mb-6 rounded-lg border border-amber-900/50 bg-amber-950/30 px-4 py-3 text-base leading-[1.5] text-amber-100">
             {error}{" "}
             <Link
               href="/onboarding"
-              className="font-medium underline-offset-2 hover:underline"
+              className="font-semibold underline-offset-2 hover:underline"
               style={{ color: ACCENT }}
             >
               Onboarding
@@ -203,11 +207,11 @@ export default function SessionsPage() {
         ) : null}
 
         {rows && rows.length === 0 ? (
-          <p className="text-[14px] text-zinc-500">Nenhuma sessão de cliente.</p>
+          <p className="text-base leading-[1.5] text-zinc-400">Nenhuma sessão de cliente.</p>
         ) : null}
 
         {rows && rows.length > 0 ? (
-          <ul className="space-y-3">
+          <ul className="space-y-4">
             {rows.map((r) => (
               <SessionCard
                 key={r.id}
@@ -222,10 +226,10 @@ export default function SessionsPage() {
           </ul>
         ) : null}
 
-        <p className="mt-10 text-[13px]">
+        <p className="mt-12 text-base leading-[1.5]">
           <Link
             href="/onboarding"
-            className="underline-offset-2 hover:underline"
+            className="inline-flex min-h-11 items-center font-semibold underline-offset-2 hover:underline"
             style={{ color: ACCENT }}
           >
             ← Voltar ao onboarding

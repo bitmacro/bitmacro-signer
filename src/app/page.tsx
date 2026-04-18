@@ -21,11 +21,11 @@ docker compose up --build`;
 
 function Header() {
   return (
-    <header className="landing-content border-b border-border/80 bg-background/40 backdrop-blur-sm">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
+    <header className="landing-content border-b border-border/80 bg-background/55 backdrop-blur-sm">
+      <div className="mx-auto flex min-h-14 max-w-6xl items-center justify-between gap-3 px-5 sm:px-6 lg:px-8">
         <Link
           href="/"
-          className="flex items-center gap-2.5 text-[14px] font-semibold tracking-tight text-foreground"
+          className="flex min-h-11 min-w-0 items-center gap-2.5 py-2 text-base font-semibold tracking-tight text-foreground sm:text-[15px]"
         >
           <Image
             src="/bitmacro-logo.png"
@@ -35,24 +35,24 @@ function Header() {
             className="size-9 shrink-0 object-contain"
             priority
           />
-          BitMacro Signer
+          <span className="truncate">BitMacro Signer</span>
         </Link>
-        <nav className="flex max-w-[min(100%,18rem)] flex-wrap items-center justify-end gap-x-3 gap-y-1 text-[11px] sm:max-w-none sm:gap-4 sm:text-[13px]">
+        <nav className="flex max-w-[min(100%,20rem)] flex-wrap items-center justify-end gap-x-1 gap-y-2 text-sm sm:max-w-none sm:gap-x-2 sm:text-sm">
           <a
             href="#como-funciona"
-            className="whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground"
+            className="inline-flex min-h-11 items-center whitespace-nowrap rounded-md px-2.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
           >
             Como funciona
           </a>
           <a
             href="#comparacao"
-            className="whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground"
+            className="inline-flex min-h-11 items-center whitespace-nowrap rounded-md px-2.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
           >
             Comparação
           </a>
           <a
             href="#self-host"
-            className="whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground"
+            className="inline-flex min-h-11 items-center whitespace-nowrap rounded-md px-2.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
           >
             Self-host
           </a>
@@ -60,7 +60,7 @@ function Header() {
             href={GITHUB_REPO}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground"
+            className="inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
           >
             <Github className="size-4 shrink-0" aria-hidden />
             GitHub
@@ -73,47 +73,47 @@ function Header() {
 
 function Hero() {
   return (
-    <section className="landing-content px-4 pb-16 pt-12 sm:px-6 sm:pb-20 sm:pt-16 md:pb-28 md:pt-20">
+    <section className="landing-content px-5 pb-16 pt-12 sm:px-6 sm:pb-20 sm:pt-16 md:pb-28 md:pt-20 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <div className="mb-6 space-y-1.5">
-          <p className="font-mono text-[12px] uppercase tracking-wider text-muted-foreground">
+        <div className="mb-6 space-y-2">
+          <p className="font-mono text-xs uppercase tracking-wider text-muted-foreground sm:text-sm">
             NIP-46 · Nostr Connect
           </p>
-          <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/80 sm:text-[11px]">
+          <p className="font-mono text-xs uppercase tracking-wider text-muted-foreground sm:text-sm">
             Bunker gerido · relay BitMacro
           </p>
         </div>
-        <h1 className="mb-5 max-w-3xl text-[28px] font-bold leading-tight tracking-tight text-foreground md:text-[40px] lg:text-[44px]">
+        <h1 className="mb-5 max-w-3xl text-[clamp(1.75rem,5.2vw+0.85rem,2.75rem)] font-bold leading-[1.15] tracking-tight text-foreground md:text-[2.5rem] lg:text-[2.75rem]">
           O teu bunker NIP-46, sempre disponível.
         </h1>
-        <p className="mb-10 max-w-2xl text-[15px] leading-relaxed text-muted-foreground md:text-[17px]">
-          Assina eventos Nostr à distância. A <span className="text-foreground/90">nsec</span>{" "}
+        <p className="mb-10 max-w-2xl text-base leading-[1.5] text-muted-foreground md:text-[17px] md:leading-[1.55]">
+          Assina eventos Nostr à distância. A <span className="text-foreground/95">nsec</span>{" "}
           permanece encriptada no cofre; o servidor nunca a armazena em texto claro — apenas um
           blob cifrado, com sessão activa opcional em memória (TTL configurável).
         </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <Link
             href="/onboarding"
-            className="glow-primary hover:glow-primary-strong inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-[14px] font-semibold text-primary-foreground transition-all duration-300 hover:scale-[1.02] sm:min-h-0 sm:py-2.5"
+            className="glow-primary hover:glow-primary-strong bm-btn-primary hover:scale-[1.01] active:scale-[0.99]"
           >
             Começar grátis
-            <ArrowRight className="size-4" aria-hidden />
+            <ArrowRight className="size-5 shrink-0" aria-hidden />
           </Link>
           <a
             href={GITHUB_REPO}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border px-6 text-[14px] font-medium text-foreground transition-colors hover:bg-secondary/60 sm:min-h-0 sm:py-2.5"
+            className="bm-btn-secondary font-semibold"
           >
-            <Github className="size-4" aria-hidden />
+            <Github className="size-5 shrink-0" aria-hidden />
             Ver no GitHub
           </a>
         </div>
-        <p className="mt-6 max-w-xl text-[12px] leading-relaxed text-muted-foreground">
+        <p className="mt-8 max-w-xl text-sm leading-[1.5] text-muted-foreground">
           Para quem prefere controlar a infraestrutura:{" "}
           <a
             href="#self-host"
-            className="text-primary underline-offset-2 transition-colors hover:underline"
+            className="font-medium text-primary underline-offset-2 transition-colors hover:underline"
           >
             Docker e repositório open source (MIT)
           </a>
@@ -146,27 +146,27 @@ function HowItWorks() {
   return (
     <section
       id="como-funciona"
-      className="section-glow-divider relative border-t border-border/60 px-4 py-16 sm:px-6 md:py-24"
+      className="section-glow-divider relative border-t border-border/60 px-5 py-12 sm:px-6 md:py-20 lg:px-8 lg:py-24"
     >
       <div className="landing-content mx-auto max-w-6xl">
-        <h2 className="mb-3 text-[22px] font-bold tracking-tight text-foreground md:text-[28px]">
+        <h2 className="mb-3 text-[clamp(1.375rem,3vw+0.75rem,1.75rem)] font-bold tracking-tight text-foreground md:text-[28px]">
           Como funciona
         </h2>
-        <p className="mb-12 max-w-2xl text-[15px] text-muted-foreground">
+        <p className="mb-10 max-w-2xl text-base leading-[1.5] text-muted-foreground md:mb-12">
           Três passos — do keypair à assinatura remota no ecossistema BitMacro.
         </p>
-        <ol className="grid gap-6 md:grid-cols-3">
+        <ol className="grid gap-6 md:grid-cols-3 md:gap-8">
           {steps.map(({ icon: Icon, title, body }, i) => (
             <li key={title}>
-              <div className="glass-card elevation-1 hover:border-primary/25 group rounded-2xl border border-border/80 p-6 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg">
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-primary transition-transform duration-300 group-hover:scale-105">
+              <div className="glass-card elevation-1 hover:border-primary/25 group rounded-2xl border border-border/80 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg md:p-6">
+                <div className="mb-4 flex size-12 items-center justify-center rounded-xl bg-secondary text-primary transition-transform duration-300 group-hover:scale-105">
                   <Icon className="size-5" aria-hidden />
                 </div>
-                <p className="mb-1 font-mono text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                <p className="mb-1 font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   {String(i + 1).padStart(2, "0")}
                 </p>
-                <h3 className="mb-2 text-[16px] font-semibold text-foreground">{title}</h3>
-                <p className="text-[14px] leading-relaxed text-muted-foreground">{body}</p>
+                <h3 className="mb-2 text-lg font-semibold leading-snug text-foreground">{title}</h3>
+                <p className="text-base leading-[1.5] text-muted-foreground">{body}</p>
               </div>
             </li>
           ))}
@@ -198,7 +198,7 @@ type CompareDataRow = {
 type CompareRow = CompareCategoryRow | CompareDataRow;
 
 const COMPARE_PILL =
-  "inline-flex max-w-full items-center rounded-full border border-border bg-secondary/70 px-2 py-0.5 text-[11px] font-medium leading-tight text-muted-foreground";
+  "inline-flex max-w-full items-center rounded-full border border-border bg-secondary/70 px-2.5 py-1 text-xs font-medium leading-tight text-muted-foreground";
 
 function CompareCellContent({ cell }: { cell: CompareCell }) {
   switch (cell.kind) {
@@ -225,7 +225,7 @@ function CompareCellContent({ cell }: { cell: CompareCell }) {
       return (
         <span className="flex flex-wrap items-center gap-1.5">
           <Check className="size-4 shrink-0 text-emerald-400" strokeWidth={2.5} aria-hidden />
-          <span className={`${COMPARE_PILL} font-mono text-[10px]`}>{cell.pill}</span>
+          <span className={`${COMPARE_PILL} font-mono text-[11px] sm:text-xs`}>{cell.pill}</span>
         </span>
       );
     default:
@@ -447,54 +447,54 @@ const COMPARISON_ROWS: CompareRow[] = [
 
 function ComparisonTable() {
   const signerCol =
-    "border-b border-border bg-[rgba(0,102,255,0.09)] px-3 py-2.5 align-middle transition-colors duration-150 max-md:min-w-[7rem] group-hover:bg-[rgba(0,102,255,0.14)]";
-  const stdCol = "border-b border-border px-3 py-2.5 align-middle text-center max-md:min-w-[5.5rem]";
+    "border-b border-border bg-[rgba(0,102,255,0.09)] px-3 py-3 align-middle transition-colors duration-150 max-md:min-w-[7.5rem] group-hover:bg-[rgba(0,102,255,0.14)]";
+  const stdCol = "border-b border-border px-3 py-3 align-middle text-center max-md:min-w-[6rem]";
   const featureCol =
-    "border-b border-border px-3 py-2.5 align-middle text-left text-[13px] font-medium text-foreground max-md:min-w-[12rem]";
+    "border-b border-border px-3 py-3 align-middle text-left text-sm font-medium leading-snug text-foreground max-md:min-w-[12rem] md:text-[15px]";
 
   return (
     <section
       id="comparacao"
-      className="section-glow-divider relative border-t border-border/60 px-4 py-16 sm:px-6 md:py-24"
+      className="section-glow-divider relative border-t border-border/60 px-5 py-12 sm:px-6 md:py-20 lg:px-8 lg:py-24"
     >
       <div className="landing-content mx-auto max-w-6xl">
-        <h2 className="mb-3 text-[22px] font-bold tracking-tight text-foreground md:text-[28px]">
+        <h2 className="mb-3 text-[clamp(1.375rem,3vw+0.75rem,1.75rem)] font-bold tracking-tight text-foreground md:text-[28px]">
           Comparação
         </h2>
-        <p className="mb-10 max-w-2xl text-[15px] text-muted-foreground">
+        <p className="mb-10 max-w-2xl text-base leading-[1.5] text-muted-foreground">
           BitMacro Signer frente a soluções conhecidas no ecossistema Nostr — funcionalidades por
           categoria.
         </p>
         <div className="glass-card elevation-1 overflow-x-auto rounded-xl border border-border">
-          <table className="w-full min-w-[720px] border-collapse text-left text-[13px]">
+          <table className="w-full min-w-[720px] border-collapse text-left text-sm md:text-[15px]">
             <thead>
               <tr className="bg-secondary/80">
                 <th
                   scope="col"
-                  className="border-b border-border px-3 py-3 text-left text-[12px] font-semibold text-muted-foreground"
+                  className="border-b border-border px-3 py-4 text-left text-sm font-semibold text-muted-foreground"
                 >
                   Característica
                 </th>
                 <th
                   scope="col"
-                  className="border-b border-border px-3 py-3 text-center text-[12px] font-semibold text-foreground"
+                  className="border-b border-border px-3 py-4 text-center text-sm font-semibold text-foreground"
                 >
                   Amber
                 </th>
                 <th
                   scope="col"
-                  className="border-b border-border px-3 py-3 text-center text-[12px] font-semibold text-foreground"
+                  className="border-b border-border px-3 py-4 text-center text-sm font-semibold text-foreground"
                 >
                   Alby
                 </th>
                 <th
                   scope="col"
-                  className="border-b border-border bg-[rgba(0,102,255,0.09)] px-3 py-3 text-center align-bottom text-[12px] font-semibold text-foreground"
+                  className="border-b border-border bg-[rgba(0,102,255,0.09)] px-3 py-4 text-center align-bottom text-sm font-semibold text-foreground"
                 >
-                  <span className="mb-2 inline-flex rounded-full border border-blue-500/35 bg-blue-500/15 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-blue-300">
+                  <span className="mb-2 inline-flex rounded-full border border-blue-500/35 bg-blue-500/15 px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-blue-200 sm:text-xs">
                     recomendado
                   </span>
-                  <span className="mt-1 block text-[13px] font-semibold text-foreground">
+                  <span className="mt-1 block text-sm font-semibold text-foreground sm:text-base">
                     BitMacro Signer
                   </span>
                 </th>
@@ -507,7 +507,7 @@ function ComparisonTable() {
                     <tr key={`cat-${row.title}`} className="bg-muted/25">
                       <td
                         colSpan={4}
-                        className="border-b border-border px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+                        className="border-b border-border px-3 py-3 font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground"
                       >
                         {row.title}
                       </td>
@@ -523,7 +523,7 @@ function ComparisonTable() {
                     <th scope="row" className={featureCol}>
                       <span className="block">{row.feature}</span>
                       {row.detail ? (
-                        <span className="mt-0.5 block text-[11px] font-normal leading-snug text-muted-foreground">
+                        <span className="mt-1 block text-sm font-normal leading-[1.5] text-muted-foreground">
                           {row.detail}
                         </span>
                       ) : null}
@@ -549,7 +549,7 @@ function ComparisonTable() {
             </tbody>
           </table>
         </div>
-        <div className="mt-5 space-y-2 text-[12px] leading-relaxed text-muted-foreground">
+        <div className="mt-6 space-y-3 text-sm leading-[1.5] text-muted-foreground">
           <p>
             <span className="font-medium text-foreground/90">fase 2</span> = roadmap previsto, não
             disponível no MVP.
@@ -568,32 +568,32 @@ function SelfHost() {
   return (
     <section
       id="self-host"
-      className="section-glow-divider relative border-t border-border/60 px-4 py-16 sm:px-6 md:py-24"
+      className="section-glow-divider relative border-t border-border/60 px-5 py-12 sm:px-6 md:py-20 lg:px-8 lg:py-24"
     >
       <div className="landing-content mx-auto max-w-6xl">
         <div className="grid gap-10 lg:grid-cols-2 lg:items-start lg:gap-12">
           <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-lg border border-border bg-secondary/40 px-3 py-1.5 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
-              <Server className="size-3.5 text-primary" aria-hidden />
+            <div className="mb-4 inline-flex min-h-10 items-center gap-2 rounded-lg border border-border bg-secondary/40 px-3 py-2 font-mono text-xs uppercase tracking-wide text-muted-foreground">
+              <Server className="size-4 shrink-0 text-primary" aria-hidden />
               Self-host
             </div>
-            <h2 className="mb-3 text-[22px] font-bold tracking-tight text-foreground md:text-[28px]">
+            <h2 className="mb-3 text-[clamp(1.375rem,3vw+0.75rem,1.75rem)] font-bold tracking-tight text-foreground md:text-[28px]">
               Corre na tua infraestrutura
             </h2>
-            <p className="mb-6 text-[15px] leading-relaxed text-muted-foreground">
-              Imagem Docker com Next.js em modo <code className="font-mono text-[13px] text-primary">standalone</code>.
+            <p className="mb-6 text-base leading-[1.5] text-muted-foreground">
+              Imagem Docker com Next.js em modo <code className="font-mono text-sm text-primary">standalone</code>.
               Copia as variáveis de ambiente, constrói e sobe — sem passos extra além do{" "}
-              <code className="font-mono text-[13px] text-foreground/90">.env</code>.
+              <code className="font-mono text-sm text-foreground/95">.env</code>.
             </p>
-            <ul className="mb-8 space-y-3 text-[14px] text-muted-foreground">
-              <li className="flex gap-2">
-                <Lock className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+            <ul className="mb-8 space-y-4 text-base leading-[1.5] text-muted-foreground">
+              <li className="flex gap-3">
+                <Lock className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
                 <span>Secrets só no host — nunca commits de chaves.</span>
               </li>
-              <li className="flex gap-2">
-                <Server className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+              <li className="flex gap-3">
+                <Server className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
                 <span>
-                  Healthcheck em <code className="font-mono text-[12px]">/api/health</code> para
+                  Healthcheck em <code className="font-mono text-sm text-foreground/90">/api/health</code> para
                   orquestração.
                 </span>
               </li>
@@ -602,18 +602,18 @@ function SelfHost() {
               href={GITHUB_REPO}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-[14px] font-medium text-primary underline-offset-2 transition-colors hover:underline"
+              className="inline-flex min-h-11 items-center gap-2 rounded-md text-base font-semibold text-primary underline-offset-2 transition-colors hover:underline"
             >
               Dockerfile, compose e README no GitHub
-              <ArrowRight className="size-4" aria-hidden />
+              <ArrowRight className="size-5 shrink-0" aria-hidden />
             </a>
           </div>
           <div className="rounded-2xl border border-border bg-card/50 elevation-1">
-            <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
-              <span className="font-mono text-[11px] text-muted-foreground">terminal</span>
-              <span className="font-mono text-[10px] text-muted-foreground/70">bash</span>
+            <div className="flex items-center justify-between border-b border-border px-4 py-3 sm:px-5">
+              <span className="font-mono text-xs text-muted-foreground">terminal</span>
+              <span className="font-mono text-xs text-muted-foreground">bash</span>
             </div>
-            <pre className="overflow-x-auto p-4 font-mono text-[12px] leading-relaxed text-foreground/90 md:text-[13px]">
+            <pre className="overflow-x-auto p-5 font-mono text-sm leading-[1.55] text-foreground/95 md:text-[15px]">
               <code>{DOCKER_SNIPPET}</code>
             </pre>
           </div>
@@ -625,11 +625,11 @@ function SelfHost() {
 
 function Footer() {
   return (
-    <footer className="landing-content border-t border-border/80 px-4 py-10 sm:px-6">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
-        <p className="text-center text-[12px] text-muted-foreground sm:text-left">
+    <footer className="landing-content border-t border-border/80 px-5 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-5 sm:flex-row sm:items-start">
+        <p className="text-center text-sm leading-[1.5] text-muted-foreground sm:text-left">
           © {new Date().getFullYear()}{" "}
-          <a href={BITMACRO_HOME} className="footer-link font-medium text-foreground/90">
+          <a href={BITMACRO_HOME} className="footer-link font-semibold text-foreground/95">
             BitMacro
           </a>
           {" · "}
@@ -644,7 +644,7 @@ function Footer() {
           {" · "}
           <span className="text-muted-foreground">Licença MIT</span>
         </p>
-        <p className="text-[11px] text-muted-foreground/80">
+        <p className="text-center text-sm leading-normal text-muted-foreground sm:text-right">
           signer.bitmacro.io — bunker NIP-46 gerido
         </p>
       </div>

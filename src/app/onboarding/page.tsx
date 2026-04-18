@@ -396,51 +396,51 @@ export default function OnboardingPage() {
       className="min-h-screen text-zinc-200 antialiased"
       style={{ backgroundColor: BG }}
     >
-      <div className="mx-auto max-w-lg px-4 py-10 sm:py-14">
-        <header className="mb-10 flex flex-col gap-3 border-b border-zinc-800/80 pb-8">
-          <p className="font-mono text-[11px] uppercase tracking-wider text-zinc-500">
+      <div className="mx-auto max-w-lg px-5 py-10 sm:py-14">
+        <header className="mb-10 flex flex-col gap-4 border-b border-zinc-800/80 pb-10">
+          <p className="font-mono text-xs uppercase tracking-wider text-zinc-400">
             BitMacro Signer
           </p>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
+          <h1 className="text-[clamp(1.5rem,4vw+0.75rem,1.75rem)] font-bold leading-tight tracking-tight text-white">
             Activar o bunker
           </h1>
-          <p className="text-[14px] leading-relaxed text-zinc-400">
+          <p className="text-base leading-[1.5] text-zinc-300">
             Usa o npub da tua Identity BitMacro, a passphrase do cofre, e obtém o QR
             NIP-46.
           </p>
 
-          <div className="mt-2 flex flex-col gap-2 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2.5 text-[13px]">
+          <div className="mt-1 flex flex-col gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 text-base">
             <div className="flex flex-wrap items-center gap-3">
               <Radio
-                className="size-4 shrink-0"
+                className="size-5 shrink-0"
                 style={{ color: ACCENT }}
                 aria-hidden
               />
-              <span className="text-zinc-400">Bunker:</span>
+              <span className="text-zinc-300">Bunker:</span>
               {statusIdentity ? (
                 statusRunning ? (
-                  <span className="font-medium text-emerald-400">Activo</span>
+                  <span className="font-semibold text-emerald-400">Activo</span>
                 ) : (
-                  <span className="max-w-[min(100%,16rem)] font-medium leading-snug text-sky-300/95 sm:max-w-none">
+                  <span className="max-w-[min(100%,16rem)] font-medium leading-snug text-sky-200 sm:max-w-none">
                     Sessão activa — bunker em modo managed (Server)
                   </span>
                 )
               ) : (
-                <span className="text-zinc-500">Inactivo</span>
+                <span className="text-zinc-400">Inactivo</span>
               )}
               {statusIdentity ? (
                 <button
                   type="button"
                   onClick={() => void handleLock()}
                   disabled={loading}
-                  className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-zinc-700 px-2.5 py-1 text-[12px] text-zinc-300 transition-colors hover:bg-zinc-800 disabled:opacity-50"
+                  className="ml-auto inline-flex min-h-11 items-center gap-2 rounded-lg border border-zinc-600 px-3 text-sm font-semibold text-zinc-100 transition-colors hover:bg-zinc-800 disabled:opacity-50 sm:ml-0 sm:px-4"
                 >
-                  <LogOut className="size-3.5" aria-hidden />
+                  <LogOut className="size-4 shrink-0" aria-hidden />
                   Bloquear bunker
                 </button>
               ) : null}
             </div>
-            <p className="text-[11px] leading-relaxed text-zinc-500">
+            <p className="text-sm leading-[1.5] text-zinc-400">
               O bunker corre no servidor — não depende desta janela estar aberta.
             </p>
             {statusIdentity && phase === 1 && step1Path === "have_npub" ? (
@@ -452,7 +452,7 @@ export default function OnboardingPage() {
                   setBunkerUri(null);
                   setPhase(3);
                 }}
-                className="w-full rounded-md py-2 text-[12px] font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="min-h-[52px] w-full rounded-lg px-4 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
                 style={{ backgroundColor: ACCENT }}
               >
                 Retomar: passo 3 — gerar QR NIP-46
@@ -462,23 +462,23 @@ export default function OnboardingPage() {
         </header>
 
         <nav
-          className="mb-10 flex items-center justify-center gap-2 text-[12px] text-zinc-500"
+          className="mb-10 flex items-center justify-center gap-2 text-sm text-zinc-400"
           aria-label="Passos"
         >
           {([1, 2, 3] as const).map((n) => (
             <div key={n} className="flex items-center gap-2">
               <span
-                className="flex size-8 items-center justify-center rounded-full border text-[13px] font-semibold"
+                className="flex size-11 items-center justify-center rounded-full border text-base font-semibold"
                 style={{
-                  borderColor: phase >= n ? ACCENT : "#3f3f46",
-                  color: phase >= n ? ACCENT : "#71717a",
+                  borderColor: phase >= n ? ACCENT : "#52525b",
+                  color: phase >= n ? ACCENT : "#d4d4d8",
                   backgroundColor: phase === n ? "rgba(0,102,255,0.12)" : "transparent",
                 }}
               >
                 {n}
               </span>
               {n < 3 ? (
-                <span className="h-px w-6 bg-zinc-800" aria-hidden />
+                <span className="h-px w-6 bg-zinc-700" aria-hidden />
               ) : null}
             </div>
           ))}
@@ -486,7 +486,7 @@ export default function OnboardingPage() {
 
         {error ? (
           <div
-            className="mb-6 rounded-lg border border-red-900/60 bg-red-950/40 px-3 py-2 text-[13px] text-red-200"
+            className="mb-6 rounded-lg border border-red-900/60 bg-red-950/40 px-4 py-3 text-base leading-[1.5] text-red-100"
             role="alert"
           >
             {error}
@@ -495,28 +495,28 @@ export default function OnboardingPage() {
 
         {/* Step 1 */}
         <section className="mb-14 scroll-mt-8">
-          <div className="mb-4 flex items-center gap-2">
+          <div className="mb-5 flex items-center gap-2">
             <Shield className="size-5" style={{ color: ACCENT }} aria-hidden />
-            <h2 className="text-lg font-semibold text-white">
+            <h2 className="text-lg font-semibold leading-snug text-white sm:text-xl">
               1. Identificação
             </h2>
           </div>
 
-          <div className="mb-4 flex flex-col gap-3">
+          <div className="mb-6 flex flex-col gap-3">
             <button
               type="button"
               onClick={() => {
                 setError(null);
                 setStep1Path("have_npub");
               }}
-              className={`rounded-lg border px-4 py-3 text-left text-[14px] transition-colors ${
+              className={`min-h-[52px] rounded-xl border px-4 py-3 text-left text-base transition-colors ${
                 step1Path === "have_npub"
                   ? "border-[#0066ff]/50 bg-[rgba(0,102,255,0.08)]"
                   : "border-zinc-600 hover:bg-zinc-800"
               }`}
             >
-              <span className="font-medium text-white">Já tenho npub</span>
-              <span className="mt-1 block text-[12px] text-zinc-500">
+              <span className="font-semibold text-white">Já tenho npub</span>
+              <span className="mt-1 block text-sm leading-[1.5] text-zinc-400">
                 Npub BitMacro Identity + passphrase do cofre
               </span>
             </button>
@@ -527,26 +527,23 @@ export default function OnboardingPage() {
                 setStep1Path("fresh_npub");
                 ensureFreshKeypair();
               }}
-              className={`rounded-lg border px-4 py-3 text-left text-[14px] transition-colors ${
+              className={`min-h-[52px] rounded-xl border px-4 py-3 text-left text-base transition-colors ${
                 step1Path === "fresh_npub"
                   ? "border-[#0066ff]/50 bg-[rgba(0,102,255,0.08)]"
                   : "border-zinc-600 hover:bg-zinc-800"
               }`}
             >
-              <span className="font-medium text-white">Não tenho npub ainda</span>
-              <span className="mt-1 block text-[12px] text-zinc-500">
+              <span className="font-semibold text-white">Não tenho npub ainda</span>
+              <span className="mt-1 block text-sm leading-[1.5] text-zinc-400">
                 Gera um par no browser e cria o cofre sem passar pelo unlock
               </span>
             </button>
           </div>
 
           {step1Path === "have_npub" ? (
-            <form onSubmit={(e) => void handleUnlock(e)} className="space-y-4">
+            <form onSubmit={(e) => void handleUnlock(e)} className="space-y-5">
               <div>
-                <label
-                  htmlFor="npub"
-                  className="mb-1.5 block text-[13px] text-zinc-400"
-                >
+                <label htmlFor="npub" className="bm-label text-zinc-300">
                   Chave pública Nostr (npub)
                 </label>
                 <input
@@ -554,16 +551,13 @@ export default function OnboardingPage() {
                   value={npubInput}
                   onChange={(e) => setNpubInput(e.target.value)}
                   autoComplete="off"
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2.5 font-mono text-[12px] text-white outline-none ring-offset-2 ring-offset-[#080808] focus:ring-2 focus:ring-[#0066ff]"
+                  className="bm-input border-zinc-700 bg-zinc-900/50 font-mono text-white ring-offset-[#080808] placeholder:text-zinc-500 focus:ring-[#0066ff]"
                   placeholder="npub1…"
                   required
                 />
               </div>
               <div>
-                <label
-                  htmlFor="passphrase"
-                  className="mb-1.5 block text-[13px] text-zinc-400"
-                >
+                <label htmlFor="passphrase" className="bm-label text-zinc-300">
                   Passphrase do cofre
                 </label>
                 <input
@@ -572,14 +566,14 @@ export default function OnboardingPage() {
                   value={passphraseStep1}
                   onChange={(e) => setPassphraseStep1(e.target.value)}
                   autoComplete="new-password"
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2.5 text-[14px] text-white outline-none ring-offset-2 ring-offset-[#080808] focus:ring-2 focus:ring-[#0066ff]"
+                  className="bm-input border-zinc-700 bg-zinc-900/50 text-white ring-offset-[#080808] focus:ring-[#0066ff]"
                   required
                 />
               </div>
               <button
                 type="submit"
                 disabled={loading}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-lg px-4 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
                 style={{ backgroundColor: ACCENT }}
               >
                 {loading ? (
@@ -591,27 +585,22 @@ export default function OnboardingPage() {
               </button>
             </form>
           ) : (
-            <form onSubmit={(e) => void handleFreshCreate(e)} className="space-y-4">
-              <p className="rounded-lg border border-amber-900/40 bg-amber-950/20 px-3 py-2 text-[12px] text-amber-100/90">
+            <form onSubmit={(e) => void handleFreshCreate(e)} className="space-y-5">
+              <p className="rounded-lg border border-amber-900/40 bg-amber-950/20 px-4 py-3 text-sm leading-[1.5] text-amber-100">
                 Guarda este npub — é a tua identidade Nostr no bunker. Depois do cofre,
                 podes associá-la à BitMacro Identity se quiseres.
               </p>
               <div>
-                <span className="mb-1.5 block text-[13px] text-zinc-400">
-                  npub gerado (readonly)
-                </span>
+                <span className="bm-label text-zinc-300">npub gerado (readonly)</span>
                 <textarea
                   readOnly
                   value={npubDisplay}
                   rows={3}
-                  className="w-full resize-none rounded-lg border border-zinc-700 bg-zinc-950/80 px-3 py-2 font-mono text-[12px] text-zinc-300"
+                  className="bm-input min-h-[5.5rem] resize-none border-zinc-700 bg-zinc-950/80 py-3 font-mono text-zinc-200 ring-offset-[#080808] focus:ring-[#0066ff]"
                 />
               </div>
               <div>
-                <label
-                  htmlFor="enc_fresh"
-                  className="mb-1.5 block text-[13px] text-zinc-400"
-                >
+                <label htmlFor="enc_fresh" className="bm-label text-zinc-300">
                   Passphrase do cofre
                 </label>
                 <input
@@ -620,14 +609,14 @@ export default function OnboardingPage() {
                   value={encryptPassword}
                   onChange={(e) => setEncryptPassword(e.target.value)}
                   autoComplete="new-password"
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2.5 text-[14px] text-white outline-none ring-offset-2 ring-offset-[#080808] focus:ring-2 focus:ring-[#0066ff]"
+                  className="bm-input border-zinc-700 bg-zinc-900/50 text-white ring-offset-[#080808] focus:ring-[#0066ff]"
                   required
                 />
               </div>
               <button
                 type="submit"
                 disabled={loading}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-lg px-4 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
                 style={{ backgroundColor: ACCENT }}
               >
                 {loading ? (
@@ -644,26 +633,23 @@ export default function OnboardingPage() {
         {/* Step 2 — import nsec (após unlock sem vault, fluxo «Já tenho npub») */}
         {phase >= 2 ? (
           <section className="mb-14 scroll-mt-8 opacity-100">
-            <div className="mb-4 flex items-center gap-2">
+            <div className="mb-5 flex items-center gap-2">
               <KeyRound className="size-5" style={{ color: ACCENT }} aria-hidden />
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-lg font-semibold leading-snug text-white sm:text-xl">
                 2. Keypair e cofre
               </h2>
             </div>
             {phase === 2 ? (
               <form
                 onSubmit={(e) => void handleStep2ImportVault(e)}
-                className="space-y-4"
+                className="space-y-5"
               >
-                <p className="text-[13px] leading-relaxed text-zinc-400">
+                <p className="text-base leading-[1.5] text-zinc-300">
                   Ainda não há cofre no Signer para este npub. Cola a nsec que corresponde
                   ao npub do passo 1 e define a passphrase para encriptar o cofre.
                 </p>
                 <div>
-                  <label
-                    htmlFor="nsec_import"
-                    className="mb-1.5 block text-[13px] text-zinc-400"
-                  >
+                  <label htmlFor="nsec_import" className="bm-label text-zinc-300">
                     nsec (bech32)
                   </label>
                   <textarea
@@ -671,16 +657,13 @@ export default function OnboardingPage() {
                     value={nsecImport}
                     onChange={(e) => setNsecImport(e.target.value)}
                     rows={3}
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-950/80 px-3 py-2 font-mono text-[11px] text-zinc-300"
+                    className="bm-input min-h-[5.5rem] resize-none border-zinc-700 bg-zinc-950/80 py-3 font-mono text-zinc-200 ring-offset-[#080808] placeholder:text-zinc-500 focus:ring-[#0066ff]"
                     placeholder="nsec1…"
                     autoComplete="off"
                   />
                 </div>
                 <div>
-                  <label
-                    htmlFor="enc_pw_import"
-                    className="mb-1.5 block text-[13px] text-zinc-400"
-                  >
+                  <label htmlFor="enc_pw_import" className="bm-label text-zinc-300">
                     Passphrase para encriptar o cofre
                   </label>
                   <input
@@ -689,14 +672,14 @@ export default function OnboardingPage() {
                     value={encryptPassword}
                     onChange={(e) => setEncryptPassword(e.target.value)}
                     autoComplete="new-password"
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2.5 text-[14px] text-white outline-none focus:ring-2 focus:ring-[#0066ff] ring-offset-2 ring-offset-[#080808]"
+                    className="bm-input border-zinc-700 bg-zinc-900/50 text-white ring-offset-[#080808] focus:ring-[#0066ff]"
                     required
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-[14px] font-semibold text-white disabled:opacity-60"
+                  className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-lg px-4 text-base font-semibold text-white disabled:opacity-60"
                   style={{ backgroundColor: ACCENT }}
                 >
                   {loading ? (
@@ -707,7 +690,7 @@ export default function OnboardingPage() {
                 </button>
               </form>
             ) : (
-              <p className="text-[13px] text-zinc-500">Cofre já criado — passo concluído.</p>
+              <p className="text-base leading-[1.5] text-zinc-400">Cofre já criado — passo concluído.</p>
             )}
           </section>
         ) : null}
@@ -715,25 +698,22 @@ export default function OnboardingPage() {
         {/* Step 3 */}
         {phase >= 3 ? (
           <section className="scroll-mt-8">
-            <div className="mb-4 flex items-center gap-2">
+            <div className="mb-5 flex items-center gap-2">
               <KeyRound className="size-5" style={{ color: ACCENT }} aria-hidden />
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-lg font-semibold leading-snug text-white sm:text-xl">
                 3. Sessão NIP-46
               </h2>
             </div>
 
             {!bunkerUri ? (
-              <div className="space-y-4">
-                <p className="text-[14px] leading-relaxed text-zinc-400">
-                  O NIP-46 usa uma <strong className="text-zinc-200">chave temporária no cliente</strong>{" "}
+              <div className="space-y-5">
+                <p className="text-base leading-[1.5] text-zinc-300">
+                  O NIP-46 usa uma <strong className="font-semibold text-zinc-100">chave temporária no cliente</strong>{" "}
                   (não o npub do teu perfil). Gera o QR e cola-o na app — na primeira ligação o cliente
                   envia essa chave e a sessão fica associada automaticamente.
                 </p>
                 <div>
-                  <label
-                    htmlFor="session_label"
-                    className="mb-1.5 block text-[13px] text-zinc-400"
-                  >
+                  <label htmlFor="session_label" className="bm-label text-zinc-300">
                     Etiqueta (opcional)
                   </label>
                   <input
@@ -743,10 +723,10 @@ export default function OnboardingPage() {
                     maxLength={120}
                     autoComplete="off"
                     placeholder="ex.: Nostrudel · Coracle no telemóvel"
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900/50 px-3 py-2.5 text-[14px] text-white outline-none ring-offset-2 ring-offset-[#080808] placeholder:text-zinc-600 focus:ring-2 focus:ring-[#0066ff]"
+                    className="bm-input border-zinc-700 bg-zinc-900/50 text-white ring-offset-[#080808] placeholder:text-zinc-500 focus:ring-[#0066ff]"
                   />
-                  <p className="mt-1.5 text-[11px] leading-relaxed text-zinc-600">
-                    O protocolo <strong className="font-medium text-zinc-500">não envia</strong> o nome da
+                  <p className="mt-2 text-sm leading-[1.5] text-zinc-400">
+                    O protocolo <strong className="font-semibold text-zinc-300">não envia</strong> o nome da
                     app (Nostrudel, Coracle, …). Esta etiqueta aparece nas sessões para te orientares.
                   </p>
                 </div>
@@ -756,7 +736,7 @@ export default function OnboardingPage() {
                   onClick={() => {
                     void createSessionAndQr(identityId.trim());
                   }}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-[14px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                  className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-lg px-4 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
                   style={{ backgroundColor: ACCENT }}
                 >
                   {loading ? (
@@ -769,34 +749,34 @@ export default function OnboardingPage() {
               </div>
             ) : (
               <>
-                <p className="mb-6 space-y-2 text-[14px] leading-relaxed text-zinc-400">
+                <p className="mb-8 space-y-3 text-base leading-[1.5] text-zinc-300">
                   <span className="block">
                     Cola este QR no cliente ou copia o link completo. Cada QR é de uso único: depois de
                     uma app ligar com sucesso, esse link deixa de servir.
                   </span>
-                  <span className="block text-zinc-500">
-                    Para <strong className="font-medium text-zinc-400">outra app</strong> (ex. Coracle
-                    depois de Nostrudel), gera um <strong className="font-medium text-zinc-400">novo</strong>{" "}
+                  <span className="block text-zinc-400">
+                    Para <strong className="font-semibold text-zinc-200">outra app</strong> (ex. Coracle
+                    depois de Nostrudel), gera um <strong className="font-semibold text-zinc-200">novo</strong>{" "}
                     QR e cola-o aí — remove ligações antigas ao bunker na app se ainda estiver a usar um
                     link em cache.
                   </span>
                 </p>
-                <div className="mb-6 flex justify-center rounded-xl border border-zinc-800 bg-white p-4">
+                <div className="mb-8 flex justify-center rounded-xl border border-zinc-800 bg-white p-5">
                   <QRCodeSVG value={bunkerUri} size={200} level="M" />
                 </div>
-                <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center">
-                  <code className="flex-1 break-all rounded-lg border border-zinc-800 bg-zinc-950/80 px-3 py-2 font-mono text-[11px] text-zinc-400">
+                <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-stretch">
+                  <code className="flex min-h-12 flex-1 items-center break-all rounded-lg border border-zinc-800 bg-zinc-950/80 px-4 py-3 font-mono text-sm leading-normal text-zinc-300">
                     {truncateMiddle(bunkerUri, 18)}
                   </code>
                   <button
                     type="button"
                     onClick={() => void copyUri()}
-                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-zinc-600 px-3 py-2 text-[13px] text-zinc-200 hover:bg-zinc-800"
+                    className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-lg border border-zinc-600 px-4 text-base font-semibold text-zinc-100 hover:bg-zinc-800"
                   >
                     {copied ? (
-                      <Check className="size-4 text-emerald-400" aria-hidden />
+                      <Check className="size-5 text-emerald-400" aria-hidden />
                     ) : (
-                      <Copy className="size-4" aria-hidden />
+                      <Copy className="size-5" aria-hidden />
                     )}
                     {copied ? "Copiado" : "Copiar"}
                   </button>
@@ -807,13 +787,13 @@ export default function OnboardingPage() {
                   onClick={() => {
                     setBunkerUri(null);
                   }}
-                  className="inline-flex w-full items-center justify-center rounded-lg border border-zinc-600 py-3 text-[14px] font-medium text-zinc-200 transition-colors hover:bg-zinc-900 disabled:opacity-60"
+                  className="inline-flex min-h-[52px] w-full items-center justify-center rounded-lg border border-zinc-600 px-4 text-base font-semibold text-zinc-100 transition-colors hover:bg-zinc-900 disabled:opacity-60"
                 >
                   Gerar outro QR (invalida o deste ecrã)
                 </button>
                 <Link
                   href="/sessions"
-                  className="inline-flex w-full items-center justify-center rounded-lg border border-zinc-600 py-3 text-[14px] font-medium text-zinc-200 transition-colors hover:bg-zinc-900"
+                  className="mt-3 inline-flex min-h-[52px] w-full items-center justify-center rounded-lg border border-zinc-600 px-4 text-base font-semibold text-zinc-100 transition-colors hover:bg-zinc-900"
                 >
                   Ver sessões activas
                 </Link>
@@ -822,8 +802,8 @@ export default function OnboardingPage() {
           </section>
         ) : null}
 
-        <p className="mt-12 text-center text-[12px] text-zinc-600">
-          <Link href="/" className="underline-offset-2 hover:underline" style={{ color: ACCENT }}>
+        <p className="mt-12 text-center text-sm leading-[1.5] text-zinc-400">
+          <Link href="/" className="font-semibold underline-offset-2 hover:underline" style={{ color: ACCENT }}>
             ← Página inicial
           </Link>
         </p>
