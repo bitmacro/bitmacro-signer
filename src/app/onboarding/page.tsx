@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import {
@@ -15,6 +16,7 @@ import {
 } from "lucide-react";
 import { getPublicKey } from "nostr-tools";
 import * as nip19 from "nostr-tools/nip19";
+import { LocaleSwitcher } from "@/components/locale-switcher";
 import { nostrPubkeyInputToHex } from "@/lib/session/ttl";
 import { generateKeypair, encryptNsec } from "@/lib/vault";
 
@@ -36,19 +38,24 @@ function truncateMiddle(s: string, keep = 14): string {
   return `${s.slice(0, keep)}…${s.slice(-keep)}`;
 }
 
-async function parseUnlockError(res: Response): Promise<string> {
-  if (res.status === 401) return "Incorrect passphrase";
-  if (res.status === 404) return "Npub not registered for this Identity";
-  try {
-    const j = (await res.json()) as { error?: string };
-    if (j.error) return j.error;
-  } catch {
-    /* ignore */
-  }
-  return "Failed to unlock";
-}
-
 export default function OnboardingPage() {
+  const t = useTranslations("onboarding");
+
+  const parseUnlockError = useCallback(
+    async (res: Response): Promise<string> => {
+      if (res.status === 401) return t("errors.incorrectPassphrase");
+      if (res.status === 404) return t("errors.npubNotRegistered");
+      try {
+        const j = (await res.json()) as { error?: string };
+        if (j.error) return j.error;
+      } catch {
+        /* ignore */
+      }
+      return t("errors.unlockFailed");
+    },
+    [t],
+  );
+
   const [phase, setPhase] = useState<Phase>(1);
 
   const [step1Path, setStep1Path] = useState<Step1Path>("have_npub");
@@ -125,7 +132,7 @@ export default function OnboardingPage() {
       try {
         body.app_pubkey = nostrPubkeyInputToHex(clientPubkeyRaw.trim());
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Invalid client pubkey");
+        setError(e instanceof Error ? e.message : t("errors.invalidClientPubkey"));
         setLoading(false);
         return;
       }
@@ -142,19 +149,19 @@ export default function OnboardingPage() {
         error?: string;
       };
       if (!res.ok) {
-        throw new Error(data.error ?? "Could not create session");
+        throw new Error(data.error ?? t("errors.couldNotCreateSession"));
       }
       if (!data.bunker_uri) {
-        throw new Error("Response missing bunker_uri");
+        throw new Error(t("errors.missingBunkerUri"));
       }
       setBunkerUri(data.bunker_uri);
       setPhase(3);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error");
+      setError(err instanceof Error ? err.message : t("errors.generic"));
     } finally {
       setLoading(false);
     }
-  }, [sessionLabel]);
+  }, [sessionLabel, t]);
 
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -190,7 +197,7 @@ export default function OnboardingPage() {
       setBunkerUri(null);
       setPhase(3);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error");
+      setError(err instanceof Error ? err.message : t("errors.generic"));
     } finally {
       setLoading(false);
     }
@@ -202,11 +209,11 @@ export default function OnboardingPage() {
     const npub = npubDisplay.trim();
     const nsecRef = vaultNsecRef.current;
     if (!npub || !nsecRef) {
-      setError("Generate the keypair or reload the “I don’t have an npub yet” option.");
+      setError(t("errors.generateOrReload"));
       return;
     }
     if (!encryptPassword) {
-      setError("Enter the vault passphrase.");
+      setError(t("errors.enterPassphrase"));
       return;
     }
 
@@ -223,11 +230,11 @@ export default function OnboardingPage() {
         error?: string;
       };
       if (!bootRes.ok) {
-        throw new Error(bootJson.error ?? "Could not create identity");
+        throw new Error(bootJson.error ?? t("errors.couldNotCreateIdentity"));
       }
       const id = bootJson.identity_id?.trim();
       if (!id) {
-        throw new Error("Response missing identity_id");
+        throw new Error(t("errors.missingIdentityId"));
       }
       setIdentityId(id);
 
@@ -250,7 +257,7 @@ export default function OnboardingPage() {
         error?: string;
       };
       if (!vaultRes.ok) {
-        throw new Error(vJson.error ?? "Failed to save vault");
+        throw new Error(vJson.error ?? t("errors.saveVaultFailed"));
       }
 
       const unlockRes = await fetch("/api/auth/unlock", {
@@ -269,7 +276,7 @@ export default function OnboardingPage() {
       setBunkerUri(null);
       setPhase(3);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error");
+      setError(err instanceof Error ? err.message : t("errors.generic"));
     } finally {
       setLoading(false);
     }
@@ -280,7 +287,7 @@ export default function OnboardingPage() {
     setError(null);
     const id = identityId.trim();
     if (!id) {
-      setError("Missing identity_id — go back to step 1.");
+      setError(t("errors.missingIdentityStep1"));
       return;
     }
 
@@ -288,13 +295,13 @@ export default function OnboardingPage() {
     try {
       const raw = nsecImport.trim();
       if (!raw) {
-        setError("Paste your nsec.");
+        setError(t("errors.pasteNsec"));
         setLoading(false);
         return;
       }
       const dec = nip19.decode(raw);
       if (dec.type !== "nsec") {
-        setError("Invalid nsec format (expected nsec1…).");
+        setError(t("errors.invalidNsec"));
         setLoading(false);
         return;
       }
@@ -302,13 +309,13 @@ export default function OnboardingPage() {
       const derived = nip19.npubEncode(getPublicKey(sk));
       sk.fill(0);
       if (derived !== npubInput.trim()) {
-        setError("This nsec does not match your npub");
+        setError(t("errors.nsecMismatch"));
         setLoading(false);
         return;
       }
 
       if (!encryptPassword) {
-        setError("Enter the vault passphrase.");
+        setError(t("errors.enterPassphrase"));
         setLoading(false);
         return;
       }
@@ -332,7 +339,7 @@ export default function OnboardingPage() {
         error?: string;
       };
       if (!vaultRes.ok) {
-        throw new Error(vJson.error ?? "Failed to save vault");
+        throw new Error(vJson.error ?? t("errors.saveVaultFailed"));
       }
 
       const unlockRes = await fetch("/api/auth/unlock", {
@@ -351,7 +358,7 @@ export default function OnboardingPage() {
       setBunkerUri(null);
       setPhase(3);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error");
+      setError(err instanceof Error ? err.message : t("errors.generic"));
     } finally {
       setLoading(false);
     }
@@ -378,7 +385,7 @@ export default function OnboardingPage() {
       setNpubDisplay("");
       await refreshStatus();
     } catch {
-      setError("Failed to lock");
+      setError(t("errors.lockFailed"));
     } finally {
       setLoading(false);
     }
@@ -398,15 +405,16 @@ export default function OnboardingPage() {
     >
       <div className="mx-auto max-w-lg px-5 py-10 sm:py-14">
         <header className="mb-10 flex flex-col gap-4 border-b border-zinc-800/80 pb-10">
-          <p className="font-mono text-xs uppercase tracking-wider text-zinc-400">
-            BitMacro Signer
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <p className="font-mono text-xs uppercase tracking-wider text-zinc-400">
+              {t("header.brand")}
+            </p>
+            <LocaleSwitcher />
+          </div>
           <h1 className="text-[clamp(1.5rem,4vw+0.75rem,1.75rem)] font-bold leading-tight tracking-tight text-white">
-            Activate the bunker
+            {t("header.title")}
           </h1>
-          <p className="text-base leading-[1.5] text-zinc-300">
-            Use your BitMacro Identity npub and vault passphrase to get the NIP-46 QR code.
-          </p>
+          <p className="text-base leading-[1.5] text-zinc-300">{t("header.subtitle")}</p>
 
           <div className="mt-1 flex flex-col gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 text-base">
             <div className="flex flex-wrap items-center gap-3">
@@ -415,17 +423,17 @@ export default function OnboardingPage() {
                 style={{ color: ACCENT }}
                 aria-hidden
               />
-              <span className="text-zinc-300">Bunker:</span>
+              <span className="text-zinc-300">{t("header.bunkerLabel")}</span>
               {statusIdentity ? (
                 statusRunning ? (
-                  <span className="font-semibold text-emerald-400">Active</span>
+                  <span className="font-semibold text-emerald-400">{t("header.active")}</span>
                 ) : (
                   <span className="max-w-[min(100%,16rem)] font-medium leading-snug text-sky-200 sm:max-w-none">
-                    Session active — bunker in managed (server) mode
+                    {t("header.sessionManaged")}
                   </span>
                 )
               ) : (
-                <span className="text-zinc-400">Inactive</span>
+                <span className="text-zinc-400">{t("header.inactive")}</span>
               )}
               {statusIdentity ? (
                 <button
@@ -435,13 +443,11 @@ export default function OnboardingPage() {
                   className="ml-auto inline-flex min-h-11 items-center gap-2 rounded-lg border border-zinc-600 px-3 text-sm font-semibold text-zinc-100 transition-colors hover:bg-zinc-800 disabled:opacity-50 sm:ml-0 sm:px-4"
                 >
                   <LogOut className="size-4 shrink-0" aria-hidden />
-                  Lock bunker
+                  {t("header.lockBunker")}
                 </button>
               ) : null}
             </div>
-            <p className="text-sm leading-[1.5] text-zinc-400">
-              The bunker runs on the server — it does not depend on this tab staying open.
-            </p>
+            <p className="text-sm leading-[1.5] text-zinc-400">{t("header.serverNote")}</p>
             {statusIdentity && phase === 1 && step1Path === "have_npub" ? (
               <button
                 type="button"
@@ -454,7 +460,7 @@ export default function OnboardingPage() {
                 className="min-h-[52px] w-full rounded-lg px-4 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
                 style={{ backgroundColor: ACCENT }}
               >
-                Resume: step 3 — generate NIP-46 QR
+                {t("header.resumeStep3")}
               </button>
             ) : null}
           </div>
@@ -462,7 +468,7 @@ export default function OnboardingPage() {
 
         <nav
           className="mb-10 flex items-center justify-center gap-2 text-sm text-zinc-400"
-          aria-label="Steps"
+          aria-label={t("steps.aria")}
         >
           {([1, 2, 3] as const).map((n) => (
             <div key={n} className="flex items-center gap-2">
@@ -497,7 +503,7 @@ export default function OnboardingPage() {
           <div className="mb-5 flex items-center gap-2">
             <Shield className="size-5" style={{ color: ACCENT }} aria-hidden />
             <h2 className="text-lg font-semibold leading-snug text-white sm:text-xl">
-              1. Identity
+              {t("step1.title")}
             </h2>
           </div>
 
@@ -514,9 +520,9 @@ export default function OnboardingPage() {
                   : "border-zinc-600 hover:bg-zinc-800"
               }`}
             >
-              <span className="font-semibold text-white">I already have an npub</span>
+              <span className="font-semibold text-white">{t("step1.haveNpub")}</span>
               <span className="mt-1 block text-sm leading-[1.5] text-zinc-400">
-                BitMacro Identity npub + vault passphrase
+                {t("step1.haveNpubHint")}
               </span>
             </button>
             <button
@@ -532,9 +538,9 @@ export default function OnboardingPage() {
                   : "border-zinc-600 hover:bg-zinc-800"
               }`}
             >
-              <span className="font-semibold text-white">I don’t have an npub yet</span>
+              <span className="font-semibold text-white">{t("step1.freshNpub")}</span>
               <span className="mt-1 block text-sm leading-[1.5] text-zinc-400">
-                Generate a keypair in the browser and create the vault without unlock first
+                {t("step1.freshNpubHint")}
               </span>
             </button>
           </div>
@@ -543,7 +549,7 @@ export default function OnboardingPage() {
             <form onSubmit={(e) => void handleUnlock(e)} className="space-y-5">
               <div>
                 <label htmlFor="npub" className="bm-label text-zinc-300">
-                  Nostr public key (npub)
+                  {t("step1.npubLabel")}
                 </label>
                 <input
                   id="npub"
@@ -557,7 +563,7 @@ export default function OnboardingPage() {
               </div>
               <div>
                 <label htmlFor="passphrase" className="bm-label text-zinc-300">
-                  Vault passphrase
+                  {t("step1.passphraseLabel")}
                 </label>
                 <input
                   id="passphrase"
@@ -580,17 +586,16 @@ export default function OnboardingPage() {
                 ) : (
                   <Lock className="size-4" aria-hidden />
                 )}
-                Unlock
+                {t("step1.unlock")}
               </button>
             </form>
           ) : (
             <form onSubmit={(e) => void handleFreshCreate(e)} className="space-y-5">
               <p className="rounded-lg border border-amber-900/40 bg-amber-950/20 px-4 py-3 text-sm leading-[1.5] text-amber-100">
-                Save this npub — it is your Nostr identity for the bunker. After the vault is set up,
-                you can link it to BitMacro Identity if you want.
+                {t("step1.warnSaveNpub")}
               </p>
               <div>
-                <span className="bm-label text-zinc-300">Generated npub (read-only)</span>
+                <span className="bm-label text-zinc-300">{t("step1.npubReadonly")}</span>
                 <textarea
                   readOnly
                   value={npubDisplay}
@@ -600,7 +605,7 @@ export default function OnboardingPage() {
               </div>
               <div>
                 <label htmlFor="enc_fresh" className="bm-label text-zinc-300">
-                  Vault passphrase
+                  {t("step1.passphraseLabel")}
                 </label>
                 <input
                   id="enc_fresh"
@@ -623,7 +628,7 @@ export default function OnboardingPage() {
                 ) : (
                   <KeyRound className="size-4" aria-hidden />
                 )}
-                Create vault and activate bunker
+                {t("step1.createVault")}
               </button>
             </form>
           )}
@@ -635,7 +640,7 @@ export default function OnboardingPage() {
             <div className="mb-5 flex items-center gap-2">
               <KeyRound className="size-5" style={{ color: ACCENT }} aria-hidden />
               <h2 className="text-lg font-semibold leading-snug text-white sm:text-xl">
-                2. Keypair and vault
+                {t("step2.title")}
               </h2>
             </div>
             {phase === 2 ? (
@@ -643,13 +648,10 @@ export default function OnboardingPage() {
                 onSubmit={(e) => void handleStep2ImportVault(e)}
                 className="space-y-5"
               >
-                <p className="text-base leading-[1.5] text-zinc-300">
-                  There is no vault in Signer for this npub yet. Paste the nsec that matches
-                  the npub from step 1 and set a passphrase to encrypt the vault.
-                </p>
+                <p className="text-base leading-[1.5] text-zinc-300">{t("step2.body")}</p>
                 <div>
                   <label htmlFor="nsec_import" className="bm-label text-zinc-300">
-                    nsec (bech32)
+                    {t("step2.nsecLabel")}
                   </label>
                   <textarea
                     id="nsec_import"
@@ -663,7 +665,7 @@ export default function OnboardingPage() {
                 </div>
                 <div>
                   <label htmlFor="enc_pw_import" className="bm-label text-zinc-300">
-                    Passphrase to encrypt the vault
+                    {t("step2.encryptPassLabel")}
                   </label>
                   <input
                     id="enc_pw_import"
@@ -684,12 +686,12 @@ export default function OnboardingPage() {
                   {loading ? (
                     <Loader2 className="size-4 animate-spin" aria-hidden />
                   ) : (
-                    "Save vault and continue"
+                    t("step2.saveContinue")
                   )}
                 </button>
               </form>
             ) : (
-              <p className="text-base leading-[1.5] text-zinc-400">Vault already created — step complete.</p>
+              <p className="text-base leading-[1.5] text-zinc-400">{t("step2.done")}</p>
             )}
           </section>
         ) : null}
@@ -700,20 +702,16 @@ export default function OnboardingPage() {
             <div className="mb-5 flex items-center gap-2">
               <KeyRound className="size-5" style={{ color: ACCENT }} aria-hidden />
               <h2 className="text-lg font-semibold leading-snug text-white sm:text-xl">
-                3. NIP-46 session
+                {t("step3.title")}
               </h2>
             </div>
 
             {!bunkerUri ? (
               <div className="space-y-5">
-                <p className="text-base leading-[1.5] text-zinc-300">
-                  NIP-46 uses a <strong className="font-semibold text-zinc-100">temporary client key</strong>{" "}
-                  (not your profile npub). Generate the QR and paste it in the app — on first connect the client
-                  sends that key and the session is bound automatically.
-                </p>
+                <p className="text-base leading-[1.5] text-zinc-300">{t("step3.explain")}</p>
                 <div>
                   <label htmlFor="session_label" className="bm-label text-zinc-300">
-                    Label (optional)
+                    {t("step3.labelOptional")}
                   </label>
                   <input
                     id="session_label"
@@ -721,13 +719,10 @@ export default function OnboardingPage() {
                     onChange={(e) => setSessionLabel(e.target.value)}
                     maxLength={120}
                     autoComplete="off"
-                    placeholder="e.g. Nostrudel · Coracle on phone"
+                    placeholder={t("step3.labelPlaceholder")}
                     className="bm-input border-zinc-700 bg-zinc-900/50 text-white ring-offset-[#080808] placeholder:text-zinc-500 focus:ring-[#0066ff]"
                   />
-                  <p className="mt-2 text-sm leading-[1.5] text-zinc-400">
-                    The protocol <strong className="font-semibold text-zinc-300">does not send</strong> the
-                    app name (Nostrudel, Coracle, …). This label is shown in sessions so you can tell them apart.
-                  </p>
+                  <p className="mt-2 text-sm leading-[1.5] text-zinc-400">{t("step3.labelHint")}</p>
                 </div>
                 <button
                   type="button"
@@ -743,22 +738,14 @@ export default function OnboardingPage() {
                   ) : (
                     <Radio className="size-4" aria-hidden />
                   )}
-                  Generate QR / bunker link
+                  {t("step3.generateQr")}
                 </button>
               </div>
             ) : (
               <>
                 <p className="mb-8 space-y-3 text-base leading-[1.5] text-zinc-300">
-                  <span className="block">
-                    Paste this QR in the client or copy the full link. Each QR is single-use: after an
-                    app connects successfully, that link stops working.
-                  </span>
-                  <span className="block text-zinc-400">
-                    For <strong className="font-semibold text-zinc-200">another app</strong> (e.g. Coracle
-                    after Nostrudel), generate a <strong className="font-semibold text-zinc-200">new</strong>{" "}
-                    QR and paste it there — remove old bunker connections in the app if it still caches a
-                    previous link.
-                  </span>
+                  <span className="block">{t("step3.qrHelp1")}</span>
+                  <span className="block text-zinc-400">{t("step3.qrHelp2")}</span>
                 </p>
                 <div className="mb-8 flex justify-center rounded-xl border border-zinc-800 bg-white p-5">
                   <QRCodeSVG value={bunkerUri} size={200} level="M" />
@@ -777,7 +764,7 @@ export default function OnboardingPage() {
                     ) : (
                       <Copy className="size-5" aria-hidden />
                     )}
-                    {copied ? "Copied" : "Copy"}
+                    {copied ? t("step3.copied") : t("step3.copy")}
                   </button>
                 </div>
                 <button
@@ -788,13 +775,13 @@ export default function OnboardingPage() {
                   }}
                   className="inline-flex min-h-[52px] w-full items-center justify-center rounded-lg border border-zinc-600 px-4 text-base font-semibold text-zinc-100 transition-colors hover:bg-zinc-900 disabled:opacity-60"
                 >
-                  Generate another QR (invalidates the one on this screen)
+                  {t("step3.regenerateQr")}
                 </button>
                 <Link
                   href="/sessions"
                   className="mt-3 inline-flex min-h-[52px] w-full items-center justify-center rounded-lg border border-zinc-600 px-4 text-base font-semibold text-zinc-100 transition-colors hover:bg-zinc-900"
                 >
-                  View active sessions
+                  {t("step3.viewSessions")}
                 </Link>
               </>
             )}
@@ -803,7 +790,7 @@ export default function OnboardingPage() {
 
         <p className="mt-12 text-center text-sm leading-[1.5] text-zinc-400">
           <Link href="/" className="font-semibold underline-offset-2 hover:underline" style={{ color: ACCENT }}>
-            ← Home
+            {t("homeLink")}
           </Link>
         </p>
       </div>

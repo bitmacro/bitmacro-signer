@@ -1,5 +1,13 @@
 import type { Metadata, Viewport } from "next";
+import { cookies, headers } from "next/headers";
 import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { Providers } from "@/components/providers";
+import { htmlLangAttribute } from "@/lib/locale-ui";
+import {
+  BITMACRO_LOCALE_COOKIE,
+  LEGACY_LOCALE_COOKIE_NAME,
+  resolveInitialLocale,
+} from "@/lib/local-preferences";
 import "./globals.css";
 
 const fontSans = IBM_Plex_Sans({
@@ -81,18 +89,30 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headerStore = await headers();
+  const cookieStore = await cookies();
+  const headerLocale = headerStore.get("x-bitmacro-locale");
+  const initialLocale = resolveInitialLocale(
+    headerLocale,
+    cookieStore.get(BITMACRO_LOCALE_COOKIE)?.value,
+    cookieStore.get(LEGACY_LOCALE_COOKIE_NAME)?.value,
+  );
+  const htmlLang = htmlLangAttribute(initialLocale);
+
   return (
     <html
-      lang="en"
+      lang={htmlLang}
       className={`${fontSans.variable} ${fontMono.variable} dark`}
       suppressHydrationWarning
     >
-      <body className="min-h-screen">{children}</body>
+      <body className="min-h-screen">
+        <Providers initialLocale={initialLocale}>{children}</Providers>
+      </body>
     </html>
   );
 }

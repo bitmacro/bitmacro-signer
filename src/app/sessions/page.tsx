@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { Check, Copy, Loader2 } from "lucide-react";
 
+import { LocaleSwitcher } from "@/components/locale-switcher";
 import { nostrHexPubkeyToNpub } from "@/lib/session/ttl";
 
 const ACCENT = "#0066FF";
@@ -34,6 +36,7 @@ function SessionCard({
   copiedKey: string | null;
   onCopied: (key: string) => void;
 }) {
+  const t = useTranslations("sessions");
   let clientNpub: string | null = null;
   try {
     clientNpub = nostrHexPubkeyToNpub(row.app_pubkey);
@@ -60,12 +63,10 @@ function SessionCard({
       {row.app_name ? (
         <p className="text-lg font-semibold leading-snug text-white">{row.app_name}</p>
       ) : (
-        <p className="text-base leading-[1.5] text-zinc-400">
-          No label — set when generating the QR in onboarding
-        </p>
+        <p className="text-base leading-[1.5] text-zinc-400">{t("noLabel")}</p>
       )}
       <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-zinc-400">
-        Client session key (NIP-46)
+        {t("clientKey")}
       </p>
       {clientNpub ? (
         <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-stretch sm:justify-between">
@@ -85,12 +86,12 @@ function SessionCard({
             ) : (
               <Copy className="size-4" aria-hidden />
             )}
-            {copiedKey === kNpub ? "Copied" : "Copy npub"}
+            {copiedKey === kNpub ? t("copied") : t("copyNpub")}
           </button>
         </div>
       ) : null}
       <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-zinc-400">
-        Hex (technical)
+        {t("hexTechnical")}
       </p>
       <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-stretch sm:justify-between">
         <code
@@ -109,18 +110,19 @@ function SessionCard({
           ) : (
             <Copy className="size-4" aria-hidden />
           )}
-          {copiedKey === kHex ? "Copied" : "Copy hex"}
+          {copiedKey === kHex ? t("copied") : t("copyHex")}
         </button>
       </div>
       <div className="mt-4 text-sm leading-[1.5] text-zinc-400">
-        expires {new Date(row.expires_at).toLocaleString()}{" "}
-        {row.used ? "· used" : "· pending"}
+        {t("expires")} {new Date(row.expires_at).toLocaleString()}{" "}
+        {row.used ? `· ${t("used")}` : `· ${t("pending")}`}
       </div>
     </li>
   );
 }
 
 export default function SessionsPage() {
+  const t = useTranslations("sessions");
   const [identityId, setIdentityId] = useState<string | null>(null);
   const [rows, setRows] = useState<SessionRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -135,7 +137,7 @@ export default function SessionsPage() {
       if (!st.ok) {
         setIdentityId(null);
         setRows(null);
-        setError("Session required");
+        setError(t("sessionRequired"));
         return;
       }
       const { identity_id } = (await st.json()) as { identity_id: string };
@@ -147,17 +149,17 @@ export default function SessionsPage() {
       );
       if (!res.ok) {
         const j = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(j.error ?? "Failed to list sessions");
+        throw new Error(j.error ?? t("listError"));
       }
       const data = (await res.json()) as SessionRow[];
       setRows(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error");
+      setError(e instanceof Error ? e.message : t("genericError"));
       setRows(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void load();
@@ -170,26 +172,23 @@ export default function SessionsPage() {
     >
       <div className="mx-auto max-w-3xl px-5 py-10 sm:py-14">
         <header className="mb-10 border-b border-zinc-800 pb-8">
-          <p className="font-mono text-xs uppercase tracking-wider text-zinc-400">
-            BitMacro Signer
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <p className="font-mono text-xs uppercase tracking-wider text-zinc-400">{t("brand")}</p>
+            <LocaleSwitcher />
+          </div>
           <h1 className="mt-2 text-[clamp(1.5rem,3vw+0.85rem,1.875rem)] font-bold leading-tight text-white">
-            Active sessions
+            {t("title")}
           </h1>
           {identityId ? (
             <p className="mt-3 break-all font-mono text-sm text-zinc-400">{identityId}</p>
           ) : null}
-          <p className="mt-4 max-w-2xl text-base leading-[1.5] text-zinc-300">
-            NIP-46 does not send the app name: use the <strong className="font-semibold text-zinc-100">session key</strong>{" "}
-            (npub/hex below). If you set a <strong className="font-semibold text-zinc-100">label</strong> when generating the
-            QR, it is shown prominently.
-          </p>
+          <p className="mt-4 max-w-2xl text-base leading-[1.5] text-zinc-300">{t("body")}</p>
         </header>
 
         {loading ? (
           <div className="flex min-h-12 items-center gap-3 text-base text-zinc-300">
             <Loader2 className="size-5 shrink-0 animate-spin" aria-hidden />
-            Loading…
+            {t("loading")}
           </div>
         ) : null}
 
@@ -201,13 +200,13 @@ export default function SessionsPage() {
               className="font-semibold underline-offset-2 hover:underline"
               style={{ color: ACCENT }}
             >
-              Onboarding
+              {t("onboardingLink")}
             </Link>
           </div>
         ) : null}
 
         {rows && rows.length === 0 ? (
-          <p className="text-base leading-[1.5] text-zinc-400">No client sessions.</p>
+          <p className="text-base leading-[1.5] text-zinc-400">{t("empty")}</p>
         ) : null}
 
         {rows && rows.length > 0 ? (
@@ -232,7 +231,7 @@ export default function SessionsPage() {
             className="inline-flex min-h-11 items-center font-semibold underline-offset-2 hover:underline"
             style={{ color: ACCENT }}
           >
-            ← Back to onboarding
+            {t("back")}
           </Link>
         </p>
       </div>

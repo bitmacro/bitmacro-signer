@@ -1,0 +1,202 @@
+{
+  "common": {
+    "locale": "Idioma",
+    "brand": "BitMacro Signer"
+  },
+  "landing": {
+    "nav": {
+      "howItWorks": "Como funciona",
+      "compare": "Comparação",
+      "selfHost": "Self-host",
+      "github": "GitHub"
+    },
+    "hero": {
+      "eyebrow1": "NIP-46 · Nostr Connect",
+      "eyebrow2": "Bunker gerido · relay BitMacro",
+      "title": "O teu bunker NIP-46, sempre disponível.",
+      "body": "Assina eventos Nostr à distância. A nsec permanece encriptada no cofre; o servidor nunca a armazena em texto claro — apenas um blob cifrado, com sessão activa opcional em memória (TTL configurável).",
+      "ctaPrimary": "Começar grátis",
+      "ctaSecondary": "Ver no GitHub",
+      "infraLead": "Preferes controlar a infraestrutura?",
+      "infraLink": "Docker e repositório open source (MIT)"
+    },
+    "how": {
+      "title": "Como funciona",
+      "subtitle": "Três passos — do keypair à assinatura remota no ecossistema BitMacro.",
+      "step1Title": "Gera o keypair",
+      "step1Body": "No browser, o cofre cria o par de chaves e prepara o URI Nostr Connect (NIP-46).",
+      "step2Title": "Mostra o QR",
+      "step2Body": "Mostra o QR ou o bunker URI ao teu cliente Nostr (telefone ou desktop).",
+      "step3Title": "Cola na app Nostr",
+      "step3Body": "Liga ao relay BitMacro para pedidos de assinatura estáveis, 24/7, sem expor a nsec."
+    },
+    "compare": {
+      "title": "Comparação",
+      "intro": "BitMacro Signer face a opções conhecidas no ecossistema Nostr — funcionalidades por categoria.",
+      "featureCol": "Característica",
+      "amber": "Amber",
+      "alby": "Alby",
+      "recommended": "Recomendado",
+      "signerProduct": "BitMacro Signer",
+      "partial": "Parcial",
+      "phase2": "fase 2",
+      "footnotePhase2": "= roadmap previsto, não disponível no MVP.",
+      "footnoteDisclaimer": "Amber e Alby são projectos independentes — comparação por funcionalidades típicas, não ranking absoluto.",
+      "categories": {
+        "platform": "Plataforma",
+        "identity": "Identidade",
+        "security": "Segurança",
+        "bunker": "Bunker NIP-46",
+        "ecosystem": "Ecossistema"
+      },
+      "features": {
+        "supportedDevices": "Dispositivos suportados",
+        "noInstall": "Sem instalação necessária",
+        "worksIos": "Funciona em iOS",
+        "noExtension": "Funciona sem extensão no browser",
+        "integratedKeypair": "Geração de keypair integrada",
+        "nip05Plan": "NIP-05 incluído no plano",
+        "lightningAddress": "Lightning Address incluída",
+        "unifiedOnboarding": "Onboarding unificado",
+        "nsecNeverExposed": "nsec nunca exposta à app",
+        "clientDecrypt": "Desencriptação no cliente",
+        "zeroKnowledgeHosted": "Zero-knowledge no hosted",
+        "shamirRecovery": "Recuperação via Shamir SSS",
+        "auditableCode": "Código open source auditável",
+        "reproducibleBuilds": "Builds reprodutíveis + hash",
+        "remoteBunker": "Bunker remoto NIP-46",
+        "twentyFourSeven": "24/7 sem dispositivo ligado",
+        "autoSigningPolicy": "Política automática de assinatura",
+        "sessionTtl": "TTL de sessão configurável",
+        "sessionRevoke": "Revogação imediata de sessão",
+        "auditLog": "Log de assinaturas auditável",
+        "webUi": "Interface web de gestão",
+        "bunkerQr": "QR code do bunker URI",
+        "managedHosted": "Hosted gerido (zero ops)",
+        "selfHostDocker": "Self-host disponível (Docker)",
+        "relayIncluded": "Relay Nostr incluído",
+        "lightningIntegrated": "Lightning integrado",
+        "lightningPayments": "Pagamentos Lightning nativos",
+        "devSdk": "SDK para developers",
+        "fullStack": "Stack completo num produto"
+      },
+      "details": {
+        "unifiedOnboardingDetail": "(keypair + NIP-05 + relay + bunker num único fluxo)"
+      },
+      "pills": {
+        "android": "Android",
+        "desktop": "Desktop",
+        "any": "Qualquer",
+        "paidAddon": "pago extra",
+        "na": "N/A"
+      }
+    },
+    "selfHost": {
+      "badge": "Self-host",
+      "title": "Corre na tua infraestrutura",
+      "body": "Imagem Docker com Next.js em modo standalone. Copia as variáveis de ambiente, constrói e sobe — sem passos extra além do .env.",
+      "bullet1": "Secrets só no host — nunca commits de chaves.",
+      "bullet2": "Healthcheck em /api/health para orquestração.",
+      "githubLink": "Dockerfile, compose e README no GitHub",
+      "terminal": "terminal",
+      "bash": "bash"
+    },
+    "footer": {
+      "mit": "Licença MIT",
+      "tagline": "signer.bitmacro.io — bunker NIP-46 gerido"
+    }
+  },
+  "onboarding": {
+    "errors": {
+      "incorrectPassphrase": "Passphrase incorrecta",
+      "npubNotRegistered": "Npub não registado nesta Identity",
+      "unlockFailed": "Erro ao desbloquear",
+      "invalidClientPubkey": "Pubkey do cliente inválido",
+      "couldNotCreateSession": "Não foi possível criar a sessão",
+      "missingBunkerUri": "Resposta sem bunker_uri",
+      "couldNotCreateIdentity": "Não foi possível criar a identidade",
+      "missingIdentityId": "Resposta sem identity_id",
+      "saveVaultFailed": "Erro ao guardar o cofre",
+      "generateOrReload": "Gera o par ou recarrega a opção «Não tenho npub ainda».",
+      "enterPassphrase": "Indica a passphrase do cofre.",
+      "missingIdentityStep1": "identity_id em falta — volta ao passo 1.",
+      "pasteNsec": "Cola a tua nsec.",
+      "invalidNsec": "Formato nsec inválido (esperado nsec1…).",
+      "nsecMismatch": "Esta nsec não corresponde ao teu npub",
+      "lockFailed": "Erro ao bloquear",
+      "generic": "Erro"
+    },
+    "header": {
+      "brand": "BitMacro Signer",
+      "title": "Activar o bunker",
+      "subtitle": "Usa o npub da tua Identity BitMacro, a passphrase do cofre, e obtém o QR NIP-46.",
+      "bunkerLabel": "Bunker:",
+      "active": "Activo",
+      "sessionManaged": "Sessão activa — bunker em modo managed (servidor)",
+      "inactive": "Inactivo",
+      "lockBunker": "Bloquear bunker",
+      "serverNote": "O bunker corre no servidor — não depende desta janela estar aberta.",
+      "resumeStep3": "Retomar: passo 3 — gerar QR NIP-46"
+    },
+    "steps": {
+      "aria": "Passos"
+    },
+    "step1": {
+      "title": "1. Identificação",
+      "haveNpub": "Já tenho npub",
+      "haveNpubHint": "Npub BitMacro Identity + passphrase do cofre",
+      "freshNpub": "Não tenho npub ainda",
+      "freshNpubHint": "Gera um par no browser e cria o cofre sem passar pelo unlock",
+      "npubLabel": "Chave pública Nostr (npub)",
+      "passphraseLabel": "Passphrase do cofre",
+      "unlock": "Desbloquear",
+      "warnSaveNpub": "Guarda este npub — é a tua identidade Nostr no bunker. Depois do cofre, podes associá-la à BitMacro Identity se quiseres.",
+      "npubReadonly": "npub gerado (readonly)",
+      "createVault": "Criar cofre e activar bunker"
+    },
+    "step2": {
+      "title": "2. Keypair e cofre",
+      "body": "Ainda não há cofre no Signer para este npub. Cola a nsec que corresponde ao npub do passo 1 e define a passphrase para encriptar o cofre.",
+      "nsecLabel": "nsec (bech32)",
+      "encryptPassLabel": "Passphrase para encriptar o cofre",
+      "saveContinue": "Guardar cofre e continuar",
+      "done": "Cofre já criado — passo concluído."
+    },
+    "step3": {
+      "title": "3. Sessão NIP-46",
+      "explain": "O NIP-46 usa uma chave temporária no cliente (não o npub do teu perfil). Gera o QR e cola-o na app — na primeira ligação o cliente envia essa chave e a sessão fica associada automaticamente.",
+      "labelOptional": "Etiqueta (opcional)",
+      "labelPlaceholder": "ex.: Nostrudel · Coracle no telemóvel",
+      "labelHint": "O protocolo não envia o nome da app (Nostrudel, Coracle, …). Esta etiqueta aparece nas sessões para te orientares.",
+      "generateQr": "Gerar QR / link bunker",
+      "qrHelp1": "Cola este QR no cliente ou copia o link completo. Cada QR é de uso único: depois de uma app ligar com sucesso, esse link deixa de servir.",
+      "qrHelp2": "Para outra app (ex. Coracle depois de Nostrudel), gera um novo QR e cola-o aí — remove ligações antigas ao bunker na app se ainda estiver a usar um link em cache.",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "regenerateQr": "Gerar outro QR (invalida o deste ecrã)",
+      "viewSessions": "Ver sessões activas"
+    },
+    "homeLink": "← Página inicial"
+  },
+  "sessions": {
+    "brand": "BitMacro Signer",
+    "title": "Sessões activas",
+    "body": "O NIP-46 não envia o nome da app: usa a chave de sessão (npub/hex abaixo). Se definires uma etiqueta ao gerar o QR, ela aparece em destaque.",
+    "noLabel": "Sem etiqueta — definida ao gerar o QR no onboarding",
+    "clientKey": "Chave de sessão no cliente (NIP-46)",
+    "hexTechnical": "Hex (técnico)",
+    "copyNpub": "Copiar npub",
+    "copyHex": "Copiar hex",
+    "copied": "Copiado",
+    "expires": "expira",
+    "used": "usada",
+    "pending": "pendente",
+    "loading": "A carregar…",
+    "sessionRequired": "Sessão necessária",
+    "listError": "Erro ao listar sessões",
+    "genericError": "Erro",
+    "empty": "Nenhuma sessão de cliente.",
+    "back": "← Voltar ao onboarding",
+    "onboardingLink": "Onboarding"
+  }
+}
