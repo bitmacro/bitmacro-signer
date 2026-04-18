@@ -3,6 +3,13 @@
     "locale": "Language",
     "brand": "BitMacro Signer"
   },
+  "buildStamp": {
+    "prefix": "Signer",
+    "title": "Deployed web module: semver from package.json; short hash matches the Git commit when SIGNER_GIT_COMMIT or Vercel env is set. Click to open the exact revision on GitHub.",
+    "sourceLink": "Source",
+    "noCommitHint": "No git commit embedded in this deployment — compare by version tag or set SIGNER_GIT_COMMIT in CI/Docker.",
+    "metaUnavailable": "Build metadata unavailable"
+  },
   "landing": {
     "nav": {
       "howItWorks": "How it works",

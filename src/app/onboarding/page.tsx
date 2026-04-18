@@ -17,6 +17,7 @@ import {
 import { getPublicKey } from "nostr-tools";
 import * as nip19 from "nostr-tools/nip19";
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import { SignerBuildStamp } from "@/components/signer-build-stamp";
 import { nostrPubkeyInputToHex } from "@/lib/session/ttl";
 import { generateKeypair, encryptNsec } from "@/lib/vault";
 
@@ -788,11 +789,14 @@ export default function OnboardingPage() {
           </section>
         ) : null}
 
-        <p className="mt-12 text-center text-sm leading-[1.5] text-zinc-400">
-          <Link href="/" className="font-semibold underline-offset-2 hover:underline" style={{ color: ACCENT }}>
-            {t("homeLink")}
-          </Link>
-        </p>
+        <div className="mt-10 flex flex-col items-center gap-4 border-t border-zinc-800/80 pt-8">
+          <SignerBuildStamp variant="compact" className="justify-center" />
+          <p className="text-center text-sm leading-[1.5] text-zinc-400">
+            <Link href="/" className="font-semibold underline-offset-2 hover:underline" style={{ color: ACCENT }}>
+              {t("homeLink")}
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

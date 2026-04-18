@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Check, Copy, Loader2, Trash2 } from "lucide-react";
 
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import { SignerBuildStamp } from "@/components/signer-build-stamp";
 import { nostrHexPubkeyToNpub } from "@/lib/session/ttl";
 
 const ACCENT = "#0066FF";
@@ -224,7 +225,10 @@ export default function SessionsPage() {
         <header className="mb-10 border-b border-zinc-800 pb-8">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <p className="font-mono text-xs uppercase tracking-wider text-zinc-400">{t("brand")}</p>
-            <LocaleSwitcher />
+            <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center sm:gap-3">
+              <SignerBuildStamp variant="compact" />
+              <LocaleSwitcher />
+            </div>
           </div>
           <h1 className="mt-2 text-[clamp(1.5rem,3vw+0.85rem,1.875rem)] font-bold leading-tight text-white">
             {t("title")}

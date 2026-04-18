@@ -17,11 +17,14 @@ RUN npm run build
 
 FROM base AS runner
 ARG BITMACRO_SIGNER_VERSION=0.0.0
+ARG SIGNER_GIT_COMMIT=
 LABEL org.opencontainers.image.title="bitmacro-signer-web" \
       org.opencontainers.image.description="BitMacro Signer Next.js (signer-web)" \
       org.opencontainers.image.version="${BITMACRO_SIGNER_VERSION}"
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+# Runtime: exposed in /api/build-info and UI (optional; pass at build: --build-arg SIGNER_GIT_COMMIT=$(git rev-parse HEAD))
+ENV SIGNER_GIT_COMMIT=${SIGNER_GIT_COMMIT}
 RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public

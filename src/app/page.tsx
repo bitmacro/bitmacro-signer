@@ -16,6 +16,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import { SignerBuildStamp } from "@/components/signer-build-stamp";
 import {
   type CompareCellDef,
   type CompareRowDef,
@@ -398,27 +399,32 @@ function Footer() {
 
   return (
     <footer className="landing-content border-t border-border/80 px-5 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-5 sm:flex-row sm:items-start">
-        <p className="text-center text-sm leading-[1.5] text-muted-foreground sm:text-left">
-          © {new Date().getFullYear()}{" "}
-          <a href={BITMACRO_HOME} className="footer-link font-semibold text-foreground/95">
-            BitMacro
-          </a>
-          {" · "}
-          <a
-            href={GITHUB_REPO}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="footer-link"
-          >
-            GitHub
-          </a>
-          {" · "}
-          <span className="text-muted-foreground">{t("mit")}</span>
-        </p>
-        <p className="text-center text-sm leading-normal text-muted-foreground sm:text-right">
-          {t("tagline")}
-        </p>
+      <div className="mx-auto flex max-w-6xl flex-col gap-6">
+        <div className="flex flex-col items-center justify-center gap-3 border-b border-border/60 pb-6">
+          <SignerBuildStamp tone="landing" className="justify-center" />
+        </div>
+        <div className="flex flex-col items-center justify-between gap-5 sm:flex-row sm:items-start">
+          <p className="text-center text-sm leading-[1.5] text-muted-foreground sm:text-left">
+            © {new Date().getFullYear()}{" "}
+            <a href={BITMACRO_HOME} className="footer-link font-semibold text-foreground/95">
+              BitMacro
+            </a>
+            {" · "}
+            <a
+              href={GITHUB_REPO}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer-link"
+            >
+              GitHub
+            </a>
+            {" · "}
+            <span className="text-muted-foreground">{t("mit")}</span>
+          </p>
+          <p className="text-center text-sm leading-normal text-muted-foreground sm:text-right">
+            {t("tagline")}
+          </p>
+        </div>
       </div>
     </footer>
   );

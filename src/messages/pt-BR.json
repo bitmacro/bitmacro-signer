@@ -3,6 +3,13 @@
     "locale": "Idioma",
     "brand": "BitMacro Signer"
   },
+  "buildStamp": {
+    "prefix": "Signer",
+    "title": "Módulo web em execução: semver do package.json; o hash curto corresponde ao commit Git quando SIGNER_GIT_COMMIT ou env Vercel está definido. Clique para abrir essa revisão no GitHub.",
+    "sourceLink": "Código-fonte",
+    "noCommitHint": "Nenhum commit Git embutido neste deploy — compare pela tag de versão ou defina SIGNER_GIT_COMMIT na CI/Docker.",
+    "metaUnavailable": "Metadados de build indisponíveis"
+  },
   "landing": {
     "nav": {
       "howItWorks": "Como funciona",
