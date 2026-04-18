@@ -153,7 +153,7 @@
       "createVault": "Create vault and activate bunker"
     },
     "step2": {
-      "title": "Back up your vault",
+      "title": "Import nsec (first vault)",
       "body": "There is no encrypted vault for this npub yet. Paste the nsec that matches your npub and choose a passphrase to encrypt the vault.",
       "nsecLabel": "nsec (bech32)",
       "encryptPassLabel": "Passphrase to encrypt the vault",
@@ -176,6 +176,42 @@
       "copy": "Copy",
       "copied": "Copied",
       "newLinkInline": "Need a new link for another app?"
+    },
+    "backup": {
+      "sectionTitle": "Offline recovery backup (required)",
+      "intro": "Your vault is encrypted with your passphrase. BitMacro Signer never stores your nsec in plaintext. This PDF is the portable copy you need to recover your identity without BitMacro infrastructure.",
+      "bulletIndependent": "The PDF contains your npub (readable) and the same encrypted vault blob as our servers — not your nsec in clear text.",
+      "bulletPassphrase": "You must keep your vault passphrase: it decrypts the backup. Without it, the PDF is useless.",
+      "bulletStorage": "Store the PDF offline (USB, printed paper in a safe). Avoid cloud folders if you want stronger security.",
+      "bulletNoCloud": "Anyone with this file and your passphrase controls your Nostr identity. Do not share.",
+      "yourNpub": "Your public key (npub)",
+      "codeInstruction": "Confirmation code (also inside the PDF)",
+      "codeHint": "After downloading, type this code to prove you have the file. You never need to paste your nsec.",
+      "downloadPdf": "Download encrypted backup PDF",
+      "confirmSafeStorage": "I confirm I saved the PDF in a safe place I control.",
+      "confirmTypeCode": "Type the confirmation code from the PDF or from above",
+      "confirmPlaceholder": "6 characters",
+      "continueAfterBackup": "Continue to bunker link",
+      "loadVaultFailed": "Could not load vault data for backup.",
+      "loadErrorTitle": "Backup unavailable",
+      "pdfGenerationFailed": "Could not generate PDF.",
+      "pdf": {
+        "fileNamePrefix": "bitmacro-signer-backup",
+        "title": "BitMacro Signer — offline vault backup",
+        "subtitle": "Keep this file private. The passphrase you chose for the Signer vault decrypts the encrypted payload below (same algorithm as the hosted vault: PBKDF2 + AES-GCM).",
+        "criticalTitle": "Security warnings",
+        "criticalBullets": "This file does not replace your passphrase — without it, recovery is impossible.|The nsec is never stored in plain text here; only ciphertext (blob) is included.|If someone obtains this file and your passphrase, they own your keys.|BitMacro cannot recover your passphrase or nsec.",
+        "npubLabel": "Public key (npub)",
+        "passphraseReminder": "Decrypt the vault fields below with the same passphrase you use to unlock BitMacro Signer.",
+        "codeTitle": "Confirmation code (type this in Signer to continue)",
+        "codeBody": "Signer shows this code to ensure you opened or saved this document. It is not a cryptographic secret.",
+        "downloadCheck": "",
+        "qrTitle": "QR — encrypted vault export (scan or transcribe JSON below if QR fails)",
+        "jsonTitle": "Encrypted vault JSON (same data as QR)",
+        "recoveryTitle": "How to recover without BitMacro",
+        "recoverySteps": "Use any tool that implements the same decryption (PBKDF2-SHA256, 600000 iterations, AES-GCM-256) with your passphrase on blob/salt/iv.|Decode your nsec from the decrypted material (bech32 nsec1…).|Import that nsec into any Nostr client.",
+        "footer": "Format: bitmacro-signer-offline-vault v1. Open source: github.com/bitmacro/bitmacro-signer"
+      }
     },
     "homeLink": "← Home"
   },

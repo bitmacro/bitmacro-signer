@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { getSessionCookie } from "@/lib/auth/session-cookie";
 import { vaultCreateBodySchema } from "@/lib/schemas/vault";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 
@@ -76,8 +77,19 @@ export async function POST(request: Request) {
 
 /**
  * GET /api/vault?identity_id=<uuid> — fetch vault ciphertext fields by identity.
+ * Requires session cookie matching `identity_id` (same as other authenticated routes).
  */
 export async function GET(request: Request) {
+  let cookieIdentityId: string | null;
+  try {
+    cookieIdentityId = await getSessionCookie();
+  } catch {
+    return jsonError("Server misconfigured: session support unavailable", 503);
+  }
+  if (!cookieIdentityId) {
+    return jsonError("Unauthorized", 401);
+  }
+
   let supabase: ReturnType<typeof createServiceRoleClient>;
   try {
     supabase = createServiceRoleClient();
@@ -94,6 +106,10 @@ export async function GET(request: Request) {
   const idResult = vaultCreateBodySchema.shape.identity_id.safeParse(rawId);
   if (!idResult.success) {
     return jsonError("Invalid identity_id", 400);
+  }
+
+  if (idResult.data !== cookieIdentityId) {
+    return jsonError("Forbidden", 403);
   }
 
   const { data, error } = await supabase

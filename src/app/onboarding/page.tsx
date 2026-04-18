@@ -18,7 +18,9 @@ import { getPublicKey } from "nostr-tools";
 import * as nip19 from "nostr-tools/nip19";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { SignerBuildStamp } from "@/components/signer-build-stamp";
+import { VaultBackupGate } from "@/components/vault-backup-gate";
 import { nostrPubkeyInputToHex } from "@/lib/session/ttl";
+import type { VaultPayload } from "@/lib/vault";
 import { generateKeypair, encryptNsec } from "@/lib/vault";
 
 const BG = "#080808";
@@ -96,6 +98,10 @@ export default function OnboardingPage() {
   );
   const [sessionsLoading, setSessionsLoading] = useState(false);
 
+  const [needsVaultBackup, setNeedsVaultBackup] = useState(false);
+  const [backupVaultPayload, setBackupVaultPayload] =
+    useState<VaultPayload | null>(null);
+
   const refreshSessions = useCallback(async (id: string) => {
     if (!id.trim()) return;
     setSessionsLoading(true);
@@ -140,6 +146,15 @@ export default function OnboardingPage() {
       } else {
         setPhase(3);
       }
+      if (typeof window !== "undefined" && j.vault_exists) {
+        const pending = sessionStorage.getItem("bm_signer_backup_pending");
+        const ok = sessionStorage.getItem(
+          `bm_signer_backup_ok_${j.identity_id}`,
+        );
+        if (pending === j.identity_id && !ok) {
+          setNeedsVaultBackup(true);
+        }
+      }
       void refreshSessions(j.identity_id);
     } catch {
       setStatusIdentity(null);
@@ -154,6 +169,17 @@ export default function OnboardingPage() {
   useEffect(() => {
     void refreshStatus();
   }, [refreshStatus]);
+
+  const completeVaultBackup = useCallback(() => {
+    const id = identityId.trim();
+    if (id) {
+      sessionStorage.removeItem("bm_signer_backup_pending");
+      sessionStorage.setItem(`bm_signer_backup_ok_${id}`, "1");
+    }
+    setNeedsVaultBackup(false);
+    setBackupVaultPayload(null);
+    void refreshSessions(id);
+  }, [identityId, refreshSessions]);
 
   const ensureFreshKeypair = useCallback(() => {
     if (vaultNsecRef.current) return;
@@ -321,9 +347,11 @@ export default function OnboardingPage() {
       if (!unlockRes.ok) {
         throw new Error(await parseUnlockError(unlockRes));
       }
+      sessionStorage.setItem("bm_signer_backup_pending", id);
+      setBackupVaultPayload(payload);
+      setNeedsVaultBackup(true);
       await refreshStatus();
       setBunkerUri(null);
-      setPhase(3);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("errors.generic"));
     } finally {
@@ -403,9 +431,11 @@ export default function OnboardingPage() {
       if (!unlockRes.ok) {
         throw new Error(await parseUnlockError(unlockRes));
       }
+      sessionStorage.setItem("bm_signer_backup_pending", id);
+      setBackupVaultPayload(payload);
+      setNeedsVaultBackup(true);
       await refreshStatus();
       setBunkerUri(null);
-      setPhase(3);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("errors.generic"));
     } finally {
@@ -421,6 +451,12 @@ export default function OnboardingPage() {
         method: "POST",
         credentials: "include",
       });
+      if (typeof window !== "undefined" && identityId) {
+        sessionStorage.removeItem("bm_signer_backup_pending");
+        sessionStorage.removeItem(`bm_signer_backup_ok_${identityId}`);
+      }
+      setNeedsVaultBackup(false);
+      setBackupVaultPayload(null);
       setBunkerUri(null);
       setSessionLabel("");
       setPhase(1);
@@ -529,7 +565,9 @@ export default function OnboardingPage() {
             </div>
 
             {statusIdentity &&
-            (phase >= 3 || (phase === 2 && step1Path === "have_npub")) ? (
+            (needsVaultBackup ||
+              phase >= 3 ||
+              (phase === 2 && step1Path === "have_npub")) ? (
               <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
                 <p className="text-sm leading-[1.5] text-zinc-400">
                   {t("identity.vaultOpen")}
@@ -662,8 +700,20 @@ export default function OnboardingPage() {
           </section>
         ) : null}
 
+        {authChecked &&
+        statusIdentity &&
+        needsVaultBackup &&
+        (npubInput.trim() || npubDisplay.trim()) ? (
+          <VaultBackupGate
+            identityId={identityId}
+            npub={npubInput.trim() || npubDisplay.trim()}
+            initialVault={backupVaultPayload}
+            onComplete={completeVaultBackup}
+          />
+        ) : null}
+
         {/* First-time vault: import nsec (only when session exists but no vault row yet) */}
-        {authChecked && phase === 2 ? (
+        {authChecked && phase === 2 && !needsVaultBackup ? (
           <section className="mb-14 scroll-mt-8">
             <div className="mb-5 flex items-center gap-2">
               <KeyRound className="size-5" style={{ color: ACCENT }} aria-hidden />
@@ -721,7 +771,7 @@ export default function OnboardingPage() {
         ) : null}
 
         {/* Sessions preview + NIP-46 connect */}
-        {authChecked && phase >= 3 ? (
+        {authChecked && phase >= 3 && !needsVaultBackup ? (
           <section className="scroll-mt-8">
             <div className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/30 p-4">
               <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">

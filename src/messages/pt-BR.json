@@ -153,7 +153,7 @@
       "createVault": "Criar cofre e activar bunker"
     },
     "step2": {
-      "title": "Cofre encriptado",
+      "title": "Importar nsec (primeiro cofre)",
       "body": "Ainda não há cofre encriptado para este npub. Cola a nsec que corresponde ao teu npub e define uma passphrase para encriptar o cofre.",
       "nsecLabel": "nsec (bech32)",
       "encryptPassLabel": "Passphrase para encriptar o cofre",
@@ -176,6 +176,42 @@
       "copy": "Copiar",
       "copied": "Copiado",
       "newLinkInline": "Precisas de um link novo para outra app?"
+    },
+    "backup": {
+      "sectionTitle": "Cópia de recuperação offline (obrigatória)",
+      "intro": "O cofre está encriptado com a tua passphrase. O BitMacro Signer nunca guarda a nsec em texto claro. Este PDF é a cópia portátil para recuperares a identidade sem depender da infraestrutura BitMacro.",
+      "bulletIndependent": "O PDF contém o teu npub (legível) e o mesmo blob encriptado que nos servidores — não a nsec em claro.",
+      "bulletPassphrase": "Guarda a passphrase do cofre: ela desencripta o backup. Sem ela, o PDF é inútil.",
+      "bulletStorage": "Guarda o PDF offline (USB, papel num sítio seguro). Evita pastas na cloud se quiseres mais segurança.",
+      "bulletNoCloud": "Quem tiver este ficheiro e a passphrase controla a tua identidade Nostr. Não partilhes.",
+      "yourNpub": "Chave pública (npub)",
+      "codeInstruction": "Código de confirmação (também no PDF)",
+      "codeHint": "Depois de descarregar, escreve este código para provares que tens o ficheiro. Nunca precisas de colar a nsec.",
+      "downloadPdf": "Descarregar PDF de backup encriptado",
+      "confirmSafeStorage": "Confirmo que guardei o PDF num local seguro sob o meu controlo.",
+      "confirmTypeCode": "Escreve o código de confirmação do PDF ou de cima",
+      "confirmPlaceholder": "6 caracteres",
+      "continueAfterBackup": "Continuar para o link do bunker",
+      "loadVaultFailed": "Não foi possível carregar o cofre para o backup.",
+      "loadErrorTitle": "Backup indisponível",
+      "pdfGenerationFailed": "Não foi possível gerar o PDF.",
+      "pdf": {
+        "fileNamePrefix": "bitmacro-signer-backup",
+        "title": "BitMacro Signer — backup offline do cofre",
+        "subtitle": "Mantém este ficheiro privado. A passphrase do cofre desencripta o payload abaixo (mesmo algoritmo que o cofre alojado: PBKDF2 + AES-GCM).",
+        "criticalTitle": "Avisos de segurança",
+        "criticalBullets": "Este ficheiro não substitui a passphrase — sem ela, não há recuperação.|A nsec nunca está em claro; só ciphertext (blob).|Quem tiver este ficheiro e a passphrase controla as tuas chaves.|A BitMacro não recupera passphrase nem nsec.",
+        "npubLabel": "Chave pública (npub)",
+        "passphraseReminder": "Desencripta os campos do cofre com a mesma passphrase que usas no BitMacro Signer.",
+        "codeTitle": "Código de confirmação (escreve no Signer para continuar)",
+        "codeBody": "O Signer mostra este código para garantires que abriste ou guardaste o documento. Não é um segredo criptográfico.",
+        "downloadCheck": "",
+        "qrTitle": "QR — export encriptado (ou usa o JSON abaixo)",
+        "jsonTitle": "JSON do cofre encriptado (mesmos dados que o QR)",
+        "recoveryTitle": "Recuperar sem BitMacro",
+        "recoverySteps": "Usa uma ferramenta com a mesma desencriptação (PBKDF2-SHA256, 600000 iterações, AES-GCM-256) com a passphrase em blob/salt/iv.|Obtém a nsec em bech32 a partir do texto desencriptado.|Importa a nsec em qualquer cliente Nostr.",
+        "footer": "Formato: bitmacro-signer-offline-vault v1. Código aberto: github.com/bitmacro/bitmacro-signer"
+      }
     },
     "homeLink": "← Página inicial"
   },
