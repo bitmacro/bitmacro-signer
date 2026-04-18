@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { cookies, headers } from "next/headers";
 import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { Providers } from "@/components/providers";
+import { SeoJsonLd } from "@/components/seo-json-ld";
 import { htmlLangAttribute } from "@/lib/locale-ui";
 import {
   BITMACRO_LOCALE_COOKIE,
@@ -31,16 +32,40 @@ export const viewport: Viewport = {
   colorScheme: "dark",
 };
 
+const SIGNER_SEO_DESCRIPTION =
+  "BitMacro Signer — bunker NIP-46 gerido: Nostr Connect, assinatura remota sem expor nsec no servidor. Cofre encriptado (AES-GCM), relay BitMacro, integração BitMacro Identity. Remote Nostr signing, encrypted vault.";
+
 export const metadata: Metadata = {
   title: {
-    default: "BitMacro Signer",
+    default: "BitMacro Signer — Bunker NIP-46 | Nostr Connect",
     template: "%s · BitMacro Signer",
   },
-  description:
-    "BitMacro-managed NIP-46 bunker — remote Nostr signing without exposing nsec to the server.",
+  description: SIGNER_SEO_DESCRIPTION,
   applicationName: "BitMacro Signer",
   metadataBase: new URL("https://signer.bitmacro.io"),
   manifest: "/site.webmanifest",
+  keywords: [
+    "Nostr Signer",
+    "NIP-46",
+    "Nostr Connect",
+    "bunker Nostr",
+    "remote signing",
+    "BitMacro",
+    "assinatura Nostr remota",
+    "Nostr Identity",
+    "nostr-tools",
+  ],
+  alternates: {
+    canonical: "https://signer.bitmacro.io",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
+  },
   icons: {
     icon: [
       {
@@ -73,19 +98,18 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
   },
   openGraph: {
-    title: "BitMacro Signer",
-    description:
-      "Managed NIP-46 bunker — encrypted vault, remote signing via BitMacro relay.",
+    title: "BitMacro Signer — Bunker NIP-46 | Nostr Connect",
+    description: SIGNER_SEO_DESCRIPTION,
     url: "https://signer.bitmacro.io",
     siteName: "BitMacro Signer",
-    locale: "en_US",
+    locale: "pt_PT",
+    alternateLocale: ["en_US"],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "BitMacro Signer",
-    description:
-      "Managed NIP-46 bunker — encrypted vault, remote signing via BitMacro relay.",
+    title: "BitMacro Signer — Bunker NIP-46",
+    description: SIGNER_SEO_DESCRIPTION,
   },
 };
 
@@ -111,6 +135,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-screen">
+        <SeoJsonLd />
         <Providers initialLocale={initialLocale}>{children}</Providers>
       </body>
     </html>
