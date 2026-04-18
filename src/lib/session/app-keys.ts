@@ -219,6 +219,29 @@ export async function completeConnect(
       return;
     }
 
+    const nowIso = new Date().toISOString();
+    const { data: openPendingRows } = await supabase
+      .from("signer_sessions")
+      .select("id, secret_hash, app_pubkey")
+      .eq("vault_id", vaultId)
+      .eq("used", false)
+      .gt("expires_at", nowIso)
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    const openPendingSnapshot = (openPendingRows ?? []).map((r) => ({
+      sessionId: r.id,
+      secretHashPrefix: r.secret_hash.slice(0, 12),
+      matchesIncomingSecretHash: r.secret_hash === secret_hash,
+      appPubkeyKind: r.app_pubkey.startsWith(PENDING_APP_PUBKEY_PREFIX)
+        ? ("pending_placeholder" as const)
+        : ("bound_npub" as const),
+    }));
+
+    const latestOpen = openPendingSnapshot[0];
+    const secretMismatchVersusLatestPending =
+      latestOpen && !latestOpen.matchesIncomingSecretHash;
+
     relayConnectLog(
       "warn",
       "completeConnect: no matching pending session",
@@ -234,6 +257,14 @@ export async function completeConnect(
         consumedSessionId: consumed?.id ?? null,
         consumedClientMatches:
           consumed?.id != null ? consumedPk === appPkNorm : null,
+        openPendingCount: openPendingSnapshot.length,
+        openPendingSnapshot,
+        hint:
+          secretMismatchVersusLatestPending === true
+            ? ("CONNECT_SECRET_DOES_NOT_MATCH_LATEST_PENDING_QR" as const)
+            : openPendingSnapshot.length === 0
+              ? ("NO_OPEN_SESSION_IN_VAULT" as const)
+              : ("CHECK_SECRET_AND_CLIENT_KEY_STABILITY" as const),
         ...diag,
       },
     );
