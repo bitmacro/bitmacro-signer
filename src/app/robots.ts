@@ -1,12 +1,12 @@
-/**
- * Robots policy for production (allow indexing the public landing; restrict private routes if needed).
- */
-import type { MetadataRoute } from "next";
-
-export default function robots(): MetadataRoute.Robots {
-  return {
-    rules: { userAgent: "*", allow: "/" },
-    sitemap: "https://signer.bitmacro.io/sitemap.xml",
-    host: "https://signer.bitmacro.io",
-  };
-}
+import type { MetadataRoute } from "next";
+
+import { getPublicSiteUrl } from "@/lib/public-site-url";
+
+export default function robots(): MetadataRoute.Robots {
+  const base = getPublicSiteUrl();
+  return {
+    rules: { userAgent: "*", allow: "/" },
+    sitemap: `${base}/sitemap.xml`,
+    host: base.replace(/^https:\/\//, ""),
+  };
+}

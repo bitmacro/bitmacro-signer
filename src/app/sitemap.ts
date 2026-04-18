@@ -1,31 +1,31 @@
-import type { MetadataRoute } from "next";
-
-const BASE = "https://signer.bitmacro.io";
-
-/**
- * URLs públicas indexáveis (landing, onboarding, sessões).
- * APIs e rotas auth não entram — não são páginas de conteúdo para SEO.
- */
-export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date();
-  return [
-    {
-      url: BASE,
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 1,
-    },
-    {
-      url: `${BASE}/onboarding`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.9,
-    },
-    {
-      url: `${BASE}/sessions`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.75,
-    },
-  ];
-}
+import type { MetadataRoute } from "next";
+
+import { getPublicSiteUrl } from "@/lib/public-site-url";
+
+/**
+ * URLs públicas indexáveis (landing, onboarding, sessões).
+ */
+export default function sitemap(): MetadataRoute.Sitemap {
+  const base = getPublicSiteUrl();
+  const now = new Date();
+  return [
+    {
+      url: base,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 1,
+    },
+    {
+      url: `${base}/onboarding`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.9,
+    },
+    {
+      url: `${base}/sessions`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.75,
+    },
+  ];
+}
