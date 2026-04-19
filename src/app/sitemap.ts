@@ -8,7 +8,7 @@ import { getPublicSiteUrl } from "@/lib/public-site-url";
 
 /**
 
- * URLs públicas indexáveis (landing, onboarding, sessões).
+ * URLs públicas indexáveis (landing, painel bunker, recuperar, sessões).
 
  */
 
@@ -34,7 +34,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
     {
 
-      url: `${base}/onboarding`,
+      url: `${base}/panel`,
 
       lastModified: now,
 

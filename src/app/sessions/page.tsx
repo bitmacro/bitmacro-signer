@@ -256,7 +256,7 @@ export default function SessionsPage() {
           <div className="mb-6 rounded-lg border border-amber-900/50 bg-amber-950/30 px-4 py-3 text-base leading-[1.5] text-amber-100">
             {error}{" "}
             <Link
-              href="/onboarding"
+              href="/panel"
               className="font-semibold underline-offset-2 hover:underline"
               style={{ color: ACCENT }}
             >
@@ -289,7 +289,7 @@ export default function SessionsPage() {
 
         <p className="mt-12 text-base leading-[1.5]">
           <Link
-            href="/onboarding"
+            href="/panel"
             className="inline-flex min-h-11 items-center font-semibold underline-offset-2 hover:underline"
             style={{ color: ACCENT }}
           >
