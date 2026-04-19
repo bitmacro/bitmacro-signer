@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.6] - 2026-04-19
+
+### Fixed
+
+- Backup PDF: manual JSON section is pretty-printed (indented); long values wrap within the text column; overflow continues on a second page when needed. QR image placement uses explicit horizontal centering on the page.
+
 ## [0.3.0] - 2026-04-18
 
 ### Added
@@ -28,5 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.3.6]: https://github.com/bitmacro/bitmacro-signer/compare/v0.3.5...v0.3.6
 [0.3.0]: https://github.com/bitmacro/bitmacro-signer/compare/v0.2.4...v0.3.0
 [0.2.4]: https://github.com/bitmacro/bitmacro-signer/releases/tag/v0.2.4

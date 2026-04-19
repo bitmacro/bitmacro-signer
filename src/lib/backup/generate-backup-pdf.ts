@@ -39,6 +39,28 @@ function splitLines(doc: jsPDF, text: string, maxWidth: number): string[] {
   return doc.splitTextToSize(text, maxWidth);
 }
 
+/** Pretty-print for the manual-copy block; QR payload stays minified. */
+function formatBundleJsonForPdf(minified: string): string {
+  try {
+    return JSON.stringify(JSON.parse(minified), null, 2);
+  } catch {
+    return minified;
+  }
+}
+
+/** One logical line from pretty JSON → wrapped lines for PDF column width. */
+function splitFormattedJsonLines(
+  doc: jsPDF,
+  formatted: string,
+  maxWidth: number,
+): string[] {
+  const out: string[] = [];
+  for (const rawLine of formatted.split("\n")) {
+    out.push(...doc.splitTextToSize(rawLine, maxWidth));
+  }
+  return out;
+}
+
 /** Center-aligned paragraph; returns Y after last line (mm). */
 function drawCenteredLines(
   doc: jsPDF,
@@ -56,8 +78,9 @@ function drawCenteredLines(
 }
 
 /**
- * Single-page A4 backup PDF: centered title, rule, compact sections, QR + recovery
- * side-by-side, minified JSON (small type) — fits one page for typical bundles.
+ * A4 backup PDF: centered title, QR centered under its heading, recovery text below,
+ * stewardship, then pretty-printed JSON for manual copy (may continue on a second page).
+ * QR payload stays minified for a compact, scannable code.
  */
 export async function buildVaultBackupPdfBlob(
   args: {
@@ -72,7 +95,7 @@ export async function buildVaultBackupPdfBlob(
   const { npub, identityId, vault, confirmationCode, recoverUrl, copy } = args;
   const bundle = buildOfflineVaultBundle(identityId, npub, vault);
   const qrPayload = serializeOfflineBundleForQr(bundle);
-  const minifiedJson = qrPayload;
+  const formattedJsonForCopy = formatBundleJsonForPdf(qrPayload);
 
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageW =
@@ -206,7 +229,7 @@ export async function buildVaultBackupPdfBlob(
 
   /* ——— QR (centered, large) + recovery + stewardship ——— */
   const qrSize = 54;
-  const qrLeft = centerX - qrSize / 2;
+  const qrX = (pageW - qrSize) / 2;
 
   const qrDataUrl = await QRCode.toDataURL(qrPayload, {
     errorCorrectionLevel: "M",
@@ -222,7 +245,7 @@ export async function buildVaultBackupPdfBlob(
   y += 3;
 
   const qrImgTop = y;
-  doc.addImage(qrDataUrl, "PNG", qrLeft, qrImgTop, qrSize, qrSize);
+  doc.addImage(qrDataUrl, "PNG", qrX, qrImgTop, qrSize, qrSize);
   y = qrImgTop + qrSize + 5;
 
   doc.setFont("helvetica", "normal");
@@ -279,7 +302,7 @@ export async function buildVaultBackupPdfBlob(
   }
   y += 3;
 
-  /* ——— JSON block (minified, small type) ——— */
+  /* ——— JSON block (pretty-printed for manual copy) ——— */
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
   doc.setTextColor(28, 28, 28);
@@ -301,20 +324,28 @@ export async function buildVaultBackupPdfBlob(
 
   doc.setFont("courier", "normal");
   let jsonFs = 4.5;
-  doc.setFontSize(jsonFs);
-  let jsonLines = doc.splitTextToSize(minifiedJson, maxW);
   const jsonLineH = 2.15;
   const footerReserve = 10;
+  doc.setFontSize(jsonFs);
+  let jsonLines = splitFormattedJsonLines(
+    doc,
+    formattedJsonForCopy,
+    maxW,
+  );
   while (
     y + jsonLines.length * jsonLineH > pageH - footerReserve &&
-    jsonFs >= 3.5
+    jsonFs > 3
   ) {
     jsonFs -= 0.25;
     doc.setFontSize(jsonFs);
-    jsonLines = doc.splitTextToSize(minifiedJson, maxW);
+    jsonLines = splitFormattedJsonLines(doc, formattedJsonForCopy, maxW);
   }
   doc.setTextColor(35, 35, 40);
   for (const jl of jsonLines) {
+    if (y + jsonLineH > pageH - footerReserve) {
+      doc.addPage();
+      y = margin;
+    }
     doc.text(jl, margin, y);
     y += jsonLineH;
   }
