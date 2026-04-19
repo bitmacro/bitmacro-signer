@@ -6,7 +6,6 @@ import type { VaultPayload } from "@/lib/vault";
 import {
   buildOfflineVaultBundle,
   serializeOfflineBundleForQr,
-  type OfflineVaultBundle,
 } from "./offline-bundle";
 
 export type BackupPdfCopy = {
@@ -15,7 +14,6 @@ export type BackupPdfCopy = {
   subtitle: string;
   criticalTitle: string;
   criticalBullets: string[];
-  /** Short “what’s in this PDF” section (3 bullets, pipe-separated). */
   didacticTitle: string;
   didacticBullets: string[];
   npubLabel: string;
@@ -29,7 +27,6 @@ export type BackupPdfCopy = {
   jsonSectionWarning: string;
   jsonTitle: string;
   recoveryTitle: string;
-  /** First recovery method; `{url}` is replaced with the full `/recover` URL. */
   recoveryWebStep: string;
   recoverySteps: string[];
   footer: string;
@@ -39,61 +36,25 @@ function splitLines(doc: jsPDF, text: string, maxWidth: number): string[] {
   return doc.splitTextToSize(text, maxWidth);
 }
 
-/** Draw one monospace line; shrink font until it fits, or wrap as last resort. */
-function drawCourierLine(
+/** Center-aligned paragraph; returns Y after last line (mm). */
+function drawCenteredLines(
   doc: jsPDF,
-  line: string,
-  margin: number,
+  lines: string[],
+  centerX: number,
   y: number,
-  maxW: number,
+  lineStep: number,
 ): number {
-  let fs = 7;
-  doc.setFont("courier", "normal");
-  while (fs >= 4) {
-    doc.setFontSize(fs);
-    const w = doc.getTextWidth(line);
-    if (w <= maxW) {
-      doc.text(line, margin, y);
-      return y + Math.max(3.2, fs * 0.45);
-    }
-    fs -= 0.5;
-  }
-  doc.setFontSize(6);
-  const wrapped = doc.splitTextToSize(line, maxW);
   let yy = y;
-  for (const wline of wrapped) {
-    doc.text(wline, margin, yy);
-    yy += 3;
-  }
-  return yy + 1;
-}
-
-function drawPrettyBundleJson(
-  doc: jsPDF,
-  bundle: OfflineVaultBundle,
-  margin: number,
-  yStart: number,
-  maxW: number,
-  pageH: number,
-  marginBottom: number,
-): number {
-  const pretty = JSON.stringify(bundle, null, 2);
-  const lines = pretty.split("\n");
-  let y = yStart;
   for (const line of lines) {
-    if (y > pageH - marginBottom) {
-      doc.addPage();
-      y = 14;
-    }
-    y = drawCourierLine(doc, line, margin, y, maxW);
+    doc.text(line, centerX, yy, { align: "center" });
+    yy += lineStep;
   }
-  return y;
+  return yy;
 }
 
 /**
- * Builds a client-side PDF: warnings, didactic blocks, npub, confirmation code,
- * QR (preferred path), then pretty-printed JSON (line-by-line, avoids mid-string
- * wraps from the old single-block splitTextToSize approach).
+ * Single-page A4 backup PDF: centered title, rule, compact sections, QR + recovery
+ * side-by-side, minified JSON (small type) — fits one page for typical bundles.
  */
 export async function buildVaultBackupPdfBlob(
   args: {
@@ -101,7 +62,6 @@ export async function buildVaultBackupPdfBlob(
     identityId: string;
     vault: VaultPayload;
     confirmationCode: string;
-    /** Full URL to the public recover page (e.g. from {@link getPublicSiteUrl}). */
     recoverUrl: string;
     copy: BackupPdfCopy;
   },
@@ -109,6 +69,7 @@ export async function buildVaultBackupPdfBlob(
   const { npub, identityId, vault, confirmationCode, recoverUrl, copy } = args;
   const bundle = buildOfflineVaultBundle(identityId, npub, vault);
   const qrPayload = serializeOfflineBundleForQr(bundle);
+  const minifiedJson = qrPayload;
 
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageW =
@@ -121,180 +82,226 @@ export async function buildVaultBackupPdfBlob(
       .height ??
     doc.internal.pageSize.getHeight?.() ??
     297;
-  const margin = 14;
+  const margin = 10;
   const maxW = pageW - margin * 2;
+  const centerX = pageW / 2;
   let y = margin;
 
+  /* ——— Title block (centered) ——— */
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.text(copy.title, margin, y);
-  y += 8;
+  doc.setFontSize(12);
+  doc.setTextColor(28, 28, 28);
+  const titleLines = splitLines(doc, copy.title, maxW);
+  y = drawCenteredLines(doc, titleLines, centerX, y, 5.5);
+  y += 2;
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  for (const line of splitLines(doc, copy.subtitle, maxW)) {
-    doc.text(line, margin, y);
-    y += 5;
-  }
-  y += 4;
+  doc.setFontSize(8.5);
+  doc.setTextColor(75, 75, 75);
+  const subLines = splitLines(doc, copy.subtitle, maxW - 8);
+  y = drawCenteredLines(doc, subLines, centerX, y, 4.2);
+  y += 3;
 
-  doc.setDrawColor(180, 40, 40);
-  doc.setLineWidth(0.4);
+  doc.setDrawColor(210, 210, 215);
+  doc.setLineWidth(0.25);
+  doc.line(margin, y, pageW - margin, y);
+  y += 5;
+
+  /* ——— Critical warnings (measure → box → text) ——— */
   const critTop = y;
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(120, 20, 20);
-  doc.text(copy.criticalTitle, margin + 2, y + 5);
-  y += 9;
-  doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
+  const critTitleLines = splitLines(doc, copy.criticalTitle, maxW - 6);
+  let critInnerH = 4 + critTitleLines.length * 4 + 1;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
   for (const bullet of copy.criticalBullets) {
+    critInnerH += splitLines(doc, `• ${bullet}`, maxW - 8).length * 3.3;
+  }
+  const critH = critInnerH + 5;
+  doc.setDrawColor(200, 90, 90);
+  doc.setLineWidth(0.35);
+  doc.setFillColor(255, 250, 250);
+  doc.rect(margin, critTop, maxW, critH, "FD");
+
+  let critPen = critTop + 4;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(145, 25, 25);
+  for (const line of critTitleLines) {
+    doc.text(line, margin + 3, critPen);
+    critPen += 4;
+  }
+  critPen += 1;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(55, 25, 25);
+  for (const bullet of copy.criticalBullets) {
+    for (const line of splitLines(doc, `• ${bullet}`, maxW - 8)) {
+      doc.text(line, margin + 4, critPen);
+      critPen += 3.3;
+    }
+  }
+  y = critTop + critH + 4;
+
+  /* ——— Didactic ——— */
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8.5);
+  doc.setTextColor(35, 45, 120);
+  doc.text(copy.didacticTitle, margin, y);
+  y += 4.5;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(45, 45, 45);
+  for (const bullet of copy.didacticBullets) {
     for (const line of splitLines(doc, `• ${bullet}`, maxW - 4)) {
       doc.text(line, margin + 2, y);
-      y += 4;
+      y += 3.2;
     }
   }
-  doc.rect(margin, critTop, maxW, y - critTop + 2);
-  doc.setTextColor(0, 0, 0);
-  y += 8;
+  y += 3;
 
+  /* ——— npub ——— */
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setTextColor(30, 30, 120);
-  doc.text(copy.didacticTitle, margin, y);
-  y += 6;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(0, 0, 0);
-  for (const bullet of copy.didacticBullets) {
-    for (const line of splitLines(doc, `• ${bullet}`, maxW - 2)) {
-      doc.text(line, margin + 2, y);
-      y += 4.2;
-    }
-  }
-  y += 6;
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.text(copy.npubLabel, margin, y);
-  y += 6;
-  doc.setFont("courier", "normal");
   doc.setFontSize(8);
+  doc.setTextColor(28, 28, 28);
+  doc.text(copy.npubLabel, margin, y);
+  y += 4;
+  doc.setFont("courier", "normal");
+  doc.setFontSize(7);
   for (const line of splitLines(doc, npub, maxW)) {
     doc.text(line, margin, y);
-    y += 4;
+    y += 3.2;
   }
-  y += 4;
+  y += 2;
 
   doc.setFont("helvetica", "italic");
-  doc.setFontSize(9);
+  doc.setFontSize(7.5);
   for (const line of splitLines(doc, copy.passphraseReminder, maxW)) {
     doc.text(line, margin, y);
-    y += 5;
+    y += 3.3;
   }
   y += 4;
 
+  /* ——— Confirmation code (centered) ——— */
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.text(copy.codeTitle, margin, y);
-  y += 7;
+  doc.setFontSize(8);
+  doc.setTextColor(28, 28, 28);
+  const codeTitleLines = splitLines(doc, copy.codeTitle, maxW);
+  y = drawCenteredLines(doc, codeTitleLines, centerX, y, 3.8);
+  y += 2;
   doc.setFont("courier", "bold");
-  doc.setFontSize(18);
-  doc.text(confirmationCode, margin, y);
-  y += 10;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  for (const line of splitLines(doc, copy.codeBody, maxW)) {
-    doc.text(line, margin, y);
-    y += 4;
-  }
+  doc.setFontSize(16);
+  doc.text(confirmationCode, centerX, y, { align: "center" });
   y += 8;
-
-  if (y > 210) {
-    doc.addPage();
-    y = margin;
-  }
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.text(copy.qrTitle, margin, y);
-  y += 5;
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  for (const line of splitLines(doc, copy.qrSectionLead, maxW)) {
-    doc.text(line, margin, y);
-    y += 4;
-  }
-  y += 4;
+  doc.setFontSize(7.5);
+  doc.setTextColor(70, 70, 70);
+  const codeBodyLines = splitLines(doc, copy.codeBody, maxW - 6);
+  y = drawCenteredLines(doc, codeBodyLines, centerX, y, 3.2);
+  y += 5;
+
+  /* ——— QR + recovery (two columns, same baseline) ——— */
+  const qrSize = 33;
+  const col2X = margin + qrSize + 4;
+  const col2W = pageW - margin - col2X;
 
   const qrDataUrl = await QRCode.toDataURL(qrPayload, {
     errorCorrectionLevel: "M",
     margin: 1,
-    width: 320,
+    width: 280,
   });
-  const qrSize = 58;
-  doc.addImage(qrDataUrl, "PNG", margin, y, qrSize, qrSize);
-  y += qrSize + 10;
-
-  if (y > 230) {
-    doc.addPage();
-    y = margin;
-  }
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.text(copy.jsonSectionTitle, margin, y);
+  doc.setFontSize(8.5);
+  doc.setTextColor(28, 28, 28);
+  doc.text(copy.qrTitle, margin, y);
   y += 5;
+  const rowTop = y;
+
+  let yRight = rowTop;
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(60, 60, 60);
-  for (const line of splitLines(doc, copy.jsonSectionWarning, maxW)) {
-    doc.text(line, margin, y);
-    y += 4;
+  doc.setFontSize(6.8);
+  doc.setTextColor(55, 55, 55);
+  for (const line of splitLines(doc, copy.qrSectionLead, col2W)) {
+    doc.text(line, col2X, yRight);
+    yRight += 2.7;
   }
-  doc.setTextColor(0, 0, 0);
-  y += 4;
-
+  yRight += 2;
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.text(copy.jsonTitle, margin, y);
-  y += 5;
-
-  y = drawPrettyBundleJson(doc, bundle, margin, y, maxW, pageH, 18);
-
-  y += 8;
-  if (y > 240) {
-    doc.addPage();
-    y = margin;
-  }
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
-  doc.text(copy.recoveryTitle, margin, y);
-  y += 6;
+  doc.setFontSize(8);
+  doc.setTextColor(28, 28, 28);
+  doc.text(copy.recoveryTitle, col2X, yRight);
+  yRight += 4;
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
+  doc.setFontSize(6.8);
   let n = 1;
   const webStepText = copy.recoveryWebStep.replace(/\{url\}/g, recoverUrl);
-  for (const line of splitLines(doc, `${n}. ${webStepText}`, maxW)) {
-    doc.text(line, margin, y);
-    y += 4.5;
+  for (const line of splitLines(doc, `${n}. ${webStepText}`, col2W)) {
+    doc.text(line, col2X, yRight);
+    yRight += 2.7;
   }
   n += 1;
   for (const step of copy.recoverySteps) {
-    for (const line of splitLines(doc, `${n}. ${step}`, maxW)) {
-      doc.text(line, margin, y);
-      y += 4.5;
+    for (const line of splitLines(doc, `${n}. ${step}`, col2W)) {
+      doc.text(line, col2X, yRight);
+      yRight += 2.7;
     }
     n += 1;
   }
-  y += 6;
+
+  doc.addImage(qrDataUrl, "PNG", margin, rowTop, qrSize, qrSize);
+
+  y = Math.max(rowTop + qrSize, yRight) + 5;
+
+  /* ——— JSON block (minified, small type) ——— */
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
+  doc.setTextColor(28, 28, 28);
+  doc.text(copy.jsonSectionTitle, margin, y);
+  y += 4;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
   doc.setTextColor(80, 80, 80);
-  for (const line of splitLines(doc, copy.footer, maxW)) {
+  for (const line of splitLines(doc, copy.jsonSectionWarning, maxW)) {
     doc.text(line, margin, y);
-    y += 4;
+    y += 3;
+  }
+  y += 2;
+  doc.setTextColor(28, 28, 28);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7.5);
+  doc.text(copy.jsonTitle, margin, y);
+  y += 4;
+
+  doc.setFont("courier", "normal");
+  let jsonFs = 4.5;
+  doc.setFontSize(jsonFs);
+  let jsonLines = doc.splitTextToSize(minifiedJson, maxW);
+  const jsonLineH = 2.15;
+  const footerReserve = 10;
+  while (
+    y + jsonLines.length * jsonLineH > pageH - footerReserve &&
+    jsonFs >= 3.5
+  ) {
+    jsonFs -= 0.25;
+    doc.setFontSize(jsonFs);
+    jsonLines = doc.splitTextToSize(minifiedJson, maxW);
+  }
+  doc.setTextColor(35, 35, 40);
+  for (const jl of jsonLines) {
+    doc.text(jl, margin, y);
+    y += jsonLineH;
+  }
+  y += 3;
+
+  /* ——— Footer ——— */
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.5);
+  doc.setTextColor(110, 110, 115);
+  for (const line of splitLines(doc, copy.footer, maxW)) {
+    doc.text(line, centerX, y, { align: "center" });
+    y += 3;
   }
 
   return doc.output("blob");

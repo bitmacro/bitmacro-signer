@@ -3,6 +3,13 @@
     "locale": "Idioma",
     "brand": "BitMacro Signer"
   },
+  "buildStamp": {
+    "title": "Abrir a revisão correspondente no GitHub",
+    "prefix": "Signer",
+    "sourceLink": "Código fonte",
+    "noCommitHint": "Hash de commit não exposto neste ambiente",
+    "metaUnavailable": "Metadados de build indisponíveis"
+  },
   "recover": {
     "title": "Recuperar nsec (local)",
     "subtitle": "Zero-knowledge — nada é enviado aos servidores BitMacro. A desencriptação corre só no teu browser.",
@@ -23,7 +30,8 @@
     "copyFailed": "Não foi possível copiar. Copia manualmente.",
     "cleared": "Conteúdo sensível removido por segurança.",
     "autoClear": "A nsec deixa de ser mostrada ao fim de 60 segundos ou ao saíres desta página.",
-    "navHome": "← Página inicial"
+    "navHome": "← Página inicial",
+    "navBunker": "Signer · bunker e sessões"
   },
   "landing": {
     "nav": {

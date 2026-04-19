@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useId, useState } from "react";
 import { AlertTriangle, Check, Copy, Loader2 } from "lucide-react";
 
+import { SignerBuildStamp } from "@/components/signer-build-stamp";
 import { parseOfflineVaultBundleFromPaste } from "@/lib/backup/offline-bundle";
 import { decryptedNsecMatchesNpub } from "@/lib/backup/recover-verify";
 import { decryptNsec, VaultDecryptError } from "@/lib/vault";
@@ -195,11 +196,26 @@ export function RecoverForm() {
         </section>
       ) : null}
 
-      <p className="mt-10 text-center text-sm">
-        <Link href="/" className="text-primary underline-offset-2 hover:underline">
-          {t("navHome")}
-        </Link>
-      </p>
+      <div className="mt-12 flex flex-col items-center gap-5 border-t border-zinc-800/80 pt-10">
+        <nav
+          className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm"
+          aria-label="Navigation"
+        >
+          <Link
+            href="/onboarding"
+            className="font-medium text-primary underline-offset-2 hover:underline"
+          >
+            {t("navBunker")}
+          </Link>
+          <span className="text-zinc-600" aria-hidden>
+            ·
+          </span>
+          <Link href="/" className="text-zinc-400 underline-offset-2 hover:underline">
+            {t("navHome")}
+          </Link>
+        </nav>
+        <SignerBuildStamp variant="compact" className="justify-center" />
+      </div>
     </div>
   );
 }

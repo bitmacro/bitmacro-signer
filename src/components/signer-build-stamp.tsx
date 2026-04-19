@@ -111,12 +111,7 @@ export function SignerBuildStamp({
           </>
         ) : loadState === "loading" ? (
           <span className={mutedTone}> · …</span>
-        ) : (
-          <span className={mutedTone} title={t("noCommitHint")}>
-            {" "}
-            · —
-          </span>
-        )}
+        ) : null}
       </a>
       <a
         href={SIGNER_REPOSITORY_URL}
