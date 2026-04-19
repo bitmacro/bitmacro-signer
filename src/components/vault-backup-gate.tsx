@@ -111,6 +111,8 @@ export function VaultBackupGate({
       recoveryTitle: t("pdf.recoveryTitle"),
       recoveryWebStep: t("pdf.recoveryWebStep"),
       recoverySteps: t("pdf.recoverySteps").split("|"),
+      stewardshipTitle: t("pdf.stewardshipTitle"),
+      stewardshipParagraphs: t("pdf.stewardshipParagraphs").split("|"),
       footer: t("pdf.footer"),
     }),
     [t],

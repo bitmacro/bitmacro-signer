@@ -176,21 +176,22 @@ export function RecoverForm() {
             </code>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <button
-              type="button"
-              onClick={() => void handleCopy()}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-zinc-600 px-4 text-sm font-semibold text-zinc-100 transition-colors hover:bg-zinc-800"
-            >
-              {copied ? (
-                <Check className="size-4 text-emerald-400" aria-hidden />
-              ) : (
-                <Copy className="size-4" aria-hidden />
-              )}
-              {copied ? t("copied") : t("copy")}
-            </button>
-            <p className="text-sm text-zinc-400">{t("importHint")}</p>
-          </div>
+          <button
+            type="button"
+            onClick={() => void handleCopy()}
+            className="inline-flex min-h-11 w-full max-w-xs items-center justify-center gap-2 rounded-lg border border-zinc-600 px-4 text-sm font-semibold text-zinc-100 transition-colors hover:bg-zinc-800 sm:w-auto"
+          >
+            {copied ? (
+              <Check className="size-4 text-emerald-400" aria-hidden />
+            ) : (
+              <Copy className="size-4" aria-hidden />
+            )}
+            {copied ? t("copied") : t("copy")}
+          </button>
+
+          <p className="whitespace-pre-line text-sm leading-relaxed text-zinc-300">
+            {t("importHint")}
+          </p>
 
           <p className="text-xs text-zinc-500">{t("autoClear")}</p>
         </section>
@@ -202,7 +203,7 @@ export function RecoverForm() {
           aria-label="Navigation"
         >
           <Link
-            href="/onboarding"
+            href="/panel"
             className="font-medium text-primary underline-offset-2 hover:underline"
           >
             {t("navBunker")}

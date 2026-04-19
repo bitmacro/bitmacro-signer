@@ -29,6 +29,9 @@ export type BackupPdfCopy = {
   recoveryTitle: string;
   recoveryWebStep: string;
   recoverySteps: string[];
+  stewardshipTitle: string;
+  /** Pipe-separated short paragraphs (same guidance as /recover after decrypt). */
+  stewardshipParagraphs: string[];
   footer: string;
 };
 
@@ -201,58 +204,80 @@ export async function buildVaultBackupPdfBlob(
   y = drawCenteredLines(doc, codeBodyLines, centerX, y, 3.2);
   y += 5;
 
-  /* ——— QR + recovery (two columns, same baseline) ——— */
-  const qrSize = 33;
-  const col2X = margin + qrSize + 4;
-  const col2W = pageW - margin - col2X;
+  /* ——— QR (centered, large) + recovery + stewardship ——— */
+  const qrSize = 54;
+  const qrLeft = centerX - qrSize / 2;
 
   const qrDataUrl = await QRCode.toDataURL(qrPayload, {
     errorCorrectionLevel: "M",
     margin: 1,
-    width: 280,
+    width: 420,
   });
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(28, 28, 28);
+  const qrHeadLines = splitLines(doc, copy.qrTitle, maxW);
+  y = drawCenteredLines(doc, qrHeadLines, centerX, y, 4.2);
+  y += 3;
+
+  const qrImgTop = y;
+  doc.addImage(qrDataUrl, "PNG", qrLeft, qrImgTop, qrSize, qrSize);
+  y = qrImgTop + qrSize + 5;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(70, 70, 70);
+  const qrLeadLines = splitLines(doc, copy.qrSectionLead, maxW - 10);
+  y = drawCenteredLines(doc, qrLeadLines, centerX, y, 3.4);
+  y += 5;
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8.5);
   doc.setTextColor(28, 28, 28);
-  doc.text(copy.qrTitle, margin, y);
+  doc.text(copy.recoveryTitle, margin, y);
   y += 5;
-  const rowTop = y;
-
-  let yRight = rowTop;
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(6.8);
-  doc.setTextColor(55, 55, 55);
-  for (const line of splitLines(doc, copy.qrSectionLead, col2W)) {
-    doc.text(line, col2X, yRight);
-    yRight += 2.7;
-  }
-  yRight += 2;
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.setTextColor(28, 28, 28);
-  doc.text(copy.recoveryTitle, col2X, yRight);
-  yRight += 4;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(6.8);
+  doc.setFontSize(7.5);
   let n = 1;
   const webStepText = copy.recoveryWebStep.replace(/\{url\}/g, recoverUrl);
-  for (const line of splitLines(doc, `${n}. ${webStepText}`, col2W)) {
-    doc.text(line, col2X, yRight);
-    yRight += 2.7;
+  for (const line of splitLines(doc, `${n}. ${webStepText}`, maxW)) {
+    doc.text(line, margin, y);
+    y += 3.4;
   }
   n += 1;
   for (const step of copy.recoverySteps) {
-    for (const line of splitLines(doc, `${n}. ${step}`, col2W)) {
-      doc.text(line, col2X, yRight);
-      yRight += 2.7;
+    for (const line of splitLines(doc, `${n}. ${step}`, maxW)) {
+      doc.text(line, margin, y);
+      y += 3.4;
     }
     n += 1;
   }
+  y += 4;
 
-  doc.addImage(qrDataUrl, "PNG", margin, rowTop, qrSize, qrSize);
-
-  y = Math.max(rowTop + qrSize, yRight) + 5;
+  doc.setDrawColor(210, 215, 225);
+  doc.setLineWidth(0.3);
+  doc.line(margin, y, pageW - margin, y);
+  y += 5;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8.5);
+  doc.setTextColor(35, 50, 95);
+  for (const line of splitLines(doc, copy.stewardshipTitle, maxW)) {
+    doc.text(line, margin, y);
+    y += 4;
+  }
+  y += 1;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(45, 45, 50);
+  for (const para of copy.stewardshipParagraphs) {
+    for (const line of splitLines(doc, para, maxW)) {
+      doc.text(line, margin, y);
+      y += 3.3;
+    }
+    y += 2;
+  }
+  y += 3;
 
   /* ——— JSON block (minified, small type) ——— */
   doc.setFont("helvetica", "bold");

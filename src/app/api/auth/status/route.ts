@@ -45,21 +45,32 @@ export async function GET() {
   }
 
   let vault_exists = false;
+  let npub: string | null = null;
   try {
     const supabase = createServiceRoleClient();
-    const { data: vaultRow } = await supabase
-      .from("signer_vaults")
-      .select("id")
-      .eq("identity_id", identityId)
-      .maybeSingle();
+    const [{ data: vaultRow }, { data: idRow }] = await Promise.all([
+      supabase
+        .from("signer_vaults")
+        .select("id")
+        .eq("identity_id", identityId)
+        .maybeSingle(),
+      supabase
+        .from("identities")
+        .select("npub")
+        .eq("id", identityId)
+        .maybeSingle(),
+    ]);
     vault_exists = Boolean(vaultRow?.id);
+    const n = idRow?.npub;
+    npub = typeof n === "string" && n.trim() ? n.trim() : null;
   } catch {
-    /* ignore — status still useful without vault flag */
+    /* ignore — status still useful without vault flag / npub */
   }
 
   return NextResponse.json({
     identity_id: identityId,
     is_running: running,
     vault_exists,
+    npub,
   });
 }

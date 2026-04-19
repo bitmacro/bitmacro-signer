@@ -24,14 +24,14 @@
     "pasteHint": "PDF paste: some viewers break long lines; this page fixes that automatically. If it still fails, scan the QR from the PDF or copy the entire JSON block at once.",
     "warningTitle": "Treat as a secret",
     "warningBody": "Anyone with this nsec can sign as you. Do not share it or store it in plaintext in the cloud.",
-    "importHint": "Import this nsec into your Nostr client.",
+    "importHint": "This key should only be used for account recovery.\n\nSharing or pasting it into apps permanently exposes your identity.\n\nFor day-to-day use, BitMacro Signer signs for you — without ever exposing this key.",
     "copy": "Copy nsec",
     "copied": "Copied",
     "copyFailed": "Could not copy. Copy manually.",
     "cleared": "Sensitive content cleared for your safety.",
     "autoClear": "The nsec is hidden after 60 seconds or when you leave this page.",
     "navHome": "← Home",
-    "navBunker": "Signer · bunker & sessions"
+    "navBunker": "Signer · panel & sessions"
   },
   "landing": {
     "nav": {
@@ -158,8 +158,8 @@
     },
     "header": {
       "brand": "BitMacro Signer",
-      "title": "Activate the bunker",
-      "subtitle": "Use your BitMacro Identity npub and vault passphrase to get the NIP-46 QR code.",
+      "title": "Bunker panel",
+      "subtitle": "Unlock the vault with your npub and passphrase, generate the NIP-46 QR, and manage app links. To switch accounts, end the session in Identity.",
       "bunkerLabel": "Bunker:",
       "active": "Active",
       "sessionManaged": "Session active — bunker in managed (server) mode",
@@ -169,7 +169,13 @@
     },
     "loadingAuth": "Checking session…",
     "identity": {
-      "vaultOpen": "Vault unlocked for this npub."
+      "vaultOpen": "Vault unlocked — active session in this browser.",
+      "sessionHint": "This is your Signer session: end it to lock the bunker, clear local state, and unlock with another npub.",
+      "endSession": "End session",
+      "copyNpub": "Copy npub",
+      "copied": "Copied",
+      "profileLoading": "Loading profile…",
+      "npubMissing": "Npub unavailable — reload the page or unlock again."
     },
     "step1": {
       "title": "Identity",
@@ -216,7 +222,7 @@
       "bulletNoCloud": "Anyone with this file and your passphrase controls your Nostr identity. Do not share.",
       "yourNpub": "Your public key (npub)",
       "vaultPassphraseBlock": "Your vault passphrase is the only key that decrypts this PDF. Store it separately from the PDF.",
-      "confirmationCodeBlock": "A 6-character code appears inside the PDF — only to confirm you saved the file. It does not replace the passphrase.",
+      "confirmationCodeBlock": "The PDF contains a 6-character code: enter it once in the assistant right after you download the backup, to prove you saved the file. It is not for account recovery or decryption — it does not replace your passphrase.",
       "downloadPdf": "Download encrypted backup PDF",
       "confirmPassphraseUnderstanding": "I understand I need the passphrase to recover my nsec. The 6-letter code does not replace it.",
       "confirmTypeCode": "Type the 6-letter code from the PDF (after downloading)",
@@ -236,7 +242,7 @@
         "npubLabel": "Public key (npub)",
         "passphraseReminder": "Decrypt the vault fields below with the same passphrase you use to unlock BitMacro Signer.",
         "codeTitle": "Confirmation code (type this in Signer to continue)",
-        "codeBody": "Type this code in Signer to confirm you opened or saved the PDF. It is not shown on the website — only in this document. It is not a cryptographic secret.",
+        "codeBody": "Use this code once: in the Signer assistant, right after you download this PDF, to confirm you saved the file. It is not for account recovery or decrypting the vault — do not confuse it with your passphrase. It is not shown on the website — only in this document.",
         "downloadCheck": "",
         "qrSectionLead": "Recommended: scan this QR on the recovery page — avoids errors when copying very long text from the PDF.",
         "qrTitle": "QR — full encrypted vault export",
@@ -245,7 +251,9 @@
         "jsonTitle": "JSON text (same data as QR)",
         "recoveryTitle": "How to recover without BitMacro",
         "recoveryWebStep": "Open {url}, paste the JSON below, and enter your passphrase. Your nsec is shown only in the browser.",
-        "recoverySteps": "Or use any tool that implements the same decryption (PBKDF2-SHA256, 600000 iterations, AES-GCM-256) with your passphrase on blob/salt/iv.|Decode your nsec from the decrypted material (bech32 nsec1…).|Import that nsec into any Nostr client.",
+        "recoverySteps": "Or use any tool that implements the same decryption (PBKDF2-SHA256, 600000 iterations, AES-GCM-256) with your passphrase on blob/salt/iv.|Decode your nsec from the decrypted material (bech32 nsec1…).",
+        "stewardshipTitle": "Safe use of this key (BitMacro Signer)",
+        "stewardshipParagraphs": "This key should only be used for account recovery.|Sharing or pasting it into apps permanently exposes your identity.|For day-to-day use, BitMacro Signer signs for you — without ever exposing this key.",
         "footer": "Format: bitmacro-signer-offline-vault v1. Open source: github.com/bitmacro/bitmacro-signer"
       }
     },
@@ -255,7 +263,7 @@
     "brand": "BitMacro Signer",
     "title": "Active sessions",
     "body": "NIP-46 does not send the app name: use the session key (npub/hex below). If you set a label when generating the QR, it is shown prominently.",
-    "noLabel": "No label — set when generating the QR in onboarding",
+    "noLabel": "No label — set when generating the QR in the panel",
     "clientKey": "Client session key (NIP-46)",
     "hexTechnical": "Hex (technical)",
     "copyNpub": "Copy npub",
@@ -269,8 +277,8 @@
     "listError": "Failed to list sessions",
     "genericError": "Error",
     "empty": "No client sessions.",
-    "back": "← Back to onboarding",
-    "onboardingLink": "Onboarding",
+    "back": "← Back to panel",
+    "onboardingLink": "Panel",
     "sessionIdLabel": "Session id (for logs)",
     "remove": "Remove session",
     "removeConfirm": "Remove this client session? You will need a new QR or bunker link to connect again.",

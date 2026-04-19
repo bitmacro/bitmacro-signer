@@ -150,7 +150,7 @@ function Hero() {
         </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <Link
-            href="/onboarding"
+            href="/panel"
             className="glow-primary hover:glow-primary-strong bm-btn-primary hover:scale-[1.01] active:scale-[0.99]"
           >
             {t("ctaPrimary")}
