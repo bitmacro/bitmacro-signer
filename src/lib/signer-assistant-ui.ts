@@ -13,6 +13,7 @@ export type SignerAssistantUiStrings = {
   srToggle: string;
   errorNetwork: string;
   errorBadResponse: string;
+  errorTimeout: string;
   notifyEmailPlaceholder: string;
   notifyMe: string;
   notifySending: string;
@@ -35,6 +36,7 @@ const UI: Record<AppLocale, SignerAssistantUiStrings> = {
     errorNetwork: "Não foi possível contactar o servidor.",
     errorBadResponse:
       "Resposta inválida do servidor. Tenta atualizar a página ou verifica o proxy (504).",
+    errorTimeout: "O pedido demorou demasiado. Verifica rede/OpenAI ou OPENAI_BASE_URL.",
     notifyEmailPlaceholder: "Email (opcional)",
     notifyMe: "Notifica-me",
     notifySending: "A enviar…",
@@ -55,6 +57,7 @@ const UI: Record<AppLocale, SignerAssistantUiStrings> = {
     errorNetwork: "Could not reach the server.",
     errorBadResponse:
       "Invalid server response. Try refreshing or check the proxy (504).",
+    errorTimeout: "Request timed out. Check network/OpenAI or OPENAI_BASE_URL.",
     notifyEmailPlaceholder: "Email (optional)",
     notifyMe: "Notify me",
     notifySending: "Sending…",
@@ -75,6 +78,7 @@ const UI: Record<AppLocale, SignerAssistantUiStrings> = {
     errorNetwork: "No fue posible contactar con el servidor.",
     errorBadResponse:
       "Respuesta inválida del servidor. Actualiza la página o revisa el proxy (504).",
+    errorTimeout: "Tiempo de espera agotado. Revisa red/OpenAI u OPENAI_BASE_URL.",
     notifyEmailPlaceholder: "Correo (opcional)",
     notifyMe: "Notificarme",
     notifySending: "Enviando…",

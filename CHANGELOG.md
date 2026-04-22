@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.2] - 2026-04-22
+
+### Fixed
+
+- Help assistant: client abort after 130s and OpenAI SDK timeout (55s, no retries) so “thinking” cannot hang indefinitely.
+
 ## [0.4.1] - 2026-04-22
 
 ### Added
@@ -51,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.4.2]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/bitmacro/bitmacro-signer/compare/v0.3.6...v0.4.0
 [0.3.6]: https://github.com/bitmacro/bitmacro-signer/compare/v0.3.5...v0.3.6

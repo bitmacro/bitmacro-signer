@@ -26,6 +26,8 @@ const DEFAULT_CHAT_MODEL = "gpt-4o-mini";
 const MAX_QUESTION_LEN = 4000;
 const MATCH_COUNT = 8;
 const ASSISTANT_PRODUTO = "signer";
+/** Per OpenAI HTTP call; fail fast instead of hanging the UI. */
+const OPENAI_HTTP_TIMEOUT_MS = 55_000;
 
 /** Docker/Vercel may set env to ""; empty string must not fall through to default. */
 function openaiChatModel(): string {
@@ -117,6 +119,8 @@ export async function POST(req: Request) {
     const baseURL = openaiBaseUrl();
     const openai = new OpenAI({
       apiKey: openaiKey,
+      timeout: OPENAI_HTTP_TIMEOUT_MS,
+      maxRetries: 0,
       ...(baseURL ? { baseURL } : {}),
     });
 

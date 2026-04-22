@@ -6,6 +6,9 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 type Source = { titulo: string; fonte: string; similarity: number };
 
+/** Embedding + chat server-side; must exceed route OpenAI timeouts. */
+const CHAT_FETCH_MS = 130_000;
+
 export function SignerDocsAssistant() {
   const { locale } = useAppLocale();
   const panelId = useId();
@@ -54,11 +57,14 @@ export function SignerDocsAssistant() {
     setNotifyEmail("");
     setNotifyDone(false);
     setNotifyError(null);
+    const ac = new AbortController();
+    const abortTimer = setTimeout(() => ac.abort(), CHAT_FETCH_MS);
     try {
       const res = await fetch("/api/help/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: q, locale }),
+        signal: ac.signal,
       });
       const text = await res.text();
       let data: {
@@ -83,9 +89,14 @@ export function SignerDocsAssistant() {
         setUnanswered(true);
         setPendingQuestion(q);
       }
-    } catch {
-      setError(getSignerAssistantUi(locale).errorNetwork);
+    } catch (e) {
+      const aborted =
+        e instanceof DOMException
+          ? e.name === "AbortError"
+          : e instanceof Error && e.name === "AbortError";
+      setError(aborted ? ui.errorTimeout : ui.errorNetwork);
     } finally {
+      clearTimeout(abortTimer);
       setLoading(false);
     }
   }
