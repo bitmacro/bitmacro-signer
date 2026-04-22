@@ -42,7 +42,7 @@ export function isLikelyOpenAiConnectivityError(err: unknown): boolean {
       : String(err);
 
   if (
-    /ETIMEDOUT|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|fetch failed|connect timeout|request timed out|timed out|socket hang up/i.test(
+    /ETIMEDOUT|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|fetch failed|connect timeout|request timed out|timed out|socket hang up|deadline \d+ms/i.test(
       msg,
     )
   ) {

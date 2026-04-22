@@ -22,6 +22,7 @@ import {
 } from "@/lib/help-product";
 import { isLikelyOpenAiConnectivityError } from "@/lib/openai-connectivity";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import { withDeadline } from "@/lib/with-deadline";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
@@ -175,14 +176,22 @@ export async function POST(req: Request) {
       ...(baseURL ? { baseURL } : {}),
     });
     logHelp("openai_client", { timeoutMs });
+    /** Hard cap if SDK/socket never returns (often IPv6 blackhole on Docker). */
+    const embedDeadlineMs = timeoutMs + 20_000;
 
     let queryEmbedding: number[];
     try {
-      const embedRes = await openai.embeddings.create({
-        model: EMBED_MODEL,
-        input: question,
-      });
+      logHelp("embed_start", { model: EMBED_MODEL, embedDeadlineMs });
+      const embedRes = await withDeadline(
+        openai.embeddings.create({
+          model: EMBED_MODEL,
+          input: question,
+        }),
+        embedDeadlineMs,
+        "embed",
+      );
       queryEmbedding = embedRes.data[0]?.embedding ?? [];
+      logHelp("embed_vectors", { ok: queryEmbedding.length > 0 });
     } catch (e) {
       if (isLikelyOpenAiConnectivityError(e)) {
         console.error("[signer/help/chat] OpenAI connectivity (embed):", e);
@@ -304,20 +313,28 @@ export async function POST(req: Request) {
       )
       .join("\n\n");
 
+    const chatModel = openaiChatModel();
+    const chatDeadlineMs = timeoutMs + 20_000;
     let completion;
     try {
-      completion = await openai.chat.completions.create({
-        model: openaiChatModel(),
-        messages: [
-          { role: "system", content: systemParts.join("\n\n") },
-          {
-            role: "user",
-            content: userContextBlock(locale, context, question),
-          },
-        ],
-        max_tokens: 900,
-        temperature: 0.25,
-      });
+      logHelp("chat_start", { model: chatModel, chatDeadlineMs });
+      completion = await withDeadline(
+        openai.chat.completions.create({
+          model: chatModel,
+          messages: [
+            { role: "system", content: systemParts.join("\n\n") },
+            {
+              role: "user",
+              content: userContextBlock(locale, context, question),
+            },
+          ],
+          max_tokens: 900,
+          temperature: 0.25,
+        }),
+        chatDeadlineMs,
+        "chat",
+      );
+      logHelp("chat_done", { choices: completion.choices?.length ?? 0 });
     } catch (e) {
       if (isLikelyOpenAiConnectivityError(e)) {
         console.error("[signer/help/chat] OpenAI connectivity (chat):", e);
