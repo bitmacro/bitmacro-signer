@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.11] - 2026-04-22
+
+### Fixed
+
+- RAG: when the widget product (e.g. signer) returned marginally relevant chunks above `RAG_MIN_SIMILARITY`, global search (other products) never ran. Now if L1 **best** similarity is below **`RAG_CROSS_PRODUCT_FALLBACK_MIN`** (default **0.38**), we also run `match_documents` with `filter_produto: null` and **keep global rows when their best score is higher** (e.g. NIP-05 in Identity corpus from the Signer assistant). Set `RAG_CROSS_PRODUCT_FALLBACK_MIN=0` to restore previous behaviour.
+
 ## [0.4.10] - 2026-04-22
 
 ### Added
@@ -125,6 +131,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.4.11]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.10...v0.4.11
 [0.4.10]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.9...v0.4.10
 [0.4.9]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.8...v0.4.9
 [0.4.8]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.7...v0.4.8

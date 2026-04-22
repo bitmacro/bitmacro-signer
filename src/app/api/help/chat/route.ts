@@ -59,6 +59,20 @@ function ragMinSimilarity(): number {
   return n;
 }
 
+/**
+ * When the widget product (e.g. signer) returns L1 hits above RAG_MIN_SIMILARITY but with low
+ * confidence, also search all products and pick global if it scores higher (Identity NIP-05 from Signer UI).
+ * Set RAG_CROSS_PRODUCT_FALLBACK_MIN=0 to disable. Default 0.38.
+ */
+function ragCrossProductFallbackMin(): number {
+  const raw = process.env.RAG_CROSS_PRODUCT_FALLBACK_MIN?.trim();
+  if (raw == null || raw === "") return 0.38;
+  const n = Number.parseFloat(raw);
+  if (!Number.isFinite(n) || n < 0) return 0.38;
+  if (n === 0) return 0;
+  return Math.min(1, Math.max(0.01, n));
+}
+
 function openaiBaseUrl(): string | undefined {
   const v = process.env.OPENAI_BASE_URL?.trim();
   return v && v.length > 0 ? v : undefined;
@@ -270,26 +284,50 @@ export async function POST(req: Request) {
     let searchLevel: 1 | 2 = 1;
     let tagProductInChunks = false;
 
+    const l1Best = bestSimilarity(l1.rows);
+    const l1Weak = isWeakRetrieval(l1.rows, threshold);
+    const fallbackMin = ragCrossProductFallbackMin();
+    const tryGlobal =
+      l1Weak ||
+      (fallbackMin > 0 && l1.rows.length > 0 && l1Best < fallbackMin);
+
     logHelp("match_l1", {
-      count: rows.length,
-      best: bestSimilarity(rows),
+      count: l1.rows.length,
+      best: l1Best,
       threshold,
-      weak: isWeakRetrieval(rows, threshold),
+      weak: l1Weak,
+      fallbackMin,
+      tryGlobal,
     });
 
-    if (isWeakRetrieval(rows, threshold)) {
+    if (tryGlobal) {
       const l2 = await rpcMatch(null);
       if (l2.err) {
         return NextResponse.json({ error: msgTryLater(locale) }, { status: 500 });
       }
-      rows = l2.rows;
-      searchLevel = 2;
-      tagProductInChunks = true;
+      const l2Best = bestSimilarity(l2.rows);
+      const l2Weak = isWeakRetrieval(l2.rows, threshold);
+
+      if (l1Weak) {
+        rows = l2.rows;
+        searchLevel = 2;
+        tagProductInChunks = true;
+      } else if (l2Best > l1Best) {
+        rows = l2.rows;
+        searchLevel = 2;
+        tagProductInChunks = true;
+      }
+
       logHelp("match_l2", {
-        count: rows.length,
-        best: bestSimilarity(rows),
+        count: l2.rows.length,
+        best: l2Best,
         threshold,
-        weak: isWeakRetrieval(rows, threshold),
+        weak: l2Weak,
+        l1Weak,
+        l1Best,
+        l2Best,
+        searchLevel,
+        tagProductInChunks,
       });
     }
 
