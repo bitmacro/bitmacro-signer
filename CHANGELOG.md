@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - RAG: when the help widget is **signer**, run an extra **`match_documents` with `filter_produto: identity`** (on by default; disable with `RAG_IDENTITY_SIDECAR=0`) and merge into the global pool so Identity-only topics (e.g. NIP-05) are not excluded when they rank below the global top-K.
+- Help chat **system prompt** (pt/en/es): excerpts may include other BitMacro products (e.g. Identity / NIP-05) — instructs the model to use them when present so it does not dismiss cross-product context.
 
 ## [0.4.13] - 2026-04-22
 
