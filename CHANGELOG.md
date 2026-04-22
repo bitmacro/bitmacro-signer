@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.13] - 2026-04-22
+
+### Fixed
+
+- RAG: eight Signer-only excerpts could still crowd out Identity for questions like NIP-05 (NIP-46 embeds closer). **`match_documents` now requests a wider pool** (`RAG_RETRIEVAL_MATCH_COUNT`, default **16**), trims to **`RAG_CONTEXT_CHUNKS`** (default **8**), and **reserves** **`RAG_CROSS_PRODUCT_RESERVED`** slots (default **3**) for `produto ≠` widget **before** filling the rest by similarity. Reserved chunks stay **first** in the prompt order (no global re-sort).
+
 ## [0.4.12] - 2026-04-22
 
 ### Fixed
@@ -137,6 +143,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.4.13]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.12...v0.4.13
 [0.4.12]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.11...v0.4.12
 [0.4.11]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.10...v0.4.11
 [0.4.10]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.9...v0.4.10

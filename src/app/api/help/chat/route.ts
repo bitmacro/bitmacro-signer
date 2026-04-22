@@ -34,7 +34,8 @@ export const runtime = "nodejs";
 const EMBED_MODEL = "text-embedding-3-small";
 const DEFAULT_CHAT_MODEL = "gpt-4o-mini";
 const MAX_QUESTION_LEN = 4000;
-const MATCH_COUNT = 8;
+const DEFAULT_CONTEXT_CHUNKS = 8;
+const DEFAULT_RETRIEVAL_MATCH_COUNT = 16;
 const WIDGET_DEFAULT_PRODUTO = "signer";
 
 /** Per OpenAI HTTP call. Override with OPENAI_HTTP_TIMEOUT_MS (ms), min 15s max 300s. */
@@ -71,6 +72,38 @@ function ragCrossProductFallbackMin(): number {
   if (!Number.isFinite(n) || n < 0) return 0.38;
   if (n === 0) return 0;
   return Math.min(1, Math.max(0.01, n));
+}
+
+/** Chunks sent to the model / returned as sources (default 8). */
+function ragContextChunkLimit(): number {
+  const raw = process.env.RAG_CONTEXT_CHUNKS?.trim();
+  if (raw == null || raw === "") return DEFAULT_CONTEXT_CHUNKS;
+  const n = Number.parseInt(raw, 10);
+  if (!Number.isFinite(n)) return DEFAULT_CONTEXT_CHUNKS;
+  return Math.min(16, Math.max(4, n));
+}
+
+/** RPC `match_count` — retrieve a wider pool so cross-product slots can surface Identity (default 16). */
+function ragRetrievalMatchCount(): number {
+  const raw = process.env.RAG_RETRIEVAL_MATCH_COUNT?.trim();
+  if (raw == null || raw === "") return DEFAULT_RETRIEVAL_MATCH_COUNT;
+  const n = Number.parseInt(raw, 10);
+  if (!Number.isFinite(n)) return DEFAULT_RETRIEVAL_MATCH_COUNT;
+  const ctx = ragContextChunkLimit();
+  return Math.min(32, Math.max(ctx, n));
+}
+
+/**
+ * When merging L1+L2, reserve this many slots for chunks whose produto ≠ widget (default 3).
+ * Set RAG_CROSS_PRODUCT_RESERVED=0 to disable (pure similarity only).
+ */
+function ragCrossProductReservedSlots(): number {
+  const raw = process.env.RAG_CROSS_PRODUCT_RESERVED?.trim();
+  if (raw == null || raw === "") return 3;
+  const n = Number.parseInt(raw, 10);
+  if (!Number.isFinite(n) || n < 0) return 3;
+  if (n === 0) return 0;
+  return Math.min(ragContextChunkLimit(), n);
 }
 
 function openaiBaseUrl(): string | undefined {
@@ -119,6 +152,44 @@ function mergeMatchRows(a: MatchRow[], b: MatchRow[], limit: number): MatchRow[]
   }
   out.sort((x, y) => y.similarity - x.similarity);
   return out.slice(0, limit);
+}
+
+/** Full deduped union sorted by similarity (for reserved-slot merge). */
+function mergeAllMatchRows(a: MatchRow[], b: MatchRow[]): MatchRow[] {
+  return mergeMatchRows(a, b, a.length + b.length + 64);
+}
+
+/**
+ * Prefer up to `reservedOther` chunks from non-widget products, then fill by global similarity
+ * so Identity (e.g. NIP-05) is not displaced by eight Signer NIP-46 excerpts.
+ */
+function mergeWithCrossProductSlots(
+  l1: MatchRow[],
+  l2: MatchRow[],
+  widgetProduct: string,
+  contextLimit: number,
+  reservedOther: number,
+): MatchRow[] {
+  const pool = mergeAllMatchRows(l1, l2);
+  if (reservedOther <= 0) {
+    return pool.slice(0, contextLimit);
+  }
+  const others = pool.filter((r) => r.produto !== widgetProduct);
+  const picked: MatchRow[] = [];
+  const seen = new Set<string>();
+  for (const r of others) {
+    if (picked.length >= reservedOther || picked.length >= contextLimit) break;
+    picked.push(r);
+    seen.add(r.id);
+  }
+  for (const r of pool) {
+    if (picked.length >= contextLimit) break;
+    if (seen.has(r.id)) continue;
+    picked.push(r);
+    seen.add(r.id);
+  }
+  /* Order matters: non-widget excerpts first (reserved), then fill by global rank — do not re-sort. */
+  return picked;
 }
 
 function logHelp(stage: string, data: Record<string, unknown>) {
@@ -250,12 +321,15 @@ export async function POST(req: Request) {
     const supabase = createServiceRoleClient();
     const threshold = ragMinSimilarity();
 
+    const retrievalK = ragRetrievalMatchCount();
+    const contextK = ragContextChunkLimit();
+
     async function rpcMatch(filterProduto: string | null): Promise<{
       rows: MatchRow[];
       err: { message: string; code?: string; details?: string; hint?: string } | null;
     }> {
       const baseArgs = {
-        match_count: MATCH_COUNT,
+        match_count: retrievalK,
         filter_produto: filterProduto,
         query_embedding: embeddingToVectorLiteral(queryEmbedding),
       };
@@ -304,6 +378,8 @@ export async function POST(req: Request) {
       l1Weak ||
       (fallbackMin > 0 && l1.rows.length > 0 && l1Best < fallbackMin);
 
+    const reservedCross = ragCrossProductReservedSlots();
+
     logHelp("match_l1", {
       count: l1.rows.length,
       best: l1Best,
@@ -311,6 +387,9 @@ export async function POST(req: Request) {
       weak: l1Weak,
       fallbackMin,
       tryGlobal,
+      retrievalK,
+      contextK,
+      reservedCross,
     });
 
     if (tryGlobal) {
@@ -322,11 +401,23 @@ export async function POST(req: Request) {
       const l2Weak = isWeakRetrieval(l2.rows, threshold);
 
       if (l1Weak) {
-        rows = l2.rows;
+        rows = mergeWithCrossProductSlots(
+          [],
+          l2.rows,
+          produtoWidget,
+          contextK,
+          reservedCross,
+        );
         searchLevel = 2;
         tagProductInChunks = true;
       } else {
-        rows = mergeMatchRows(l1.rows, l2.rows, MATCH_COUNT);
+        rows = mergeWithCrossProductSlots(
+          l1.rows,
+          l2.rows,
+          produtoWidget,
+          contextK,
+          reservedCross,
+        );
         searchLevel = 2;
         tagProductInChunks = rows.some((r) => r.produto !== produtoWidget);
       }
@@ -342,7 +433,10 @@ export async function POST(req: Request) {
         mergedBest: bestSimilarity(rows),
         searchLevel,
         tagProductInChunks,
+        productsInContext: [...new Set(rows.map((r) => r.produto))],
       });
+    } else {
+      rows = l1.rows.slice(0, contextK);
     }
 
     if (isWeakRetrieval(rows, threshold)) {
