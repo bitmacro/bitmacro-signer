@@ -24,7 +24,7 @@ function localeFromAcceptLanguage(header: string | null): AppLocale {
   return "pt-BR";
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (

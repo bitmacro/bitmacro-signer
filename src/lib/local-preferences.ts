@@ -13,7 +13,7 @@ export function parseLocaleCookie(value: string | undefined | null): AppLocale {
   return "pt-BR";
 }
 
-/** Prefer middleware header, then unified cookie, then legacy relay-panel cookie */
+/** Prefer proxy (x-bitmacro-locale) header, then unified cookie, then legacy relay-panel cookie */
 export function resolveInitialLocale(
   headerLocale: string | null | undefined,
   unifiedCookie: string | undefined | null,
