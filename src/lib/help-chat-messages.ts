@@ -19,21 +19,21 @@ export function msgOpenAiUnreachable(locale: HelpLocale): string {
         "The app server could not reach the AI provider (network timeout). " +
         "From the host or container, check outbound HTTPS to api.openai.com, " +
         "or set OPENAI_BASE_URL to a reachable gateway (e.g. on your VPS). " +
-        "See Signer .env.example."
+        "Diagnostic: GET /api/help/network-check on the Signer host. See .env.example."
       );
     case "es":
       return (
         "El servidor de la aplicación no pudo conectar con el proveedor de IA (tiempo de espera). " +
         "Comprueba el HTTPS saliente hacia api.openai.com desde el host o el contenedor, " +
         "o define OPENAI_BASE_URL hacia una pasarela alcanzable. " +
-        "Consulta .env.example del Signer."
+        "Diagnóstico: GET /api/help/network-check en el Signer. Ver .env.example."
       );
     default:
       return (
         "O servidor da aplicação não conseguiu ligar ao fornecedor de IA (timeout de rede). " +
         "No host ou no contentor, verifica HTTPS de saída para api.openai.com, " +
         "ou define OPENAI_BASE_URL para um gateway acessível (ex.: na VPS). " +
-        "Vê .env.example do Signer."
+        "Diagnóstico: GET /api/help/network-check no Signer. Vê .env.example."
       );
   }
 }
