@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.12] - 2026-04-22
+
+### Fixed
+
+- RAG cross-product: when L1 was marginal and L2 ran, we only replaced context if `l2Best > l1Best`. Identity chunks could score just below the best signer hit and never surface. Now we **merge** L1+L2, **dedupe**, sort by similarity, and take the top **K** so the strongest chunk wins (e.g. NIP-05 from Identity).
+
 ## [0.4.11] - 2026-04-22
 
 ### Fixed
@@ -131,6 +137,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.4.12]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.11...v0.4.12
 [0.4.11]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.10...v0.4.11
 [0.4.10]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.9...v0.4.10
 [0.4.9]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.8...v0.4.9

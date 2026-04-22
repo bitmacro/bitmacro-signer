@@ -108,6 +108,19 @@ function isWeakRetrieval(rows: MatchRow[], threshold: number): boolean {
   return rows.length === 0 || bestSimilarity(rows) < threshold;
 }
 
+/** Dedupe by id, sort by similarity desc, cap at `limit` (cross-product retrieval). */
+function mergeMatchRows(a: MatchRow[], b: MatchRow[], limit: number): MatchRow[] {
+  const seen = new Set<string>();
+  const out: MatchRow[] = [];
+  for (const r of [...a, ...b]) {
+    if (seen.has(r.id)) continue;
+    seen.add(r.id);
+    out.push(r);
+  }
+  out.sort((x, y) => y.similarity - x.similarity);
+  return out.slice(0, limit);
+}
+
 function logHelp(stage: string, data: Record<string, unknown>) {
   console.info("[signer/help/chat]", { stage, ...data });
 }
@@ -312,10 +325,10 @@ export async function POST(req: Request) {
         rows = l2.rows;
         searchLevel = 2;
         tagProductInChunks = true;
-      } else if (l2Best > l1Best) {
-        rows = l2.rows;
+      } else {
+        rows = mergeMatchRows(l1.rows, l2.rows, MATCH_COUNT);
         searchLevel = 2;
-        tagProductInChunks = true;
+        tagProductInChunks = rows.some((r) => r.produto !== produtoWidget);
       }
 
       logHelp("match_l2", {
@@ -326,6 +339,7 @@ export async function POST(req: Request) {
         l1Weak,
         l1Best,
         l2Best,
+        mergedBest: bestSimilarity(rows),
         searchLevel,
         tagProductInChunks,
       });
