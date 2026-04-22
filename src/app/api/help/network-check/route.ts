@@ -6,6 +6,14 @@ export const runtime = "nodejs";
  * GET — lightweight connectivity check from inside the container (DNS + TLS + OpenAI edge).
  * Does not return the API key. Safe to curl from LAN: /api/help/network-check
  */
+/** Path for GET /v1/models probe — base may be `https://api.openai.com` or full SDK base `…/v1`. */
+function openAiModelsProbeUrl(baseNoTrailingSlash: string): string {
+  if (baseNoTrailingSlash.endsWith("/v1")) {
+    return `${baseNoTrailingSlash}/models`;
+  }
+  return `${baseNoTrailingSlash}/v1/models`;
+}
+
 export async function GET() {
   const baseRaw =
     process.env.OPENAI_BASE_URL?.trim().replace(/\/$/, "") ||
@@ -38,7 +46,7 @@ export async function GET() {
   let httpsStatus: number | null = null;
   let httpsError: string | null = null;
 
-  const url = `${baseRaw}/v1/models`;
+  const url = openAiModelsProbeUrl(baseRaw);
   const t0 = Date.now();
   try {
     const res = await fetch(url, {

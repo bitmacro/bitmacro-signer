@@ -1,6 +1,6 @@
 {
   "name": "@bitmacro/bitmacro-signer",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "Managed NIP-46 bunker for the BitMacro ecosystem — secure remote signing without exposing nsec",
   "private": false,
   "license": "MIT",
