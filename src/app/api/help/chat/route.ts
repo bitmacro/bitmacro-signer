@@ -20,13 +20,19 @@ import OpenAI from "openai";
 export const runtime = "nodejs";
 
 const EMBED_MODEL = "text-embedding-3-small";
-const CHAT_MODEL = process.env.OPENAI_CHAT_MODEL ?? "gpt-4o-mini";
+const DEFAULT_CHAT_MODEL = "gpt-4o-mini";
 const MAX_QUESTION_LEN = 4000;
 const MATCH_COUNT = 8;
 const ASSISTANT_PRODUTO = "signer";
 
+/** Docker/Vercel podem definir env vazio ""; ?? não substitui "". */
+function openaiChatModel(): string {
+  const v = process.env.OPENAI_CHAT_MODEL?.trim();
+  return v && v.length > 0 ? v : DEFAULT_CHAT_MODEL;
+}
+
 function ragMinSimilarity(): number {
-  const raw = process.env.RAG_MIN_SIMILARITY;
+  const raw = process.env.RAG_MIN_SIMILARITY?.trim();
   if (raw == null || raw === "") return 0.32;
   const n = Number.parseFloat(raw);
   if (!Number.isFinite(n) || n < 0 || n > 1) return 0.32;
@@ -173,7 +179,7 @@ export async function POST(req: Request) {
       .join("\n\n");
 
     const completion = await openai.chat.completions.create({
-      model: CHAT_MODEL,
+      model: openaiChatModel(),
       messages: [
         { role: "system", content: systemPrompt(locale) },
         {
