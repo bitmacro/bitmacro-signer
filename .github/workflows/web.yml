@@ -52,6 +52,7 @@ jobs:
           push: true
           build-args: |
             BITMACRO_SIGNER_VERSION=${{ steps.meta.outputs.version }}
+            SIGNER_GIT_COMMIT=${{ github.sha }}
           tags: |
             ${{ steps.meta.outputs.image }}:latest
             ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.version }}

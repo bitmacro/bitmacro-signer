@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.7] - 2026-04-22
+
+### Fixed
+
+- GHCR **Web Docker** workflow now passes `SIGNER_GIT_COMMIT` into the image; Dockerfile sets `ENV BITMACRO_SIGNER_VERSION` for runtime.
+- Startup log: `[bitmacro-signer] boot semver=… commit=…` so ops can confirm the running image without guessing.
+- `GET /api/build-info` includes `imageVersion` from the container env.
+
 ## [0.4.6] - 2026-04-22
 
 ### Added
@@ -94,6 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.4.7]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.6...v0.4.7
 [0.4.6]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.5...v0.4.6
 [0.4.5]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.4...v0.4.5
 [0.4.4]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.3...v0.4.4

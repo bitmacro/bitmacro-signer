@@ -23,7 +23,8 @@ LABEL org.opencontainers.image.title="bitmacro-signer-web" \
       org.opencontainers.image.version="${BITMACRO_SIGNER_VERSION}"
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-# Runtime: exposed in /api/build-info and UI (optional; pass at build: --build-arg SIGNER_GIT_COMMIT=$(git rev-parse HEAD))
+# Runtime: /api/build-info, startup log, ops (CI must pass SIGNER_GIT_COMMIT)
+ENV BITMACRO_SIGNER_VERSION=${BITMACRO_SIGNER_VERSION}
 ENV SIGNER_GIT_COMMIT=${SIGNER_GIT_COMMIT}
 RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nextjs

@@ -18,5 +18,7 @@ export async function GET() {
     repository: info.repository,
     verifyUrl: info.verifyUrl,
     deploymentEnvironment: info.deploymentEnvironment,
+    /** Image build-args (Docker); confirms you are not running a stale local :latest cache. */
+    imageVersion: process.env.BITMACRO_SIGNER_VERSION?.trim() || null,
   });
 }

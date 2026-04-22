@@ -7,5 +7,10 @@ import dns from "node:dns";
 export function register(): void {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     dns.setDefaultResultOrder("ipv4first");
+    const ver = process.env.BITMACRO_SIGNER_VERSION?.trim() || "(unset)";
+    const sha = process.env.SIGNER_GIT_COMMIT?.trim().slice(0, 7) || "unset";
+    console.info(
+      `[bitmacro-signer] boot semver=${ver} commit=${sha} node=${process.version}`,
+    );
   }
 }
