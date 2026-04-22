@@ -2,7 +2,7 @@
  * Ingestão do corpus Signer → Supabase `documents` (pgvector), produto=signer.
  *
  * Variáveis: OPENAI_API_KEY, SUPABASE_SERVICE_ROLE_KEY,
- *   NEXT_PUBLIC_SUPABASE_URL ou SUPABASE_URL,
+ *   SUPABASE_SERVICE_ROLE_URL (opcional, relay), NEXT_PUBLIC_SUPABASE_URL ou SUPABASE_URL,
  *   opcional SIGNER_KB_PATH (default ./signer-knowledge-base.md).
  *
  * Apagar linhas produto=signer antes de inserir:
@@ -137,18 +137,26 @@ function wantReplace(): boolean {
 }
 
 function supabaseUrl(): string {
-  const a = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").trim();
-  const b = (process.env.SUPABASE_URL ?? "").trim();
-  return a || b;
+  const order = [
+    process.env.SUPABASE_SERVICE_ROLE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_URL,
+  ];
+  for (const raw of order) {
+    const u = raw?.trim();
+    if (u) return u;
+  }
+  return "";
 }
 
 function exitMissingSupabaseUrl(): never {
   console.error(
     [
-      "Missing Supabase URL (NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL).",
+      "Missing Supabase URL (SUPABASE_SERVICE_ROLE_URL, NEXT_PUBLIC_SUPABASE_URL, or SUPABASE_URL).",
       "",
       "1. In this folder, create or edit .env.local (see .env.example).",
       "   NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co",
+      "   # Optional self-host relay: SUPABASE_SERVICE_ROLE_URL=http://10.0.0.1:8091",
       "   SUPABASE_SERVICE_ROLE_KEY=eyJ...",
       "   OPENAI_API_KEY=sk-...",
       "",

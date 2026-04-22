@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.10] - 2026-04-22
+
+### Added
+
+- **`SUPABASE_SERVICE_ROLE_URL`** — optional base URL for `createServiceRoleClient()` (and daemon) when self-hosted hosts cannot reach `*.supabase.co`; browser/session still uses `NEXT_PUBLIC_SUPABASE_URL`. Precedence: `SUPABASE_SERVICE_ROLE_URL` → `SUPABASE_URL` → `NEXT_PUBLIC_SUPABASE_URL`.
+- `GET /api/help/supabase-check` — probes `…/rest/v1/` from the service-role base (no key).
+
+### Changed
+
+- Ingest script prefers `SUPABASE_SERVICE_ROLE_URL` when set.
+
 ## [0.4.9] - 2026-04-22
 
 ### Changed
@@ -114,6 +125,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.4.10]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.9...v0.4.10
 [0.4.9]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.8...v0.4.9
 [0.4.8]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.7...v0.4.8
 [0.4.7]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.6...v0.4.7

@@ -21,7 +21,10 @@ import {
   normalizeHelpProdutoFromBody,
 } from "@/lib/help-product";
 import { isLikelyOpenAiConnectivityError } from "@/lib/openai-connectivity";
-import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import {
+  createServiceRoleClient,
+  resolveServiceRoleSupabaseUrl,
+} from "@/lib/supabase/service-role";
 import { withDeadline } from "@/lib/with-deadline";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
@@ -76,8 +79,9 @@ function embeddingToVectorLiteral(embedding: number[]): string {
 
 function supabaseConfigured(): boolean {
   const url =
-    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ||
-    process.env.SUPABASE_URL?.trim();
+    process.env.SUPABASE_SERVICE_ROLE_URL?.trim() ||
+    process.env.SUPABASE_URL?.trim() ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   return Boolean(url && key);
 }
@@ -150,15 +154,12 @@ export async function POST(req: Request) {
 
   if (!supabaseConfigured()) {
     console.error(
-      "[signer/help/chat] NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY missing",
+      "[signer/help/chat] Supabase URL or SUPABASE_SERVICE_ROLE_KEY missing",
     );
     return NextResponse.json({ error: msgTryLater(locale) }, { status: 500 });
   }
 
-  const sbUrl =
-    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ||
-    process.env.SUPABASE_URL?.trim() ||
-    "";
+  const sbUrl = resolveServiceRoleSupabaseUrl();
 
   try {
     logHelp("request", {
