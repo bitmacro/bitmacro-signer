@@ -106,6 +106,13 @@ function ragCrossProductReservedSlots(): number {
   return Math.min(ragContextChunkLimit(), n);
 }
 
+/** Extra `match_documents(..., 'identity')` when widget is signer so Identity chunks are not dropped from the global top-K. Set RAG_IDENTITY_SIDECAR=0 to disable. */
+function ragIdentitySidecarEnabled(): boolean {
+  const raw = process.env.RAG_IDENTITY_SIDECAR?.trim();
+  if (raw === "0" || raw?.toLowerCase() === "false") return false;
+  return true;
+}
+
 function openaiBaseUrl(): string | undefined {
   const v = process.env.OPENAI_BASE_URL?.trim();
   return v && v.length > 0 ? v : undefined;
@@ -397,13 +404,26 @@ export async function POST(req: Request) {
       if (l2.err) {
         return NextResponse.json({ error: msgTryLater(locale) }, { status: 500 });
       }
-      const l2Best = bestSimilarity(l2.rows);
-      const l2Weak = isWeakRetrieval(l2.rows, threshold);
+      let l2Pool = l2.rows;
+      if (ragIdentitySidecarEnabled() && produtoWidget === "signer") {
+        const idHit = await rpcMatch("identity");
+        if (!idHit.err && idHit.rows.length > 0) {
+          l2Pool = mergeAllMatchRows(l2.rows, idHit.rows);
+          logHelp("match_identity_sidecar", {
+            identityRows: idHit.rows.length,
+            poolRows: l2Pool.length,
+          });
+        } else if (idHit.err) {
+          logHelp("match_identity_sidecar_skip", { err: true });
+        }
+      }
+      const l2Best = bestSimilarity(l2Pool);
+      const l2Weak = isWeakRetrieval(l2Pool, threshold);
 
       if (l1Weak) {
         rows = mergeWithCrossProductSlots(
           [],
-          l2.rows,
+          l2Pool,
           produtoWidget,
           contextK,
           reservedCross,
@@ -413,7 +433,7 @@ export async function POST(req: Request) {
       } else {
         rows = mergeWithCrossProductSlots(
           l1.rows,
-          l2.rows,
+          l2Pool,
           produtoWidget,
           contextK,
           reservedCross,
@@ -423,7 +443,7 @@ export async function POST(req: Request) {
       }
 
       logHelp("match_l2", {
-        count: l2.rows.length,
+        count: l2Pool.length,
         best: l2Best,
         threshold,
         weak: l2Weak,

@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.14] - 2026-04-22
+
+### Fixed
+
+- RAG: when the help widget is **signer**, run an extra **`match_documents` with `filter_produto: identity`** (on by default; disable with `RAG_IDENTITY_SIDECAR=0`) and merge into the global pool so Identity-only topics (e.g. NIP-05) are not excluded when they rank below the global top-K.
+
 ## [0.4.13] - 2026-04-22
 
 ### Fixed
@@ -143,6 +149,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.4.14]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.13...v0.4.14
 [0.4.13]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.12...v0.4.13
 [0.4.12]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.11...v0.4.12
 [0.4.11]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.10...v0.4.11
