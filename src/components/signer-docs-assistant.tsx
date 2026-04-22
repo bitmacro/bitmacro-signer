@@ -63,7 +63,7 @@ export function SignerDocsAssistant() {
       const res = await fetch("/api/help/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: q, locale }),
+        body: JSON.stringify({ question: q, locale, produto: "signer" }),
         signal: ac.signal,
       });
       const text = await res.text();
@@ -113,6 +113,7 @@ export function SignerDocsAssistant() {
           question: pendingQuestion,
           email: notifyEmail.trim(),
           locale,
+          produto: "signer",
         }),
       });
       const data = (await res.json()) as { error?: string; ok?: boolean };

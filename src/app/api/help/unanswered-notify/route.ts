@@ -9,12 +9,13 @@ import {
   msgQuestionInvalid,
   msgTryLater,
 } from "@/lib/help-chat-messages";
+import { normalizeHelpProdutoFromBody } from "@/lib/help-product";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-const PRODUTO = "signer";
+const WIDGET_DEFAULT_PRODUTO = "signer";
 const MAX_QUESTION_LEN = 4000;
 const MAX_EMAIL_LEN = 254;
 
@@ -57,6 +58,8 @@ export async function POST(req: Request) {
       (body as { locale: unknown }).locale,
   );
 
+  const produto = normalizeHelpProdutoFromBody(body, WIDGET_DEFAULT_PRODUTO);
+
   const question =
     typeof body === "object" &&
     body !== null &&
@@ -91,7 +94,7 @@ export async function POST(req: Request) {
   try {
     const supabase = createServiceRoleClient();
     const { error } = await supabase.from("unanswered_questions").insert({
-      produto: PRODUTO,
+      produto,
       pergunta: question,
       email,
     });

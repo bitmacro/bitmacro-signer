@@ -93,6 +93,57 @@ export function msgNoAnswer(locale: HelpLocale): string {
   }
 }
 
+/** When answering from global RAG (another product’s docs). */
+export function crossProductSourceNote(
+  locale: HelpLocale,
+  productLabel: string,
+  productUrl: string,
+): string {
+  switch (locale) {
+    case "en":
+      return (
+        `This information comes from ${productLabel} documentation. ` +
+        `Learn more at ${productUrl}. ` +
+        `Answer from the excerpts below; mention this source if helpful.`
+      );
+    case "es":
+      return (
+        `Esta información procede de la documentación de ${productLabel}. ` +
+        `Más información en ${productUrl}. ` +
+        `Responde con los fragmentos siguientes; menciona la fuente si ayuda.`
+      );
+    default:
+      return (
+        `Esta informação é da documentação do produto ${productLabel}. ` +
+        `Podes saber mais em ${productUrl}. ` +
+        `Responde com base nos trechos abaixo; menciona a fonte se for útil.`
+      );
+  }
+}
+
+export function contextChunkLineWithProduct(
+  locale: HelpLocale,
+  index: number,
+  row: {
+    produto: string;
+    fonte: string;
+    titulo: string;
+    conteudo: string;
+  },
+  showProductTag: boolean,
+): string {
+  const n = index + 1;
+  const tag = showProductTag ? ` [${row.produto}]` : "";
+  switch (locale) {
+    case "en":
+      return `### Excerpt ${n}${tag} (source: ${row.fonte} — ${row.titulo})\n${row.conteudo}`;
+    case "es":
+      return `### Fragmento ${n}${tag} (fuente: ${row.fonte} — ${row.titulo})\n${row.conteudo}`;
+    default:
+      return `### Trecho ${n}${tag} (fonte: ${row.fonte} — ${row.titulo})\n${row.conteudo}`;
+  }
+}
+
 export function systemPrompt(locale: HelpLocale): string {
   switch (locale) {
     case "en":

@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.3] - 2026-04-22
+
+### Added
+
+- Help chat: two-stage RAG — scoped `produto` match first, then whole `documents` if below `RAG_MIN_SIMILARITY`; level-2 adds cross-product system note + product link.
+- Widget sends `produto` (`signer`); optional `HELP_PRODUCT_URL_*` env overrides for links.
+- Structured logs: `request`, `embed_ok`, `match_l1`, `match_l2`, `retrieval_weak`, `prompt_cross_product`, `done`, plus `openai_error` details on API failures.
+
+### Changed
+
+- Requires Supabase `match_documents` update: `filter_produto` nullable = search all rows (see `bitmacro-id/scripts/sql/match_documents.sql`).
+
 ## [0.4.2] - 2026-04-22
 
 ### Fixed
@@ -57,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.4.3]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/bitmacro/bitmacro-signer/compare/v0.3.6...v0.4.0
