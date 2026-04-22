@@ -12,6 +12,7 @@ export type SignerAssistantUiStrings = {
   dialogLabel: string;
   srToggle: string;
   errorNetwork: string;
+  errorBadResponse: string;
   notifyEmailPlaceholder: string;
   notifyMe: string;
   notifySending: string;
@@ -32,6 +33,8 @@ const UI: Record<AppLocale, SignerAssistantUiStrings> = {
     dialogLabel: "Assistente BitMacro Signer",
     srToggle: "Assistente BitMacro Signer",
     errorNetwork: "Não foi possível contactar o servidor.",
+    errorBadResponse:
+      "Resposta inválida do servidor. Tenta atualizar a página ou verifica o proxy (504).",
     notifyEmailPlaceholder: "Email (opcional)",
     notifyMe: "Notifica-me",
     notifySending: "A enviar…",
@@ -50,6 +53,8 @@ const UI: Record<AppLocale, SignerAssistantUiStrings> = {
     dialogLabel: "BitMacro Signer assistant",
     srToggle: "BitMacro Signer assistant",
     errorNetwork: "Could not reach the server.",
+    errorBadResponse:
+      "Invalid server response. Try refreshing or check the proxy (504).",
     notifyEmailPlaceholder: "Email (optional)",
     notifyMe: "Notify me",
     notifySending: "Sending…",
@@ -68,6 +73,8 @@ const UI: Record<AppLocale, SignerAssistantUiStrings> = {
     dialogLabel: "Asistente BitMacro Signer",
     srToggle: "Asistente BitMacro Signer",
     errorNetwork: "No fue posible contactar con el servidor.",
+    errorBadResponse:
+      "Respuesta inválida del servidor. Actualiza la página o revisa el proxy (504).",
     notifyEmailPlaceholder: "Correo (opcional)",
     notifyMe: "Notificarme",
     notifySending: "Enviando…",

@@ -11,6 +11,33 @@ export function msgTryLater(locale: HelpLocale): string {
   }
 }
 
+/** Self-hosted: outbound HTTPS to OpenAI blocked or timing out (firewall, routing, ISP). */
+export function msgOpenAiUnreachable(locale: HelpLocale): string {
+  switch (locale) {
+    case "en":
+      return (
+        "The app server could not reach the AI provider (network timeout). " +
+        "From the host or container, check outbound HTTPS to api.openai.com, " +
+        "or set OPENAI_BASE_URL to a reachable gateway (e.g. on your VPS). " +
+        "See Signer .env.example."
+      );
+    case "es":
+      return (
+        "El servidor de la aplicación no pudo conectar con el proveedor de IA (tiempo de espera). " +
+        "Comprueba el HTTPS saliente hacia api.openai.com desde el host o el contenedor, " +
+        "o define OPENAI_BASE_URL hacia una pasarela alcanzable. " +
+        "Consulta .env.example del Signer."
+      );
+    default:
+      return (
+        "O servidor da aplicação não conseguiu ligar ao fornecedor de IA (timeout de rede). " +
+        "No host ou no contentor, verifica HTTPS de saída para api.openai.com, " +
+        "ou define OPENAI_BASE_URL para um gateway acessível (ex.: na VPS). " +
+        "Vê .env.example do Signer."
+      );
+  }
+}
+
 export function msgBadJson(locale: HelpLocale): string {
   switch (locale) {
     case "en":

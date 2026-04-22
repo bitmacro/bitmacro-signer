@@ -60,12 +60,19 @@ export function SignerDocsAssistant() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: q, locale }),
       });
-      const data = (await res.json()) as {
+      const text = await res.text();
+      let data: {
         error?: string;
         answer?: string;
         sources?: Source[];
         unanswered?: boolean;
       };
+      try {
+        data = text ? (JSON.parse(text) as typeof data) : {};
+      } catch {
+        setError(ui.errorBadResponse);
+        return;
+      }
       if (!res.ok) {
         setError(data.error ?? `${res.status}`);
         return;

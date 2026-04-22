@@ -8,11 +8,13 @@ import {
   msgBadJson,
   msgNoAnswer,
   msgNotInDocumentation,
+  msgOpenAiUnreachable,
   msgQuestionInvalid,
   msgTryLater,
   systemPrompt,
   userContextBlock,
 } from "@/lib/help-chat-messages";
+import { isLikelyOpenAiConnectivityError } from "@/lib/openai-connectivity";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
@@ -25,7 +27,7 @@ const MAX_QUESTION_LEN = 4000;
 const MATCH_COUNT = 8;
 const ASSISTANT_PRODUTO = "signer";
 
-/** Docker/Vercel podem definir env vazio ""; ?? não substitui "". */
+/** Docker/Vercel may set env to ""; empty string must not fall through to default. */
 function openaiChatModel(): string {
   const v = process.env.OPENAI_CHAT_MODEL?.trim();
   return v && v.length > 0 ? v : DEFAULT_CHAT_MODEL;
@@ -37,6 +39,12 @@ function ragMinSimilarity(): number {
   const n = Number.parseFloat(raw);
   if (!Number.isFinite(n) || n < 0 || n > 1) return 0.32;
   return n;
+}
+
+/** Optional: https://api.openai.com/v1 or a reachable proxy (e.g. Cloudflare AI Gateway, VPS relay). */
+function openaiBaseUrl(): string | undefined {
+  const v = process.env.OPENAI_BASE_URL?.trim();
+  return v && v.length > 0 ? v : undefined;
 }
 
 type MatchRow = {
@@ -61,25 +69,6 @@ function supabaseConfigured(): boolean {
 }
 
 export async function POST(req: Request) {
-  const openaiKey = process.env.OPENAI_API_KEY;
-  if (!openaiKey) {
-    console.error("[signer/help/chat] OPENAI_API_KEY missing");
-    return NextResponse.json(
-      { error: msgTryLater("pt-BR") },
-      { status: 500 },
-    );
-  }
-
-  if (!supabaseConfigured()) {
-    console.error(
-      "[signer/help/chat] NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY missing",
-    );
-    return NextResponse.json(
-      { error: msgTryLater("pt-BR") },
-      { status: 500 },
-    );
-  }
-
   let body: unknown;
   try {
     body = await req.json();
@@ -111,8 +100,25 @@ export async function POST(req: Request) {
     );
   }
 
+  const openaiKey = process.env.OPENAI_API_KEY;
+  if (!openaiKey) {
+    console.error("[signer/help/chat] OPENAI_API_KEY missing");
+    return NextResponse.json({ error: msgTryLater(locale) }, { status: 500 });
+  }
+
+  if (!supabaseConfigured()) {
+    console.error(
+      "[signer/help/chat] NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY missing",
+    );
+    return NextResponse.json({ error: msgTryLater(locale) }, { status: 500 });
+  }
+
   try {
-    const openai = new OpenAI({ apiKey: openaiKey });
+    const baseURL = openaiBaseUrl();
+    const openai = new OpenAI({
+      apiKey: openaiKey,
+      ...(baseURL ? { baseURL } : {}),
+    });
 
     const embedRes = await openai.embeddings.create({
       model: EMBED_MODEL,
@@ -204,10 +210,14 @@ export async function POST(req: Request) {
       unanswered: false,
     });
   } catch (e) {
+    if (isLikelyOpenAiConnectivityError(e)) {
+      console.error("[signer/help/chat] OpenAI connectivity:", e);
+      return NextResponse.json(
+        { error: msgOpenAiUnreachable(locale), code: "openai_connectivity" },
+        { status: 502 },
+      );
+    }
     console.error("[signer/help/chat] unhandled:", e);
-    return NextResponse.json(
-      { error: msgTryLater(locale) },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: msgTryLater(locale) }, { status: 500 });
   }
 }
