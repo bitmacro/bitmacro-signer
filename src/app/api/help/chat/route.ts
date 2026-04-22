@@ -457,6 +457,29 @@ export async function POST(req: Request) {
       });
     } else {
       rows = l1.rows.slice(0, contextK);
+      /* Strong L1 (best ≥ fallback): global RPC is skipped, but Identity-only answers (NIP-05) still need the sidecar. */
+      if (ragIdentitySidecarEnabled() && produtoWidget === "signer") {
+        const idHit = await rpcMatch("identity");
+        if (!idHit.err && idHit.rows.length > 0) {
+          rows = mergeWithCrossProductSlots(
+            l1.rows,
+            idHit.rows,
+            produtoWidget,
+            contextK,
+            reservedCross,
+          );
+          searchLevel = 2;
+          tagProductInChunks = rows.some((r) => r.produto !== produtoWidget);
+          logHelp("match_identity_sidecar_strong_l1", {
+            identityRows: idHit.rows.length,
+            l1Best,
+            mergedBest: bestSimilarity(rows),
+            productsInContext: [...new Set(rows.map((r) => r.produto))],
+          });
+        } else if (idHit.err) {
+          logHelp("match_identity_sidecar_strong_l1_skip", { err: true });
+        }
+      }
     }
 
     if (isWeakRetrieval(rows, threshold)) {
