@@ -1,6 +1,7 @@
 "use client";
 
 import { IntlClientProvider } from "@/components/intl-client-provider";
+import { SignerDocsAssistant } from "@/components/signer-docs-assistant";
 import type { AppLocale } from "@/lib/local-preferences";
 
 export function Providers({
@@ -10,5 +11,10 @@ export function Providers({
   children: React.ReactNode;
   initialLocale: AppLocale;
 }) {
-  return <IntlClientProvider initialLocale={initialLocale}>{children}</IntlClientProvider>;
+  return (
+    <IntlClientProvider initialLocale={initialLocale}>
+      {children}
+      <SignerDocsAssistant />
+    </IntlClientProvider>
+  );
 }

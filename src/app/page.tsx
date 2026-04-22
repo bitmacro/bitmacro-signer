@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useMessages, useTranslations } from "next-intl";
 
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { SignerBuildStamp } from "@/components/signer-build-stamp";
@@ -101,6 +101,12 @@ function Header() {
             {t("howItWorks")}
           </a>
           <a
+            href="#faq"
+            className="inline-flex min-h-11 items-center whitespace-nowrap rounded-md px-2.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
+          >
+            {t("faq")}
+          </a>
+          <a
             href="#compare"
             className="inline-flex min-h-11 items-center whitespace-nowrap rounded-md px-2.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
           >
@@ -176,6 +182,65 @@ function Hero() {
           </a>
           .
         </p>
+      </div>
+    </section>
+  );
+}
+
+function LandingFaq() {
+  const t = useTranslations("landing.faq");
+  const messages = useMessages() as {
+    landing: { faq: { items: { q: string; a: string }[] } };
+  };
+  const items = messages.landing.faq.items;
+
+  return (
+    <section
+      id="faq"
+      className="section-glow-divider relative border-t border-border/60 px-5 py-12 sm:px-6 md:py-20 lg:px-8 lg:py-24"
+    >
+      <div className="landing-content mx-auto max-w-6xl">
+        <p className="mb-3 font-mono text-xs font-semibold uppercase tracking-wider text-primary">
+          {t("tag")}
+        </p>
+        <h2 className="mb-10 text-[clamp(1.375rem,3vw+0.75rem,1.75rem)] font-bold tracking-tight text-foreground md:mb-12 md:text-[28px]">
+          {t("title")}
+        </h2>
+        <div className="mx-auto max-w-3xl space-y-3">
+          {items.map((item) => (
+            <details
+              key={item.q}
+              className="group glass-card elevation-1 rounded-2xl border border-border/80 open:border-primary/30 open:shadow-md"
+            >
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 marker:content-none sm:px-6 sm:py-5 [&::-webkit-details-marker]:hidden">
+                <span className="text-left text-sm font-semibold leading-snug text-foreground group-open:text-primary sm:text-base">
+                  {item.q}
+                </span>
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-secondary/60 text-primary transition-transform duration-300 group-open:rotate-180">
+                  <svg
+                    className="size-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                    aria-hidden
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </span>
+              </summary>
+              <div className="border-t border-border/60 px-5 pb-5 sm:px-6 sm:pb-6">
+                <p className="pt-4 text-sm leading-relaxed text-muted-foreground sm:text-[15px]">
+                  {item.a}
+                </p>
+              </div>
+            </details>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -437,6 +502,7 @@ export default function HomePage() {
       <main>
         <Hero />
         <HowItWorks />
+        <LandingFaq />
         <ComparisonTable />
         <SelfHost />
       </main>

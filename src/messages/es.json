@@ -36,6 +36,7 @@
   "landing": {
     "nav": {
       "howItWorks": "Cómo funciona",
+      "faq": "FAQ",
       "compare": "Comparar",
       "selfHost": "Self-host",
       "github": "GitHub"
@@ -130,6 +131,44 @@
       "githubLink": "Dockerfile, Compose y README en GitHub",
       "terminal": "terminal",
       "bash": "bash"
+    },
+    "faq": {
+      "tag": "Respuestas claras",
+      "title": "Preguntas frecuentes",
+      "items": [
+        {
+          "q": "¿Qué es BitMacro Signer?",
+          "a": "Un bunker y cofre NIP-46 gestionado: tu clave privada Nostr (nsec) permanece cifrada y puedes firmar eventos 24/7 sin dar la nsec a las apps ni mantener el móvil encendido. Las peticiones de firma van cifradas (NIP-44) por el relay — el relay no lee el contenido."
+        },
+        {
+          "q": "¿Qué es NIP-46 y qué es un bunker?",
+          "a": "NIP-46 separa la app de la clave: la app pide firmas a un proceso (bunker) que tiene la nsec. La app solo recibe eventos firmados y nunca ve tu nsec."
+        },
+        {
+          "q": "¿BitMacro ve mi nsec o mi contraseña?",
+          "a": "La contraseña del cofre no sale del navegador. La nsec se cifra en tu dispositivo antes de guardarse; al desbloquear, en el servidor solo está en RAM durante un TTL (por defecto 24h), no en disco en claro. El diseño busca cifrado zero-knowledge respecto a lo que guardas."
+        },
+        {
+          "q": "¿Por qué es obligatorio el PDF de backup?",
+          "a": "Es cómo recuperas la nsec si pierdes la contraseña o el acceso a la cuenta. Sin PDF (y sin la contraseña correcta), no hay recuperación — no hay backdoor. Guarda el PDF offline y en lugar seguro."
+        },
+        {
+          "q": "¿Cómo conecto Nostrudel, Primal o Coracle?",
+          "a": "Desbloquea el cofre en el panel, ve a Sesiones → Nueva sesión, pon nombre y muestra el QR (bunker URI). En el cliente, elige bunker / Nostr Connect y escanea. Cada QR es de un solo uso; otro dispositivo o app necesita un QR nuevo."
+        },
+        {
+          "q": "¿Qué son las sesiones? ¿Puedo revocar?",
+          "a": "Cada sesión vincula un cliente (app_pubkey) a tu bunker. Puedes revocar en la lista — la firma cesa al instante. Usa etiquetas claras (p. ej. Primal iPhone)."
+        },
+        {
+          "q": "Olvidé la contraseña. ¿Qué hago?",
+          "a": "Si tienes el PDF de backup, usa signer.bitmacro.io/recover: pega el JSON (o escanea el QR del PDF) y la contraseña correcta; el descifrado es solo en el navegador. Sin PDF y sin contraseña, esa identidad se pierde para siempre."
+        },
+        {
+          "q": "¿En qué se diferencia Signer de BitMacro Identity?",
+          "a": "Identity (id.bitmacro.io) da NIP-05, Lightning Address y relays. Signer (signer.bitmacro.io) guarda y usa tu nsec vía NIP-46. Son complementarios."
+        }
+      ]
     },
     "footer": {
       "mit": "Licencia MIT",
