@@ -6,8 +6,8 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 type Source = { titulo: string; fonte: string; similarity: number };
 
-/** Embedding + chat server-side; must exceed route OpenAI timeouts. */
-const CHAT_FETCH_MS = 130_000;
+/** Must exceed 2× server OpenAI timeout (embed + chat); server default 90s each. */
+const CHAT_FETCH_MS = 200_000;
 
 export function SignerDocsAssistant() {
   const { locale } = useAppLocale();

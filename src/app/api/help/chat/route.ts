@@ -32,8 +32,15 @@ const DEFAULT_CHAT_MODEL = "gpt-4o-mini";
 const MAX_QUESTION_LEN = 4000;
 const MATCH_COUNT = 8;
 const WIDGET_DEFAULT_PRODUTO = "signer";
-/** Per OpenAI HTTP call; fail fast instead of hanging the UI. */
-const OPENAI_HTTP_TIMEOUT_MS = 55_000;
+
+/** Per OpenAI HTTP call. Override with OPENAI_HTTP_TIMEOUT_MS (ms), min 15s max 300s. */
+function openaiHttpTimeoutMs(): number {
+  const raw = process.env.OPENAI_HTTP_TIMEOUT_MS?.trim();
+  if (raw == null || raw === "") return 90_000;
+  const n = Number.parseInt(raw, 10);
+  if (!Number.isFinite(n)) return 90_000;
+  return Math.min(300_000, Math.max(15_000, n));
+}
 
 function openaiChatModel(): string {
   const v = process.env.OPENAI_CHAT_MODEL?.trim();
@@ -160,12 +167,14 @@ export async function POST(req: Request) {
     });
 
     const baseURL = openaiBaseUrl();
+    const timeoutMs = openaiHttpTimeoutMs();
     const openai = new OpenAI({
       apiKey: openaiKey,
-      timeout: OPENAI_HTTP_TIMEOUT_MS,
+      timeout: timeoutMs,
       maxRetries: 0,
       ...(baseURL ? { baseURL } : {}),
     });
+    logHelp("openai_client", { timeoutMs });
 
     let queryEmbedding: number[];
     try {
@@ -346,7 +355,9 @@ export async function POST(req: Request) {
         { status: 502 },
       );
     }
-    console.error("[signer/help/chat] unhandled:", e);
+    const errMsg = e instanceof Error ? e.message : String(e);
+    const errName = e instanceof Error ? e.name : typeof e;
+    console.error("[signer/help/chat] unhandled:", { name: errName, message: errMsg, e });
     return NextResponse.json({ error: msgTryLater(locale) }, { status: 500 });
   }
 }

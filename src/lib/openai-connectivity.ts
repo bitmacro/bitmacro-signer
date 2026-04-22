@@ -41,11 +41,20 @@ export function isLikelyOpenAiConnectivityError(err: unknown): boolean {
       ? `${err.message}\n${String((err as Error & { cause?: unknown }).cause ?? "")}`
       : String(err);
 
-  if (/ETIMEDOUT|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|fetch failed|Connect Timeout/i.test(msg)) {
+  if (
+    /ETIMEDOUT|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|fetch failed|connect timeout|request timed out|timed out|socket hang up/i.test(
+      msg,
+    )
+  ) {
     return true;
   }
 
-  if (err instanceof Error && err.name === "APIConnectionError") return true;
+  if (err instanceof Error) {
+    const n = err.name;
+    if (n === "APIConnectionError" || n === "APIUserAbortError") {
+      return true;
+    }
+  }
 
   return false;
 }
