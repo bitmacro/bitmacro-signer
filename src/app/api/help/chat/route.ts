@@ -180,6 +180,7 @@ export async function POST(req: Request) {
     const embedDeadlineMs = timeoutMs + 20_000;
 
     let queryEmbedding: number[];
+    const embedStartedAt = Date.now();
     try {
       logHelp("embed_start", { model: EMBED_MODEL, embedDeadlineMs });
       const embedRes = await withDeadline(
@@ -191,8 +192,15 @@ export async function POST(req: Request) {
         "embed",
       );
       queryEmbedding = embedRes.data[0]?.embedding ?? [];
-      logHelp("embed_vectors", { ok: queryEmbedding.length > 0 });
+      logHelp("embed_vectors", {
+        ok: queryEmbedding.length > 0,
+        ms: Date.now() - embedStartedAt,
+      });
     } catch (e) {
+      logHelp("embed_failed", {
+        ms: Date.now() - embedStartedAt,
+        message: e instanceof Error ? e.message : String(e),
+      });
       if (isLikelyOpenAiConnectivityError(e)) {
         console.error("[signer/help/chat] OpenAI connectivity (embed):", e);
         return NextResponse.json(
@@ -316,6 +324,7 @@ export async function POST(req: Request) {
     const chatModel = openaiChatModel();
     const chatDeadlineMs = timeoutMs + 20_000;
     let completion;
+    const chatStartedAt = Date.now();
     try {
       logHelp("chat_start", { model: chatModel, chatDeadlineMs });
       completion = await withDeadline(
@@ -334,8 +343,15 @@ export async function POST(req: Request) {
         chatDeadlineMs,
         "chat",
       );
-      logHelp("chat_done", { choices: completion.choices?.length ?? 0 });
+      logHelp("chat_done", {
+        choices: completion.choices?.length ?? 0,
+        ms: Date.now() - chatStartedAt,
+      });
     } catch (e) {
+      logHelp("chat_failed", {
+        ms: Date.now() - chatStartedAt,
+        message: e instanceof Error ? e.message : String(e),
+      });
       if (isLikelyOpenAiConnectivityError(e)) {
         console.error("[signer/help/chat] OpenAI connectivity (chat):", e);
         return NextResponse.json(
