@@ -476,6 +476,15 @@ function Footer() {
             </a>
             {" · "}
             <a
+              href="https://id.bitmacro.io"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer-link"
+            >
+              BitMacro Identity
+            </a>
+            {" · "}
+            <a
               href={GITHUB_REPO}
               target="_blank"
               rel="noopener noreferrer"
