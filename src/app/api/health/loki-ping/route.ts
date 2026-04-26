@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getCorrelationIds } from "@/lib/observability/correlation";
+import { apiGET } from "@/lib/observability/api-route-wrapper";
 import { pushLokiStructured } from "@/lib/observability/loki-http-push";
 import { SignerEvents } from "@/lib/observability/signer-log-events";
 
@@ -10,7 +11,7 @@ export const dynamic = "force-dynamic";
  * GET /api/health/loki-ping — teste de push Loki (service=bitmacro-signer).
  * Grafana: {service_name="bitmacro-signer"} |= "signer.loki.ping"
  */
-export async function GET(request: Request) {
+async function handleGet(request: Request) {
   const ids = getCorrelationIds(request);
   await pushLokiStructured("info", {
     component: "health",
@@ -27,3 +28,5 @@ export async function GET(request: Request) {
     at: new Date().toISOString(),
   });
 }
+
+export const GET = apiGET("GET /api/health/loki-ping", handleGet);

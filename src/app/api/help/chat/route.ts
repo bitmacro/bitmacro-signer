@@ -28,6 +28,7 @@ import {
 import { withDeadline } from "@/lib/with-deadline";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
+import { apiPOST } from "@/lib/observability/api-route-wrapper";
 
 export const runtime = "nodejs";
 
@@ -217,7 +218,7 @@ function logOpenAiFailure(e: unknown) {
   console.error("[signer/help/chat] openai_error", e);
 }
 
-export async function POST(req: Request) {
+async function handlePost(req: Request) {
   let body: unknown;
   try {
     body = await req.json();
@@ -584,3 +585,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: msgTryLater(locale) }, { status: 500 });
   }
 }
+
+export const POST = apiPOST("POST /api/help/chat", handlePost);

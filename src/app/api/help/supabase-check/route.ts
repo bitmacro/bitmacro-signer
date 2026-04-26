@@ -1,4 +1,5 @@
 import { resolveServiceRoleSupabaseUrl } from "@/lib/supabase/service-role";
+import { apiGET } from "@/lib/observability/api-route-wrapper";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -7,7 +8,7 @@ export const runtime = "nodejs";
  * GET — TLS/HTTP probe to Supabase REST root from inside the container (same base URL as service-role).
  * No API key sent. Expect 401 or 200 from PostgREST.
  */
-export async function GET() {
+async function handleGet(_request: Request) {
   let base: string;
   try {
     base = resolveServiceRoleSupabaseUrl();
@@ -58,6 +59,8 @@ export async function GET() {
     rest: { url, ms, status, error: errMsg },
     hint: ok
       ? null
-      : "If this host cannot reach Supabase (Cloudflare) directly, set SUPABASE_SERVICE_ROLE_URL to the VPS relay (bitmacro-cloud supabase-relay). Keep NEXT_PUBLIC_SUPABASE_URL for the browser.",
+      :       "If this host cannot reach Supabase (Cloudflare) directly, set SUPABASE_SERVICE_ROLE_URL to the VPS relay (bitmacro-cloud supabase-relay). Keep NEXT_PUBLIC_SUPABASE_URL for the browser.",
   });
 }
+
+export const GET = apiGET("GET /api/help/supabase-check", handleGet);

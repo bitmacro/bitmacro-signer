@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { setSessionCookie } from "@/lib/auth/session-cookie";
+import { apiPOST } from "@/lib/observability/api-route-wrapper";
 import { authUnlockBodySchema } from "@/lib/schemas/auth";
 import { isRunning, startBunker, stopBunker } from "@/lib/bunker";
 import {
@@ -23,7 +24,7 @@ function jsonError(message: string, status: number, details?: unknown) {
  * POST /api/auth/unlock — resolve identity by npub, decrypt vault with passphrase, start bunker, session cookie.
  * Self-host with DAEMON_INTERNAL_URL: forwards nsec to signer-daemon (internal HTTP); otherwise startBunker in-process (dev).
  */
-export async function POST(request: Request) {
+async function handlePost(request: Request) {
   let supabase: ReturnType<typeof createServiceRoleClient>;
   try {
     supabase = createServiceRoleClient();
@@ -147,3 +148,5 @@ export async function POST(request: Request) {
     is_running,
   });
 }
+
+export const POST = apiPOST("POST /api/auth/unlock", handlePost);

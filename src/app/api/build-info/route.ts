@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { apiGET } from "@/lib/observability/api-route-wrapper";
 import { getSignerBuildInfo } from "@/lib/signer-build";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +9,7 @@ export const dynamic = "force-dynamic";
  * Public build metadata for security transparency: semver + optional git SHA
  * (same values shown in the UI). No secrets.
  */
-export async function GET() {
+async function handleGet(_request: Request) {
   const info = getSignerBuildInfo();
   return NextResponse.json({
     name: info.name,
@@ -22,3 +23,5 @@ export async function GET() {
     imageVersion: process.env.BITMACRO_SIGNER_VERSION?.trim() || null,
   });
 }
+
+export const GET = apiGET("GET /api/build-info", handleGet);

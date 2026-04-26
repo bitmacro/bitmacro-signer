@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { identityBootstrapBodySchema } from "@/lib/schemas/identity";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { getCorrelationIds } from "@/lib/observability/correlation";
+import { apiPOST } from "@/lib/observability/api-route-wrapper";
 import { pushLokiStructured } from "@/lib/observability/loki-http-push";
 import { SignerEvents } from "@/lib/observability/signer-log-events";
 
@@ -17,7 +18,7 @@ function jsonError(message: string, status: number, details?: unknown) {
  * POST /api/identities/bootstrap — ensures an `identities` row for the npub (idempotent).
  * Used by the “I don’t have an npub yet” onboarding flow before POST /api/vault.
  */
-export async function POST(request: Request) {
+async function handlePost(request: Request) {
   const ids = getCorrelationIds(request);
   let supabase: ReturnType<typeof createServiceRoleClient>;
   try {
@@ -161,3 +162,5 @@ export async function POST(request: Request) {
     created: true,
   });
 }
+
+export const POST = apiPOST("POST /api/identities/bootstrap", handlePost);

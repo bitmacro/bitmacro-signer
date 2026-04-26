@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getSessionCookie } from "@/lib/auth/session-cookie";
+import { apiGET, apiPOST } from "@/lib/observability/api-route-wrapper";
 import { sessionCreateBodySchema } from "@/lib/schemas/session";
 import {
   authorizeApp,
@@ -39,7 +40,7 @@ function toPublicSession(s: Session): SessionListItem {
 /**
  * POST /api/sessions — authorize app, return session_id, secret, bunker_uri.
  */
-export async function POST(request: Request) {
+async function handlePost(request: Request) {
   let cookieIdentityId: string | null;
   try {
     cookieIdentityId = await getSessionCookie();
@@ -133,7 +134,7 @@ export async function POST(request: Request) {
  * GET /api/sessions?identity_id=<uuid> — list sessions for vault (no secret_hash).
  * Requires the session cookie to match `identity_id`.
  */
-export async function GET(request: Request) {
+async function handleGet(request: Request) {
   let cookieIdentityId: string | null;
   try {
     cookieIdentityId = await getSessionCookie();
@@ -177,3 +178,6 @@ export async function GET(request: Request) {
 
   return NextResponse.json(rows.map(toPublicSession));
 }
+
+export const POST = apiPOST("POST /api/sessions", handlePost);
+export const GET = apiGET("GET /api/sessions", handleGet);

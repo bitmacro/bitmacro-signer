@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getSessionCookie } from "@/lib/auth/session-cookie";
+import { apiGET, apiPOST } from "@/lib/observability/api-route-wrapper";
 import { vaultCreateBodySchema } from "@/lib/schemas/vault";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 
@@ -14,7 +15,7 @@ function jsonError(message: string, status: number, details?: unknown) {
 /**
  * POST /api/vault — create signer_vaults row after verifying identity exists.
  */
-export async function POST(request: Request) {
+async function handlePost(request: Request) {
   let supabase: ReturnType<typeof createServiceRoleClient>;
   try {
     supabase = createServiceRoleClient();
@@ -79,7 +80,7 @@ export async function POST(request: Request) {
  * GET /api/vault?identity_id=<uuid> — fetch vault ciphertext fields by identity.
  * Requires session cookie matching `identity_id` (same as other authenticated routes).
  */
-export async function GET(request: Request) {
+async function handleGet(request: Request) {
   let cookieIdentityId: string | null;
   try {
     cookieIdentityId = await getSessionCookie();
@@ -132,3 +133,6 @@ export async function GET(request: Request) {
     bunker_pubkey: data.bunker_pubkey,
   });
 }
+
+export const POST = apiPOST("POST /api/vault", handlePost);
+export const GET = apiGET("GET /api/vault", handleGet);

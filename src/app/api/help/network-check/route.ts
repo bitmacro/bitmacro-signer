@@ -1,3 +1,4 @@
+import { apiGET } from "@/lib/observability/api-route-wrapper";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -31,7 +32,7 @@ function errorChainCode(e: unknown): string | undefined {
   return undefined;
 }
 
-export async function GET() {
+async function handleGet(_request: Request) {
   const usingRelay = Boolean(process.env.OPENAI_BASE_URL?.trim());
   const baseRaw =
     process.env.OPENAI_BASE_URL?.trim().replace(/\/$/, "") ||
@@ -117,3 +118,5 @@ export async function GET() {
     hint,
   });
 }
+
+export const GET = apiGET("GET /api/help/network-check", handleGet);

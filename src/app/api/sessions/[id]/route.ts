@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getSessionCookie } from "@/lib/auth/session-cookie";
+import { apiDELETE, type ParamsBag } from "@/lib/observability/api-route-wrapper";
 import { revokeSessionForIdentity } from "@/lib/session/app-keys";
 
 function jsonError(message: string, status: number) {
@@ -10,10 +11,7 @@ function jsonError(message: string, status: number) {
 /**
  * DELETE /api/sessions/:id — remove a client session for the signed-in Identity (cookie).
  */
-export async function DELETE(
-  _request: Request,
-  context: { params: Promise<{ id: string }> },
-) {
+async function handleDelete(_request: Request, context: ParamsBag) {
   let identityId: string | null;
   try {
     identityId = await getSessionCookie();
@@ -24,7 +22,9 @@ export async function DELETE(
     return jsonError("Unauthorized", 401);
   }
 
-  const { id } = await context.params;
+  const params = await context.params;
+  const raw = params?.id;
+  const id = typeof raw === "string" ? raw : Array.isArray(raw) ? raw[0] : "";
   if (!id?.trim()) {
     return jsonError("Session id is required", 400);
   }
@@ -51,3 +51,5 @@ export async function DELETE(
 
   return NextResponse.json({ revoked: true });
 }
+
+export const DELETE = apiDELETE("DELETE /api/sessions/:id", handleDelete);

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { clearSessionCookie, getSessionCookie } from "@/lib/auth/session-cookie";
+import { apiPOST } from "@/lib/observability/api-route-wrapper";
 import {
   getDaemonInternalConfig,
   notifyDaemonLock,
@@ -14,7 +15,7 @@ function jsonError(message: string, status: number) {
 /**
  * POST /api/auth/lock — stop bunker for session identity and clear cookie.
  */
-export async function POST() {
+async function handlePost(_request: Request) {
   let daemonCfg: ReturnType<typeof getDaemonInternalConfig>;
   try {
     daemonCfg = getDaemonInternalConfig();
@@ -41,3 +42,5 @@ export async function POST() {
     return jsonError("Server misconfigured: session secret unavailable", 503);
   }
 }
+
+export const POST = apiPOST("POST /api/auth/lock", handlePost);

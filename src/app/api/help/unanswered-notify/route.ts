@@ -11,6 +11,7 @@ import {
 } from "@/lib/help-chat-messages";
 import { normalizeHelpProdutoFromBody } from "@/lib/help-product";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import { apiPOST } from "@/lib/observability/api-route-wrapper";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -33,7 +34,7 @@ function supabaseConfigured(): boolean {
   return Boolean(url && key);
 }
 
-export async function POST(req: Request) {
+async function handlePost(req: Request) {
   if (!supabaseConfigured()) {
     console.error(
       "[signer/unanswered-notify] Supabase URL or service role key missing",
@@ -115,3 +116,5 @@ export async function POST(req: Request) {
     );
   }
 }
+
+export const POST = apiPOST("POST /api/help/unanswered-notify", handlePost);

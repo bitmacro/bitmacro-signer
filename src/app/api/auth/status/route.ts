@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getSessionCookie } from "@/lib/auth/session-cookie";
+import { apiGET } from "@/lib/observability/api-route-wrapper";
 import {
   getDaemonBunkerRunning,
   getDaemonInternalConfig,
@@ -15,7 +16,7 @@ function jsonError(message: string, status: number) {
 /**
  * GET /api/auth/status — current session identity, bunker running flag, and vault row presence.
  */
-export async function GET() {
+async function handleGet(_request: Request) {
   let daemonCfg: ReturnType<typeof getDaemonInternalConfig>;
   try {
     daemonCfg = getDaemonInternalConfig();
@@ -74,3 +75,5 @@ export async function GET() {
     npub,
   });
 }
+
+export const GET = apiGET("GET /api/auth/status", handleGet);
