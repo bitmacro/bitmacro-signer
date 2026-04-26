@@ -39,7 +39,7 @@ export async function pushLokiStructured(
   const body = {
     streams: [
       {
-        stream: { service },
+        stream: { service, service_name: service },
         values: [[tsNs, line]],
       },
     ],
