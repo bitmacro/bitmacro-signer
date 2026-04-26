@@ -9,6 +9,7 @@
     "panel": "Bunker panel",
     "sessions": "Active sessions",
     "recover": "Offline recovery",
+    "language": "Language",
     "endSession": "End session"
   },
   "buildStamp": {
@@ -47,14 +48,15 @@
       "faq": "FAQ",
       "compare": "Compare",
       "selfHost": "Self-host",
-      "github": "GitHub"
+      "github": "GitHub",
+      "enter": "Enter"
     },
     "hero": {
       "eyebrow1": "NIP-46 · Nostr Connect",
       "eyebrow2": "Managed bunker · BitMacro relay",
       "title": "Your NIP-46 bunker, always on.",
       "body": "Sign Nostr events remotely. Your nsec stays encrypted in the vault; the server never stores it in plaintext — only an encrypted blob, with an optional in-memory session (configurable TTL).",
-      "ctaPrimary": "Get started free",
+      "ctaPrimary": "Start",
       "ctaSecondary": "View on GitHub",
       "infraLead": "Prefer to run your own stack?",
       "infraLink": "Docker and MIT-licensed open source repo"

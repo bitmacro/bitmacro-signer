@@ -11,7 +11,9 @@ import {
 } from "react";
 import { ChevronDown, Loader2, LogOut, UserRound } from "lucide-react";
 
+import { useAppLocale } from "@/components/intl-client-provider";
 import { useNostrProfile } from "@/hooks/use-nostr-profile";
+import { localeShortLabel, nextLocale } from "@/lib/locale-ui";
 
 type AuthStatusOk = {
   identity_id: string;
@@ -43,6 +45,7 @@ export function SignerSessionUserMenu({
   watchKey = "",
 }: SignerSessionUserMenuProps) {
   const t = useTranslations("sessionUserMenu");
+  const { locale, setLocale } = useAppLocale();
   const [session, setSession] = useState<AuthStatusOk | null>(null);
   const [checked, setChecked] = useState(false);
   const [open, setOpen] = useState(false);
@@ -188,6 +191,17 @@ export function SignerSessionUserMenu({
           >
             {t("recover")}
           </Link>
+          <button
+            role="menuitem"
+            type="button"
+            onClick={() => setLocale(nextLocale(locale))}
+            className="flex w-full items-center justify-between px-3 py-2.5 text-left text-sm text-zinc-200 hover:bg-zinc-900"
+          >
+            <span>{t("language")}</span>
+            <span className="rounded-md border border-zinc-700 px-1.5 py-0.5 text-xs text-zinc-300">
+              {localeShortLabel(locale)}
+            </span>
+          </button>
           <div className="my-1 border-t border-zinc-800" />
           <button
             role="menuitem"

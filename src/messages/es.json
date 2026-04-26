@@ -9,6 +9,7 @@
     "panel": "Panel del bunker",
     "sessions": "Sesiones activas",
     "recover": "Recuperación sin conexión",
+    "language": "Idioma",
     "endSession": "Cerrar sesión"
   },
   "buildStamp": {
@@ -47,14 +48,15 @@
       "faq": "FAQ",
       "compare": "Comparar",
       "selfHost": "Self-host",
-      "github": "GitHub"
+      "github": "GitHub",
+      "enter": "Entrar"
     },
     "hero": {
       "eyebrow1": "NIP-46 · Nostr Connect",
       "eyebrow2": "Bunker gestionado · relay BitMacro",
       "title": "Tu bunker NIP-46, siempre disponible.",
       "body": "Firma eventos Nostr a distancia. Tu nsec permanece cifrado en la bóveda; el servidor nunca lo guarda en claro — solo un blob cifrado, con sesión opcional en memoria (TTL configurable).",
-      "ctaPrimary": "Empezar gratis",
+      "ctaPrimary": "Empezar",
       "ctaSecondary": "Ver en GitHub",
       "infraLead": "¿Prefieres tu propia infraestructura?",
       "infraLink": "Docker y repo open source (MIT)"

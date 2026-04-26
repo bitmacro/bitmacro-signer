@@ -13,10 +13,11 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useMessages, useTranslations } from "next-intl";
 
-import { LocaleSwitcher } from "@/components/locale-switcher";
 import { SignerBuildStamp } from "@/components/signer-build-stamp";
+import { SignerSessionUserMenu } from "@/components/signer-session-user-menu";
 import {
   type CompareCellDef,
   type CompareRowDef,
@@ -75,25 +76,63 @@ function CompareCellContent({
 function Header() {
   const t = useTranslations("landing.nav");
   const tc = useTranslations("common");
+  const [hasSession, setHasSession] = useState(false);
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/auth/status", { credentials: "include" });
+        if (!cancelled) {
+          setHasSession(res.ok);
+          setChecked(true);
+        }
+      } catch {
+        if (!cancelled) {
+          setHasSession(false);
+          setChecked(true);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <header className="landing-content border-b border-border/80 bg-background/55 backdrop-blur-sm">
-      <div className="mx-auto flex min-h-14 max-w-6xl items-center justify-between gap-3 px-5 sm:px-6 lg:px-8">
-        <Link
-          href="/"
-          className="flex min-h-11 min-w-0 items-center gap-2.5 py-2 text-base font-semibold tracking-tight text-foreground sm:text-[15px]"
-        >
-          <Image
-            src="/bitmacro-logo.png"
-            alt={tc("brand")}
-            width={36}
-            height={36}
-            className="size-9 shrink-0 object-contain"
-            priority
-          />
-          <span className="truncate">{tc("brand")}</span>
-        </Link>
-        <nav className="flex max-w-[min(100%,24rem)] flex-wrap items-center justify-end gap-x-1 gap-y-2 text-sm sm:max-w-none sm:gap-x-2 sm:text-sm">
+      <div className="mx-auto max-w-6xl px-5 sm:px-6 lg:px-8">
+        <div className="flex min-h-14 items-center justify-between gap-3 py-1.5">
+          <Link
+            href="/"
+            className="flex min-h-11 min-w-0 items-center gap-2.5 py-2 text-base font-semibold tracking-tight text-foreground sm:text-[15px]"
+          >
+            <Image
+              src="/bitmacro-logo.png"
+              alt={tc("brand")}
+              width={36}
+              height={36}
+              className="size-9 shrink-0 object-contain"
+              priority
+            />
+            <span className="hidden truncate sm:block">{tc("brand")}</span>
+          </Link>
+          <div className="flex items-center gap-2">
+            {checked && hasSession ? (
+              <SignerSessionUserMenu watchKey="landing" />
+            ) : (
+              <Link
+                href="/panel"
+                className="inline-flex min-h-10 items-center rounded-md bg-[#0066FF] px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+              >
+                {t("enter")}
+              </Link>
+            )}
+          </div>
+        </div>
+
+        <nav className="flex items-center justify-center gap-x-1 overflow-x-auto border-t border-border/60 py-1.5 text-sm sm:justify-end sm:gap-x-2 sm:text-sm">
           <a
             href="#how-it-works"
             className="inline-flex min-h-11 items-center whitespace-nowrap rounded-md px-2.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
@@ -127,7 +166,6 @@ function Header() {
             <Github className="size-4 shrink-0" aria-hidden />
             {t("github")}
           </a>
-          <LocaleSwitcher />
         </nav>
       </div>
     </header>
