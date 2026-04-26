@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 
 import { identityBootstrapBodySchema } from "@/lib/schemas/identity";
 import { createServiceRoleClient } from "@/lib/supabase/server";
+import { getCorrelationIds } from "@/lib/observability/correlation";
+import { logStructured } from "@/lib/observability/pino-logger.node";
+import { SignerEvents } from "@/lib/observability/signer-log-events";
 
 function jsonError(message: string, status: number, details?: unknown) {
   return NextResponse.json(
@@ -15,10 +18,18 @@ function jsonError(message: string, status: number, details?: unknown) {
  * Used by the “I don’t have an npub yet” onboarding flow before POST /api/vault.
  */
 export async function POST(request: Request) {
+  const ids = getCorrelationIds(request);
   let supabase: ReturnType<typeof createServiceRoleClient>;
   try {
     supabase = createServiceRoleClient();
   } catch {
+    logStructured("error", {
+      component: "identities_bootstrap",
+      event: SignerEvents.identityBootstrap.failed,
+      journey_id: ids.journey_id,
+      request_id: ids.request_id,
+      message: "supabase service role unavailable",
+    });
     return jsonError("Server misconfigured: Supabase service role unavailable", 503);
   }
 
@@ -26,15 +37,36 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
+    logStructured("warn", {
+      component: "identities_bootstrap",
+      event: SignerEvents.identityBootstrap.failed,
+      journey_id: ids.journey_id,
+      request_id: ids.request_id,
+      message: "invalid json",
+    });
     return jsonError("Invalid JSON body", 400);
   }
 
   const parsed = identityBootstrapBodySchema.safeParse(body);
   if (!parsed.success) {
+    logStructured("warn", {
+      component: "identities_bootstrap",
+      event: SignerEvents.identityBootstrap.failed,
+      journey_id: ids.journey_id,
+      request_id: ids.request_id,
+      message: "validation failed",
+    });
     return jsonError("Validation failed", 400, parsed.error.flatten());
   }
 
   const { npub } = parsed.data;
+  logStructured("info", {
+    component: "identities_bootstrap",
+    event: SignerEvents.identityBootstrap.started,
+    journey_id: ids.journey_id,
+    request_id: ids.request_id,
+    message: "bootstrap",
+  });
 
   const { data: existing, error: selErr } = await supabase
     .from("identities")
@@ -43,9 +75,24 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (selErr) {
+    logStructured("error", {
+      component: "identities_bootstrap",
+      event: SignerEvents.identityBootstrap.failed,
+      journey_id: ids.journey_id,
+      request_id: ids.request_id,
+      message: "select failed",
+    });
     return jsonError(selErr.message, 500);
   }
   if (existing?.id) {
+    logStructured("info", {
+      component: "identities_bootstrap",
+      event: SignerEvents.identityBootstrap.success,
+      journey_id: ids.journey_id,
+      request_id: ids.request_id,
+      message: "existing identity",
+      created: false,
+    });
     return NextResponse.json({
       identity_id: existing.id as string,
       created: false,
@@ -66,19 +113,49 @@ export async function POST(request: Request) {
         .eq("npub", npub)
         .maybeSingle();
       if (race?.id) {
+        logStructured("info", {
+          component: "identities_bootstrap",
+          event: SignerEvents.identityBootstrap.success,
+          journey_id: ids.journey_id,
+          request_id: ids.request_id,
+          message: "race insert deduped",
+          created: false,
+        });
         return NextResponse.json({
           identity_id: race.id as string,
           created: false,
         });
       }
     }
+    logStructured("error", {
+      component: "identities_bootstrap",
+      event: SignerEvents.identityBootstrap.failed,
+      journey_id: ids.journey_id,
+      request_id: ids.request_id,
+      message: "insert failed",
+    });
     return jsonError(insErr.message, 500);
   }
 
   if (!inserted?.id) {
+    logStructured("error", {
+      component: "identities_bootstrap",
+      event: SignerEvents.identityBootstrap.failed,
+      journey_id: ids.journey_id,
+      request_id: ids.request_id,
+      message: "no id returned",
+    });
     return jsonError("Insert did not return identity id", 500);
   }
 
+  logStructured("info", {
+    component: "identities_bootstrap",
+    event: SignerEvents.identityBootstrap.success,
+    journey_id: ids.journey_id,
+    request_id: ids.request_id,
+    message: "created",
+    created: true,
+  });
   return NextResponse.json({
     identity_id: inserted.id as string,
     created: true,
