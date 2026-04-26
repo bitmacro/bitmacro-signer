@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { identityBootstrapBodySchema } from "@/lib/schemas/identity";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { getCorrelationIds } from "@/lib/observability/correlation";
-import { logStructured } from "@/lib/observability/pino-logger.node";
+import { pushLokiStructured } from "@/lib/observability/loki-http-push";
 import { SignerEvents } from "@/lib/observability/signer-log-events";
 
 function jsonError(message: string, status: number, details?: unknown) {
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   try {
     supabase = createServiceRoleClient();
   } catch {
-    logStructured("error", {
+    await pushLokiStructured("error", {
       component: "identities_bootstrap",
       event: SignerEvents.identityBootstrap.failed,
       journey_id: ids.journey_id,
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    logStructured("warn", {
+    await pushLokiStructured("warn", {
       component: "identities_bootstrap",
       event: SignerEvents.identityBootstrap.failed,
       journey_id: ids.journey_id,
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 
   const parsed = identityBootstrapBodySchema.safeParse(body);
   if (!parsed.success) {
-    logStructured("warn", {
+    await pushLokiStructured("warn", {
       component: "identities_bootstrap",
       event: SignerEvents.identityBootstrap.failed,
       journey_id: ids.journey_id,
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
   }
 
   const { npub } = parsed.data;
-  logStructured("info", {
+  await pushLokiStructured("info", {
     component: "identities_bootstrap",
     event: SignerEvents.identityBootstrap.started,
     journey_id: ids.journey_id,
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (selErr) {
-    logStructured("error", {
+    await pushLokiStructured("error", {
       component: "identities_bootstrap",
       event: SignerEvents.identityBootstrap.failed,
       journey_id: ids.journey_id,
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     return jsonError(selErr.message, 500);
   }
   if (existing?.id) {
-    logStructured("info", {
+    await pushLokiStructured("info", {
       component: "identities_bootstrap",
       event: SignerEvents.identityBootstrap.success,
       journey_id: ids.journey_id,
@@ -113,7 +113,7 @@ export async function POST(request: Request) {
         .eq("npub", npub)
         .maybeSingle();
       if (race?.id) {
-        logStructured("info", {
+        await pushLokiStructured("info", {
           component: "identities_bootstrap",
           event: SignerEvents.identityBootstrap.success,
           journey_id: ids.journey_id,
@@ -127,7 +127,7 @@ export async function POST(request: Request) {
         });
       }
     }
-    logStructured("error", {
+    await pushLokiStructured("error", {
       component: "identities_bootstrap",
       event: SignerEvents.identityBootstrap.failed,
       journey_id: ids.journey_id,
@@ -138,7 +138,7 @@ export async function POST(request: Request) {
   }
 
   if (!inserted?.id) {
-    logStructured("error", {
+    await pushLokiStructured("error", {
       component: "identities_bootstrap",
       event: SignerEvents.identityBootstrap.failed,
       journey_id: ids.journey_id,
@@ -148,7 +148,7 @@ export async function POST(request: Request) {
     return jsonError("Insert did not return identity id", 500);
   }
 
-  logStructured("info", {
+  await pushLokiStructured("info", {
     component: "identities_bootstrap",
     event: SignerEvents.identityBootstrap.success,
     journey_id: ids.journey_id,
