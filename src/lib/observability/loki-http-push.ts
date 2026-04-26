@@ -31,8 +31,8 @@ export async function pushLokiStructured(
   const pass = process.env.LOKI_PASSWORD
   if (!base || !user || !pass) return
 
-  const service = String(input.service ?? DEFAULT_SERVICE)
-  const { service: _s, message, ...rest } = input
+  const { message, service: inputService, ...rest } = input
+  const service = String(inputService ?? DEFAULT_SERVICE)
   const line = JSON.stringify({ level, msg: message, service, ...rest })
   const tsNs = String(BigInt(Date.now()) * BigInt(1_000_000))
 

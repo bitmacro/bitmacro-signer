@@ -9,7 +9,8 @@ export const dynamic = "force-dynamic";
  * Public build metadata for security transparency: semver + optional git SHA
  * (same values shown in the UI). No secrets.
  */
-async function handleGet(_request: Request) {
+async function handleGet(request: Request) {
+  void request;
   const info = getSignerBuildInfo();
   return NextResponse.json({
     name: info.name,

@@ -15,7 +15,8 @@ function jsonError(message: string, status: number) {
 /**
  * POST /api/auth/lock — stop bunker for session identity and clear cookie.
  */
-async function handlePost(_request: Request) {
+async function handlePost(request: Request) {
+  void request;
   let daemonCfg: ReturnType<typeof getDaemonInternalConfig>;
   try {
     daemonCfg = getDaemonInternalConfig();

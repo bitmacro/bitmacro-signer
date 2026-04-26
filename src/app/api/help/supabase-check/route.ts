@@ -8,7 +8,8 @@ export const runtime = "nodejs";
  * GET — TLS/HTTP probe to Supabase REST root from inside the container (same base URL as service-role).
  * No API key sent. Expect 401 or 200 from PostgREST.
  */
-async function handleGet(_request: Request) {
+async function handleGet(request: Request) {
+  void request;
   let base: string;
   try {
     base = resolveServiceRoleSupabaseUrl();

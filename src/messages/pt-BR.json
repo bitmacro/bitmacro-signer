@@ -3,6 +3,14 @@
     "locale": "Idioma",
     "brand": "BitMacro Signer"
   },
+  "sessionUserMenu": {
+    "ariaLabel": "Menu da conta",
+    "fallbackUser": "Conta",
+    "panel": "Painel do bunker",
+    "sessions": "Sessões activas",
+    "recover": "Recuperação offline",
+    "endSession": "Terminar sessão"
+  },
   "buildStamp": {
     "title": "Abrir a revisão correspondente no GitHub",
     "prefix": "Signer",

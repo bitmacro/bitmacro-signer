@@ -6,7 +6,8 @@ import { pushLokiStructured } from '@/lib/observability/loki-http-push'
 const service = () => (process.env.BITMACRO_LOG_SERVICE as string) || 'bitmacro-signer'
 
 function stripNoise(ctx: Record<string, unknown>) {
-  const { skipUserLookup: _s, ...rest } = ctx
+  const { skipUserLookup, ...rest } = ctx
+  void skipUserLookup
   return rest
 }
 

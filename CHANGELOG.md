@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.16] - 2026-04-26
+
+### Added
+
+- Session user menu (panel / sessions): link to **Offline recovery** (`/recover`) in the account dropdown.
+
+### Changed
+
+- ESLint: silence unused `Request` parameters in route handlers (`void request`) and clean unused destructuring in Loki / route HTTP logger helpers.
+
 ## [0.4.15] - 2026-04-22
 
 ### Fixed
@@ -156,6 +166,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.4.16]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.15...v0.4.16
 [0.4.15]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.14...v0.4.15
 [0.4.14]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.13...v0.4.14
 [0.4.13]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.12...v0.4.13

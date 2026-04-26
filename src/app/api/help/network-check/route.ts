@@ -32,7 +32,8 @@ function errorChainCode(e: unknown): string | undefined {
   return undefined;
 }
 
-async function handleGet(_request: Request) {
+async function handleGet(request: Request) {
+  void request;
   const usingRelay = Boolean(process.env.OPENAI_BASE_URL?.trim());
   const baseRaw =
     process.env.OPENAI_BASE_URL?.trim().replace(/\/$/, "") ||

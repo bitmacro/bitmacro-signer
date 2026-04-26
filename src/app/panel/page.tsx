@@ -19,6 +19,7 @@ import { getPublicKey } from "nostr-tools";
 import * as nip19 from "nostr-tools/nip19";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { SignerBuildStamp } from "@/components/signer-build-stamp";
+import { SignerSessionUserMenu } from "@/components/signer-session-user-menu";
 import { VaultBackupGate } from "@/components/vault-backup-gate";
 import { useNostrProfile } from "@/hooks/use-nostr-profile";
 import { nostrPubkeyInputToHex } from "@/lib/session/ttl";
@@ -526,7 +527,12 @@ export default function PanelPage() {
             <p className="font-mono text-xs uppercase tracking-wider text-zinc-400">
               {t("header.brand")}
             </p>
-            <LocaleSwitcher />
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <LocaleSwitcher />
+              <SignerSessionUserMenu
+                watchKey={`${statusIdentity ?? ""}|${sessionNpub}`}
+              />
+            </div>
           </div>
           <h1 className="text-[clamp(1.5rem,4vw+0.75rem,1.75rem)] font-bold leading-tight tracking-tight text-white">
             {t("header.title")}

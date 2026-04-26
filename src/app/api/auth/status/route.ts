@@ -16,7 +16,8 @@ function jsonError(message: string, status: number) {
 /**
  * GET /api/auth/status — current session identity, bunker running flag, and vault row presence.
  */
-async function handleGet(_request: Request) {
+async function handleGet(request: Request) {
+  void request;
   let daemonCfg: ReturnType<typeof getDaemonInternalConfig>;
   try {
     daemonCfg = getDaemonInternalConfig();
