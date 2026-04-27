@@ -48,12 +48,10 @@
       "faq": "FAQ",
       "compare": "Compare",
       "selfHost": "Self-host",
-      "github": "GitHub",
       "enter": "Enter"
     },
     "hero": {
-      "eyebrow1": "NIP-46 · Nostr Connect",
-      "eyebrow2": "Managed bunker · BitMacro relay",
+      "eyebrow": "NIP-46 · Nostr Connect · Managed bunker",
       "title": "Your NIP-46 bunker, always on.",
       "body": "Sign Nostr events remotely. Your nsec stays encrypted in the vault; the server never stores it in plaintext — only an encrypted blob, with an optional in-memory session (configurable TTL).",
       "ctaPrimary": "Start",

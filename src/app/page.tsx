@@ -16,6 +16,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useMessages, useTranslations } from "next-intl";
 
+import { LocaleSwitcher } from "@/components/locale-switcher";
 import { SignerBuildStamp } from "@/components/signer-build-stamp";
 import { SignerSessionUserMenu } from "@/components/signer-session-user-menu";
 import {
@@ -122,12 +123,15 @@ function Header() {
             {checked && hasSession ? (
               <SignerSessionUserMenu watchKey="landing" />
             ) : (
-              <Link
-                href="/panel"
-                className="inline-flex min-h-10 items-center rounded-md bg-[#0066FF] px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-              >
-                {t("enter")}
-              </Link>
+              <>
+                {checked ? <LocaleSwitcher /> : null}
+                <Link
+                  href="/panel"
+                  className="inline-flex min-h-10 items-center rounded-md bg-[#0066FF] px-4 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                >
+                  {t("enter")}
+                </Link>
+              </>
             )}
           </div>
         </div>
@@ -157,15 +161,6 @@ function Header() {
           >
             {t("selfHost")}
           </a>
-          <a
-            href={GITHUB_REPO}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground"
-          >
-            <Github className="size-4 shrink-0" aria-hidden />
-            {t("github")}
-          </a>
         </nav>
       </div>
     </header>
@@ -178,14 +173,9 @@ function Hero() {
   return (
     <section className="landing-content px-5 pb-16 pt-12 sm:px-6 sm:pb-20 sm:pt-16 md:pb-28 md:pt-20 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <div className="mb-6 space-y-2">
-          <p className="font-mono text-xs uppercase tracking-wider text-muted-foreground sm:text-sm">
-            {t("eyebrow1")}
-          </p>
-          <p className="font-mono text-xs uppercase tracking-wider text-muted-foreground sm:text-sm">
-            {t("eyebrow2")}
-          </p>
-        </div>
+        <p className="mb-6 font-mono text-xs uppercase tracking-wider text-muted-foreground sm:text-sm">
+          {t("eyebrow")}
+        </p>
         <h1 className="mb-5 max-w-3xl text-[clamp(1.75rem,5.2vw+0.85rem,2.75rem)] font-bold leading-[1.15] tracking-tight text-foreground md:text-[2.5rem] lg:text-[2.75rem]">
           {t("title")}
         </h1>

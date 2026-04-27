@@ -228,7 +228,7 @@ export default function SessionsPage() {
             <p className="font-mono text-xs uppercase tracking-wider text-zinc-400">{t("brand")}</p>
             <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center sm:gap-3">
               <SignerBuildStamp variant="compact" />
-              <LocaleSwitcher />
+              {!identityId ? <LocaleSwitcher /> : null}
               <SignerSessionUserMenu watchKey={identityId ?? ""} />
             </div>
           </div>

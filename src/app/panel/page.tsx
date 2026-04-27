@@ -528,7 +528,7 @@ export default function PanelPage() {
               {t("header.brand")}
             </p>
             <div className="flex flex-wrap items-center justify-end gap-2">
-              <LocaleSwitcher />
+              {!statusIdentity ? <LocaleSwitcher /> : null}
               <SignerSessionUserMenu
                 watchKey={`${statusIdentity ?? ""}|${sessionNpub}`}
               />
