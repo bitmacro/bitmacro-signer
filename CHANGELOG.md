@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.18] - 2026-05-02
+
+### Changed
+
+- **Locale switcher:** segmented control **PT / EN / ES** with orange highlight on the active locale (aligned with id.bitmacro.io), replacing the single cycling button on landing, panel, and sessions headers; session menu shows the same control under **Language**.
+
 ## [0.4.17] - 2026-05-02
 
 ### Added
@@ -186,6 +192,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.4.18]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.17...v0.4.18
 [0.4.17]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.16...v0.4.17
 [0.4.16]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.15...v0.4.16
 [0.4.15]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.14...v0.4.15
