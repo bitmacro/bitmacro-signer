@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.20] - 2026-05-02
+
+### Fixed
+
+- **Stale frontend after deploy:** HTML/app routes now send `Cache-Control: private, no-store, …` via `next.config.mjs`, while `/_next/static` stays cache-friendly. CDN/proxy caching of an old document was loading outdated chunk hashes (footer locale/version and segmented PT/EN/ES missing) even though `curl localhost:3002/api/build-info` showed the new release.
+
 ## [0.4.19] - 2026-05-02
 
 ### Fixed
@@ -199,6 +205,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.4.20]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.19...v0.4.20
 [0.4.19]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.18...v0.4.19
 [0.4.18]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.17...v0.4.18
 [0.4.17]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.16...v0.4.17
