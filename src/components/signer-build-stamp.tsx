@@ -3,10 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
-import {
-  SIGNER_PACKAGE_VERSION,
-  SIGNER_REPOSITORY_URL,
-} from "@/lib/signer-version";
+import { SIGNER_REPOSITORY_URL } from "@/lib/signer-version";
 
 type BuildInfoJson = {
   version?: string;
@@ -24,8 +21,9 @@ type Props = {
 };
 
 /**
- * Shows deployed module semver (from build) and optional git commit from `/api/build-info`
- * so users can match the running app to a public GitHub revision.
+ * Shows semver + git short hash from `/api/build-info` only (never from the client bundle).
+ * Cached `_next/static` chunks can lag behind the container; baking `package.json` here caused
+ * stale footers while the API already reported the live release.
  */
 export function SignerBuildStamp({
   variant = "default",
@@ -42,11 +40,22 @@ export function SignerBuildStamp({
     let cancelled = false;
     void (async () => {
       try {
-        const r = await fetch("/api/build-info", { cache: "no-store" });
+        const r = await fetch(
+          `/api/build-info?_=${Date.now()}`,
+          { cache: "no-store", credentials: "same-origin" },
+        );
         const j = (await r.json()) as BuildInfoJson;
+        const ok =
+          r.ok &&
+          typeof j.version === "string" &&
+          j.version.trim().length > 0;
         if (!cancelled) {
-          setInfo(j);
-          setLoadState("done");
+          if (ok) {
+            setInfo(j);
+            setLoadState("done");
+          } else {
+            setLoadState("error");
+          }
         }
       } catch {
         if (!cancelled) {
@@ -59,8 +68,12 @@ export function SignerBuildStamp({
     };
   }, []);
 
-  const version = info?.version ?? SIGNER_PACKAGE_VERSION;
-  const commitShort = info?.commitShort ?? null;
+  const version =
+    loadState === "done" && typeof info?.version === "string"
+      ? info.version.trim()
+      : null;
+  const commitShort =
+    loadState === "done" && info?.commitShort ? info.commitShort : null;
   const verifyUrl =
     info?.verifyUrl ??
     (info?.commit
@@ -98,7 +111,9 @@ export function SignerBuildStamp({
         title={title}
       >
         <span className={prefixTone}>{t("prefix")}</span>{" "}
-        <span className={verTone}>v{version}</span>
+        <span className={verTone}>
+          {version ? <>v{version}</> : loadState === "loading" ? <>v…</> : <>—</>}
+        </span>
         {commitShort ? (
           <>
             <span className={mutedTone} aria-hidden>
