@@ -36,6 +36,7 @@ jobs:
       - name: Image name, semver, short SHA
         id: meta
         run: |
+          # Semver labels the image (BITMACRO_SIGNER_VERSION) and must match package.json at this checkout; same value is embedded by `next build`.
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
           VERSION=$(node -p "require('./package.json').version")
           echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
