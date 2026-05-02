@@ -30,6 +30,7 @@ const featureIds = [
   "zeroKnowledgeHosted",
   "shamirRecovery",
   "auditableCode",
+  "encryptedPdfBackup",
   "reproducibleBuilds",
   "remoteBunker",
   "twentyFourSeven",
@@ -39,13 +40,12 @@ const featureIds = [
   "auditLog",
   "webUi",
   "bunkerQr",
+  "nostrConnect",
   "managedHosted",
   "selfHostDocker",
   "relayIncluded",
   "lightningIntegrated",
-  "lightningPayments",
   "devSdk",
-  "fullStack",
 ];
 
 const featuresEn = {
@@ -62,6 +62,7 @@ const featuresEn = {
   zeroKnowledgeHosted: "Zero-knowledge on hosted",
   shamirRecovery: "Recovery via Shamir SSS",
   auditableCode: "Auditable open source code",
+  encryptedPdfBackup: "Encrypted offline backup (PDF)",
   reproducibleBuilds: "Reproducible builds + hash",
   remoteBunker: "Remote NIP-46 bunker",
   twentyFourSeven: "24/7 without a device online",
@@ -71,13 +72,12 @@ const featuresEn = {
   auditLog: "Auditable signature log",
   webUi: "Web management UI",
   bunkerQr: "Bunker URI QR code",
+  nostrConnect: "nostrconnect:// support",
   managedHosted: "Managed hosted (zero ops)",
   selfHostDocker: "Self-host available (Docker)",
   relayIncluded: "Nostr relay included",
   lightningIntegrated: "Lightning integrated",
-  lightningPayments: "Native Lightning payments",
   devSdk: "Developer SDK",
-  fullStack: "Full stack in one product",
 };
 
 const featuresPt = {
@@ -94,6 +94,7 @@ const featuresPt = {
   zeroKnowledgeHosted: "Zero-knowledge no hosted",
   shamirRecovery: "Recuperação via Shamir SSS",
   auditableCode: "Código open source auditável",
+  encryptedPdfBackup: "Backup físico encriptado (PDF)",
   reproducibleBuilds: "Builds reprodutíveis + hash",
   remoteBunker: "Bunker remoto NIP-46",
   twentyFourSeven: "24/7 sem dispositivo ligado",
@@ -103,13 +104,12 @@ const featuresPt = {
   auditLog: "Log de assinaturas auditável",
   webUi: "Interface web de gestão",
   bunkerQr: "QR code do bunker URI",
+  nostrConnect: "Suporte nostrconnect://",
   managedHosted: "Hosted gerido (zero ops)",
   selfHostDocker: "Self-host disponível (Docker)",
   relayIncluded: "Relay Nostr incluído",
   lightningIntegrated: "Lightning integrado",
-  lightningPayments: "Pagamentos Lightning nativos",
   devSdk: "SDK para developers",
-  fullStack: "Stack completo num produto",
 };
 
 const featuresEs = {
@@ -126,6 +126,7 @@ const featuresEs = {
   zeroKnowledgeHosted: "Conocimiento cero en hosted",
   shamirRecovery: "Recuperación vía Shamir SSS",
   auditableCode: "Código abierto auditable",
+  encryptedPdfBackup: "Copia de seguridad cifrada (PDF)",
   reproducibleBuilds: "Builds reproducibles + hash",
   remoteBunker: "Bunker remoto NIP-46",
   twentyFourSeven: "24/7 sin dispositivo en línea",
@@ -135,13 +136,12 @@ const featuresEs = {
   auditLog: "Registro de firmas auditable",
   webUi: "UI web de gestión",
   bunkerQr: "Código QR del bunker URI",
+  nostrConnect: "Soporte nostrconnect://",
   managedHosted: "Hosted gestionado (cero ops)",
   selfHostDocker: "Self-host disponible (Docker)",
   relayIncluded: "Relay Nostr incluido",
   lightningIntegrated: "Lightning integrado",
-  lightningPayments: "Pagos Lightning nativos",
   devSdk: "SDK para desarrolladores",
-  fullStack: "Stack completo en un producto",
 };
 
 function buildMessages(features, lang) {
@@ -178,6 +178,9 @@ function buildMessages(features, lang) {
           any: "Any",
           paidAddon: "paid add-on",
           na: "N/A",
+          localOnly: "local only",
+          viaIdentity: "via Identity",
+          signerPlusIdentity: "Signer + Identity",
         }
       : lang === "pt"
         ? {
@@ -186,6 +189,9 @@ function buildMessages(features, lang) {
             any: "Qualquer",
             paidAddon: "pago extra",
             na: "N/A",
+            localOnly: "só local",
+            viaIdentity: "via Identity",
+            signerPlusIdentity: "Signer + Identity",
           }
         : {
             android: "Android",
@@ -193,14 +199,17 @@ function buildMessages(features, lang) {
             any: "Cualquiera",
             paidAddon: "pago aparte",
             na: "N/A",
+            localOnly: "solo local",
+            viaIdentity: "via Identity",
+            signerPlusIdentity: "Signer + Identity",
           };
 
   const detail =
     lang === "en"
-      ? "(keypair + NIP-05 + relay + bunker in one flow)"
+      ? "(Signer vault + Identity for NIP-05 and Lightning Address)"
       : lang === "pt"
-        ? "(keypair + NIP-05 + relay + bunker num único fluxo)"
-        : "(keypair + NIP-05 + relay + bunker en un solo flujo)";
+        ? "(Cofre Signer + Identity para NIP-05 e Lightning Address)"
+        : "(Cofre Signer + Identity para NIP-05 y Lightning Address)";
 
   const landing =
     lang === "en"
@@ -213,7 +222,7 @@ function buildMessages(features, lang) {
           hero: {
             eyebrow: "NIP-46 · Nostr Connect · Managed bunker",
             title: "Your NIP-46 bunker, always on.",
-            body: "Sign Nostr events remotely. Your nsec stays encrypted in the vault; the server never stores it in plaintext — only an encrypted blob, with an optional in-memory session (configurable TTL).",
+            body: "Sign Nostr events remotely. Your nsec stays encrypted in the vault; the server never stores it in plaintext, only an encrypted blob, with an optional in-memory session (configurable TTL).",
             ctaPrimary: "Get started free",
             ctaSecondary: "View on GitHub",
             infraLead: "Prefer to run your own stack?",
@@ -222,7 +231,7 @@ function buildMessages(features, lang) {
           how: {
             title: "How it works",
             subtitle:
-              "Three steps — from keypair to remote signing in the BitMacro ecosystem.",
+              "Three steps: from keypair to remote signing in the BitMacro ecosystem.",
             step1Title: "Generate the keypair",
             step1Body:
               "In the browser, the vault creates the keypair and prepares the Nostr Connect URI (NIP-46).",
@@ -236,17 +245,17 @@ function buildMessages(features, lang) {
           compare: {
             title: "Comparison",
             intro:
-              "BitMacro Signer compared to familiar options in the Nostr ecosystem — features by category.",
+              "BitMacro Signer compared to familiar options in the Nostr ecosystem (features by category).",
             featureCol: "Feature",
             amber: "Amber",
             alby: "Alby",
             recommended: "Recommended",
             signerProduct: "BitMacro Signer",
             partial: "Partial",
-            phase2: "phase 2",
+            phase2: "Coming soon",
             footnotePhase2: "= on the roadmap, not in the MVP.",
             footnoteDisclaimer:
-              "Amber and Alby are independent projects — this compares typical product capabilities, not an absolute ranking.",
+              "Amber and Alby are independent projects (comparison by typical product capabilities, not an absolute ranking).",
             categories,
             features,
             details: { unifiedOnboardingDetail: detail },
@@ -255,8 +264,8 @@ function buildMessages(features, lang) {
           selfHost: {
             badge: "Self-host",
             title: "Run on your infrastructure",
-            body: "Docker image with Next.js in standalone mode. Copy environment variables, build, and run — no extra steps beyond .env.",
-            bullet1: "Secrets stay on the host — never commit keys.",
+            body: "Docker image with Next.js in standalone mode. Copy environment variables, build, and run, with no extra steps beyond .env.",
+            bullet1: "Secrets stay on the host; never commit keys.",
             bullet2: "Healthcheck at /api/health for orchestration.",
             githubLink: "Dockerfile, Compose, and README on GitHub",
             terminal: "terminal",
@@ -264,7 +273,7 @@ function buildMessages(features, lang) {
           },
           footer: {
             mit: "MIT License",
-            tagline: "signer.bitmacro.io — managed NIP-46 bunker",
+            tagline: "signer.bitmacro.io · managed NIP-46 bunker",
           },
         }
       : lang === "pt"
@@ -277,7 +286,7 @@ function buildMessages(features, lang) {
             hero: {
               eyebrow: "NIP-46 · Nostr Connect · Bunker gerido",
               title: "O teu bunker NIP-46, sempre disponível.",
-              body: "Assina eventos Nostr à distância. A nsec permanece encriptada no cofre; o servidor nunca a armazena em texto claro — apenas um blob cifrado, com sessão activa opcional em memória (TTL configurável).",
+              body: "Assina eventos Nostr à distância. A nsec permanece encriptada no cofre; o servidor nunca a armazena em texto claro, apenas um blob cifrado, com sessão activa opcional em memória (TTL configurável).",
               ctaPrimary: "Começar grátis",
               ctaSecondary: "Ver no GitHub",
               infraLead: "Preferes controlar a infraestrutura?",
@@ -286,7 +295,7 @@ function buildMessages(features, lang) {
             how: {
               title: "Como funciona",
               subtitle:
-                "Três passos — do keypair à assinatura remota no ecossistema BitMacro.",
+                "Três passos: do keypair à assinatura remota no ecossistema BitMacro.",
               step1Title: "Gera o keypair",
               step1Body:
                 "No browser, o cofre cria o par de chaves e prepara o URI Nostr Connect (NIP-46).",
@@ -300,17 +309,17 @@ function buildMessages(features, lang) {
             compare: {
               title: "Comparação",
               intro:
-                "BitMacro Signer face a opções conhecidas no ecossistema Nostr — funcionalidades por categoria.",
+                "BitMacro Signer face a opções conhecidas no ecossistema Nostr (funcionalidades por categoria).",
               featureCol: "Característica",
               amber: "Amber",
               alby: "Alby",
               recommended: "Recomendado",
               signerProduct: "BitMacro Signer",
               partial: "Parcial",
-              phase2: "fase 2",
+              phase2: "Em breve",
               footnotePhase2: "= roadmap previsto, não disponível no MVP.",
               footnoteDisclaimer:
-                "Amber e Alby são projectos independentes — comparação por funcionalidades típicas, não ranking absoluto.",
+                "Amber e Alby são projectos independentes (comparação por funcionalidades típicas, não ranking absoluto).",
               categories,
               features,
               details: { unifiedOnboardingDetail: detail },
@@ -319,8 +328,8 @@ function buildMessages(features, lang) {
             selfHost: {
               badge: "Self-host",
               title: "Corre na tua infraestrutura",
-              body: "Imagem Docker com Next.js em modo standalone. Copia as variáveis de ambiente, constrói e sobe — sem passos extra além do .env.",
-              bullet1: "Secrets só no host — nunca commits de chaves.",
+              body: "Imagem Docker com Next.js em modo standalone. Copia as variáveis de ambiente, constrói e sobe, sem passos extra além do .env.",
+              bullet1: "Secrets só no host; nunca commits de chaves.",
               bullet2: "Healthcheck em /api/health para orquestração.",
               githubLink: "Dockerfile, compose e README no GitHub",
               terminal: "terminal",
@@ -328,7 +337,7 @@ function buildMessages(features, lang) {
             },
             footer: {
               mit: "Licença MIT",
-              tagline: "signer.bitmacro.io — bunker NIP-46 gerido",
+              tagline: "signer.bitmacro.io · bunker NIP-46 gerido",
             },
           }
         : {
@@ -340,7 +349,7 @@ function buildMessages(features, lang) {
             hero: {
               eyebrow: "NIP-46 · Nostr Connect · Bunker gestionado",
               title: "Tu bunker NIP-46, siempre disponible.",
-              body: "Firma eventos Nostr a distancia. Tu nsec permanece cifrado en la bóveda; el servidor nunca lo guarda en claro — solo un blob cifrado, con sesión opcional en memoria (TTL configurable).",
+              body: "Firma eventos Nostr a distancia. Tu nsec permanece cifrado en la bóveda; el servidor nunca lo guarda en claro, solo un blob cifrado, con sesión opcional en memoria (TTL configurable).",
               ctaPrimary: "Empezar gratis",
               ctaSecondary: "Ver en GitHub",
               infraLead: "¿Prefieres tu propia infraestructura?",
@@ -349,7 +358,7 @@ function buildMessages(features, lang) {
             how: {
               title: "Cómo funciona",
               subtitle:
-                "Tres pasos — del keypair a la firma remota en el ecosistema BitMacro.",
+                "Tres pasos: del keypair a la firma remota en el ecosistema BitMacro.",
               step1Title: "Genera el par de claves",
               step1Body:
                 "En el navegador, la bóveda crea el par y prepara el URI Nostr Connect (NIP-46).",
@@ -363,17 +372,17 @@ function buildMessages(features, lang) {
             compare: {
               title: "Comparación",
               intro:
-                "BitMacro Signer frente a opciones conocidas en el ecosistema Nostr — funciones por categoría.",
+                "BitMacro Signer frente a opciones conocidas en el ecosistema Nostr (funciones por categoría).",
               featureCol: "Característica",
               amber: "Amber",
               alby: "Alby",
               recommended: "Recomendado",
               signerProduct: "BitMacro Signer",
               partial: "Parcial",
-              phase2: "fase 2",
+              phase2: "Próximamente",
               footnotePhase2: "= en el roadmap, no en el MVP.",
               footnoteDisclaimer:
-                "Amber y Alby son proyectos independientes — se comparan capacidades típicas, no un ranking absoluto.",
+                "Amber y Alby son proyectos independientes (se comparan capacidades típicas, no un ranking absoluto).",
               categories,
               features,
               details: { unifiedOnboardingDetail: detail },
@@ -382,8 +391,8 @@ function buildMessages(features, lang) {
             selfHost: {
               badge: "Self-host",
               title: "En tu infraestructura",
-              body: "Imagen Docker con Next.js en modo standalone. Copia variables de entorno, construye y ejecuta — sin pasos extra más allá de .env.",
-              bullet1: "Los secretos quedan en el host — nunca commitees claves.",
+              body: "Imagen Docker con Next.js en modo standalone. Copia variables de entorno, construye y ejecuta, sin pasos extra más allá de .env.",
+              bullet1: "Los secretos quedan en el host; nunca commitees claves.",
               bullet2: "Healthcheck en /api/health para orquestación.",
               githubLink: "Dockerfile, Compose y README en GitHub",
               terminal: "terminal",
@@ -391,7 +400,7 @@ function buildMessages(features, lang) {
             },
             footer: {
               mit: "Licencia MIT",
-              tagline: "signer.bitmacro.io — bunker NIP-46 gestionado",
+              tagline: "signer.bitmacro.io · bunker NIP-46 gestionado",
             },
           };
 
@@ -412,7 +421,7 @@ function buildMessages(features, lang) {
               "Generate the keypair again from the bottom link on the identity section.",
             enterPassphrase: "Enter the vault passphrase.",
             missingIdentityStep1:
-              "Missing identity_id — unlock again with your npub.",
+              "Missing identity_id; unlock again with your npub.",
             pasteNsec: "Paste your nsec.",
             invalidNsec: "Invalid nsec format (expected nsec1…).",
             nsecMismatch: "This nsec does not match your npub",
@@ -427,11 +436,11 @@ function buildMessages(features, lang) {
             bunkerLabel: "Bunker:",
             active: "Active",
             sessionManaged:
-              "Session active — bunker in managed (server) mode",
+              "Session active (bunker in managed server mode)",
             inactive: "Inactive",
             lockBunker: "Lock bunker",
             serverNote:
-              "The bunker runs on the server — it does not depend on this tab staying open.",
+              "The bunker runs on the server and does not depend on this tab staying open.",
           },
           loadingAuth: "Checking session…",
           identity: {
@@ -446,7 +455,7 @@ function buildMessages(features, lang) {
               "Don’t have an npub yet? Generate a keypair in the browser",
             backToUnlock: "← Back to unlock with existing npub",
             warnSaveNpub:
-              "Save this npub — it is your Nostr identity for the bunker. After the vault is set up, you can link it to BitMacro Identity if you want.",
+              "Save this npub: it is your Nostr identity for the bunker. After the vault is set up, you can link it to BitMacro Identity if you want.",
             npubReadonly: "Generated npub (read-only)",
             createVault: "Create vault and activate bunker",
           },
@@ -460,12 +469,12 @@ function buildMessages(features, lang) {
           sessionsPreview: {
             title: "Client sessions",
             manage: "Details & remove",
-            empty: "No sessions yet — generate a bunker link below for your first app.",
+            empty: "No sessions yet; generate a bunker link below for your first app.",
           },
           step3: {
             title: "Connect an app",
             explain:
-              "NIP-46 uses a temporary client key (not your profile npub). Generate the QR and paste it in the app — on first connect the client sends that key and the session is bound automatically.",
+              "NIP-46 uses a temporary client key (not your profile npub). Generate the QR and paste it in the app; on first connect the client sends that key and the session is bound automatically.",
             labelOptional: "Label (optional)",
             labelPlaceholder: "e.g. Primal · Coracle · Nostrudel",
             labelHint:
@@ -497,7 +506,7 @@ function buildMessages(features, lang) {
                 "Gera o par outra vez a partir da ligação no fim da secção Identidade.",
               enterPassphrase: "Indica a passphrase do cofre.",
               missingIdentityStep1:
-                "identity_id em falta — desbloqueia outra vez com o teu npub.",
+                "identity_id em falta; desbloqueia outra vez com o teu npub.",
               pasteNsec: "Cola a tua nsec.",
               invalidNsec: "Formato nsec inválido (esperado nsec1…).",
               nsecMismatch: "Esta nsec não corresponde ao teu npub",
@@ -512,11 +521,11 @@ function buildMessages(features, lang) {
               bunkerLabel: "Bunker:",
               active: "Activo",
               sessionManaged:
-                "Sessão activa — bunker em modo managed (servidor)",
+                "Sessão activa (bunker em modo managed, servidor)",
               inactive: "Inactivo",
               lockBunker: "Bloquear bunker",
               serverNote:
-                "O bunker corre no servidor — não depende desta janela estar aberta.",
+                "O bunker corre no servidor e não depende desta janela estar aberta.",
             },
             loadingAuth: "A verificar sessão…",
             identity: {
@@ -530,7 +539,7 @@ function buildMessages(features, lang) {
               freshNpubLink: "Ainda não tens npub? Gera um par no browser",
               backToUnlock: "← Voltar ao unlock com npub existente",
               warnSaveNpub:
-                "Guarda este npub — é a tua identidade Nostr no bunker. Depois do cofre, podes associá-la à BitMacro Identity se quiseres.",
+                "Guarda este npub: é a tua identidade Nostr no bunker. Depois do cofre, podes associá-la à BitMacro Identity se quiseres.",
               npubReadonly: "npub gerado (readonly)",
               createVault: "Criar cofre e activar bunker",
             },
@@ -545,12 +554,12 @@ function buildMessages(features, lang) {
               title: "Sessões de cliente",
               manage: "Detalhes e remover",
               empty:
-                "Ainda não há sessões — gera um link bunker abaixo para a primeira app.",
+                "Ainda não há sessões; gera um link bunker abaixo para a primeira app.",
             },
             step3: {
               title: "Ligar uma app",
               explain:
-                "O NIP-46 usa uma chave temporária no cliente (não o npub do teu perfil). Gera o QR e cola-o na app — na primeira ligação o cliente envia essa chave e a sessão fica associada automaticamente.",
+                "O NIP-46 usa uma chave temporária no cliente (não o npub do teu perfil). Gera o QR e cola-o na app; na primeira ligação o cliente envia essa chave e a sessão fica associada automaticamente.",
               labelOptional: "Etiqueta (opcional)",
               labelPlaceholder: "ex.: Primal · Coracle · Nostrudel",
               labelHint:
@@ -581,7 +590,7 @@ function buildMessages(features, lang) {
                 "Genera el par otra vez desde el enlace al final de la sección Identidad.",
               enterPassphrase: "Introduce la frase de paso de la bóveda.",
               missingIdentityStep1:
-                "Falta identity_id — desbloquea de nuevo con tu npub.",
+                "Falta identity_id; desbloquea de nuevo con tu npub.",
               pasteNsec: "Pega tu nsec.",
               invalidNsec: "Formato nsec inválido (se espera nsec1…).",
               nsecMismatch: "Esta nsec no coincide con tu npub",
@@ -596,11 +605,11 @@ function buildMessages(features, lang) {
               bunkerLabel: "Bunker:",
               active: "Activo",
               sessionManaged:
-                "Sesión activa — bunker en modo gestionado (servidor)",
+                "Sesión activa (bunker en modo gestionado, servidor)",
               inactive: "Inactivo",
               lockBunker: "Bloquear bunker",
               serverNote:
-                "El bunker corre en el servidor — no depende de que esta pestaña siga abierta.",
+                "El bunker corre en el servidor y no depende de que esta pestaña siga abierta.",
             },
             loadingAuth: "Comprobando sesión…",
             identity: {
@@ -615,7 +624,7 @@ function buildMessages(features, lang) {
                 "¿Aún no tienes npub? Genera un par en el navegador",
               backToUnlock: "← Volver al desbloqueo con npub existente",
               warnSaveNpub:
-                "Guarda este npub — es tu identidad Nostr en el bunker. Tras la bóveda, puedes vincularla a BitMacro Identity si quieres.",
+                "Guarda este npub: es tu identidad Nostr en el bunker. Tras la bóveda, puedes vincularla a BitMacro Identity si quieres.",
               npubReadonly: "npub generado (solo lectura)",
               createVault: "Crear bóveda y activar bunker",
             },
@@ -630,12 +639,12 @@ function buildMessages(features, lang) {
               title: "Sesiones de cliente",
               manage: "Detalles y eliminar",
               empty:
-                "Aún no hay sesiones — genera un enlace bunker abajo para la primera app.",
+                "Aún no hay sesiones; genera un enlace bunker abajo para la primera app.",
             },
             step3: {
               title: "Conectar una app",
               explain:
-                "NIP-46 usa una clave temporal en el cliente (no el npub de tu perfil). Genera el QR y pégalo en la app — en el primer enlace el cliente envía esa clave y la sesión se asocia automáticamente.",
+                "NIP-46 usa una clave temporal en el cliente (no el npub de tu perfil). Genera el QR y pégalo en la app; en el primer enlace el cliente envía esa clave y la sesión se asocia automáticamente.",
               labelOptional: "Etiqueta (opcional)",
               labelPlaceholder: "p. ej. Primal · Coracle · Nostrudel",
               labelHint:
@@ -658,7 +667,7 @@ function buildMessages(features, lang) {
           brand: "BitMacro Signer",
           title: "Active sessions",
           body: "NIP-46 does not send the app name: use the session key (npub/hex below). If you set a label when generating the QR, it is shown prominently.",
-          noLabel: "No label — set when generating the QR in onboarding",
+          noLabel: "No label (set when generating the QR in onboarding)",
           clientKey: "Client session key (NIP-46)",
           hexTechnical: "Hex (technical)",
           copyNpub: "Copy npub",
@@ -686,7 +695,7 @@ function buildMessages(features, lang) {
             brand: "BitMacro Signer",
             title: "Sessões activas",
             body: "O NIP-46 não envia o nome da app: usa a chave de sessão (npub/hex abaixo). Se definires uma etiqueta ao gerar o QR, ela aparece em destaque.",
-            noLabel: "Sem etiqueta — definida ao gerar o QR no onboarding",
+            noLabel: "Sem etiqueta (definida ao gerar o QR no onboarding)",
             clientKey: "Chave de sessão no cliente (NIP-46)",
             hexTechnical: "Hex (técnico)",
             copyNpub: "Copiar npub",
@@ -713,7 +722,7 @@ function buildMessages(features, lang) {
             brand: "BitMacro Signer",
             title: "Sesiones activas",
             body: "NIP-46 no envía el nombre de la app: usa la clave de sesión (npub/hex abajo). Si pones una etiqueta al generar el QR, se muestra destacada.",
-            noLabel: "Sin etiqueta — se define al generar el QR en onboarding",
+            noLabel: "Sin etiqueta (se define al generar el QR en onboarding)",
             clientKey: "Clave de sesión del cliente (NIP-46)",
             hexTechnical: "Hex (técnico)",
             copyNpub: "Copiar npub",

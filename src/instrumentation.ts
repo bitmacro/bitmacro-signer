@@ -1,16 +1,10 @@
-import dns from "node:dns";
-
 /**
- * Prefer A records over AAAA for outbound HTTPS (OpenAI, etc.).
- * Complements NODE_OPTIONS=--dns-result-order=ipv4first for standalone/runtime edge cases.
+ * Keeps this entry free of Node built-in imports so Turbopack does not analyze `node:dns`
+ * for the Edge Runtime graph (see Next.js warning on instrumentation + node:*).
  */
-export function register(): void {
-  if (process.env.NEXT_RUNTIME === "nodejs") {
-    dns.setDefaultResultOrder("ipv4first");
-    const ver = process.env.BITMACRO_SIGNER_VERSION?.trim() || "(unset)";
-    const sha = process.env.SIGNER_GIT_COMMIT?.trim().slice(0, 7) || "unset";
-    console.info(
-      `[bitmacro-signer] boot semver=${ver} commit=${sha} node=${process.version}`,
-    );
+export async function register(): Promise<void> {
+  if (process.env.NEXT_RUNTIME !== "nodejs") {
+    return;
   }
+  await import("./lib/register-node-instrumentation");
 }

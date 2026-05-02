@@ -33,11 +33,11 @@ export const viewport: Viewport = {
 };
 
 const SIGNER_SEO_DESCRIPTION =
-  "BitMacro Signer — bunker NIP-46 gerido: Nostr Connect, assinatura remota sem expor nsec no servidor. Cofre encriptado (AES-GCM), relay BitMacro, integração BitMacro Identity. Remote Nostr signing, encrypted vault.";
+  "BitMacro Signer: bunker NIP-46 gerido. Nostr Connect, assinatura remota sem expor nsec no servidor. Cofre encriptado (AES-GCM), relay BitMacro, integração BitMacro Identity. Remote Nostr signing, encrypted vault.";
 
 export const metadata: Metadata = {
   title: {
-    default: "BitMacro Signer — Bunker NIP-46 | Nostr Connect",
+    default: "BitMacro Signer · Bunker NIP-46 | Nostr Connect",
     template: "%s · BitMacro Signer",
   },
   description: SIGNER_SEO_DESCRIPTION,
@@ -98,7 +98,7 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
   },
   openGraph: {
-    title: "BitMacro Signer — Bunker NIP-46 | Nostr Connect",
+    title: "BitMacro Signer · Bunker NIP-46 | Nostr Connect",
     description: SIGNER_SEO_DESCRIPTION,
     url: "https://signer.bitmacro.io",
     siteName: "BitMacro Signer",
@@ -108,7 +108,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "BitMacro Signer — Bunker NIP-46",
+    title: "BitMacro Signer · Bunker NIP-46",
     description: SIGNER_SEO_DESCRIPTION,
   },
 };

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Sessões activas",
   description:
-    "Sessões NIP-46 autorizadas no BitMacro Signer — chaves de cliente, etiquetas e estado das ligações Nostr Connect.",
+    "Sessões NIP-46 autorizadas no BitMacro Signer: chaves de cliente, etiquetas e estado das ligações Nostr Connect.",
   openGraph: {
     title: "Sessões activas · BitMacro Signer",
     description:

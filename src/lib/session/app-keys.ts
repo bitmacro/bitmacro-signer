@@ -94,7 +94,7 @@ export async function authorizeApp(
     .eq("used", false);
 
   if (delErr) {
-    throw new Error(`authorizeApp: failed to clear pending sessions — ${delErr.message}`);
+    throw new Error(`authorizeApp: failed to clear pending sessions (${delErr.message})`);
   }
 
   const expires_at = new Date(
@@ -271,7 +271,7 @@ export async function completeConnect(
 
     if (consumed?.id) {
       throw new Error(
-        "connect: secret already used — create a new session in the Signer UI",
+        "connect: secret already used; create a new session in the Signer UI",
       );
     }
     throw new Error(
@@ -299,7 +299,7 @@ export async function completeConnect(
       },
     );
     throw new Error(
-      "connect: unauthorized — this QR was generated for a different client pubkey",
+      "connect: unauthorized (this QR was generated for a different client pubkey)",
     );
   }
 

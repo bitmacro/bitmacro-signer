@@ -5,6 +5,26 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.17] - 2026-05-02
+
+### Added
+
+- Comparison table rows **encrypted offline backup (PDF)** and **nostrconnect:// support** (Signer “coming soon” where marked phase 2); new compare **pills** (`localOnly`, `viaIdentity`, `signerPlusIdentity`).
+- **`src/lib/register-node-instrumentation.ts`**: Node-only bootstrap (DNS IPv4-first + boot log), loaded dynamically from `instrumentation.ts`.
+
+### Changed
+
+- **i18n (pt-BR, en, es):** FAQ Signer wording; punctuation pass replacing em dashes with colons, semicolons, commas, or middots where it reads more naturally; compare **phase 2** pill copy (“Coming soon” / “Em breve” / “Próximamente”); `unifiedOnboarding` detail reflects Signer + Identity; SEO strings (root layout, Open Graph, sessions metadata, package description).
+- **Comparison matrix** (`COMPARISON_ROW_DEFS`): dropped `lightningPayments` and `fullStack`; adjusted cells for `clientDecrypt`, `sessionTtl`, `auditLog`, `nip05Plan`, `lightningAddress`, `unifiedOnboarding`, `zeroKnowledgeHosted`, `devSdk`; `yesPill` cells can resolve pill text from messages (package name still monospace).
+- **Help chat** context lines: source/title separator and system-prompt wording (no em dash in those strings).
+- **`scripts/i18n-emit.mjs`:** feature list and labels aligned with the live message files.
+- **Ingest script:** document title uses `:` between heading and subtitle instead of an em dash.
+
+### Fixed
+
+- **Turbopack / Edge:** `instrumentation.ts` no longer imports `node:dns` at module scope, avoiding repeated “Node.js module … not supported in the Edge Runtime” warnings during `next dev` / build analysis.
+- **NIP-46 `app-keys` errors:** wording without em dashes.
+
 ## [0.4.16] - 2026-04-26
 
 ### Added
@@ -166,6 +186,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.4.17]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.16...v0.4.17
 [0.4.16]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.15...v0.4.16
 [0.4.15]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.14...v0.4.15
 [0.4.14]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.13...v0.4.14

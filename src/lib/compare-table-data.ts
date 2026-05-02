@@ -2,6 +2,13 @@
 
 export type ComparePillId = "android" | "desktop" | "any" | "paidAddon" | "na";
 
+/** `yesPill.pill` values that resolve via `landing.compare.pills.{pill}` */
+export const COMPARE_YES_PILL_I18N_KEYS = new Set([
+  "localOnly",
+  "viaIdentity",
+  "signerPlusIdentity",
+]);
+
 export type CompareCellDef =
   | { kind: "yes" }
   | { kind: "no" }
@@ -71,14 +78,14 @@ export const COMPARISON_ROW_DEFS: CompareRowDef[] = [
     featureId: "nip05Plan",
     amber: { kind: "no" },
     alby: { kind: "pill", id: "paidAddon" },
-    signer: { kind: "yes" },
+    signer: { kind: "yesPill", pill: "viaIdentity" },
   },
   {
     type: "row",
     featureId: "lightningAddress",
     amber: { kind: "no" },
     alby: { kind: "pill", id: "paidAddon" },
-    signer: { kind: "yes" },
+    signer: { kind: "yesPill", pill: "viaIdentity" },
   },
   {
     type: "row",
@@ -86,7 +93,7 @@ export const COMPARISON_ROW_DEFS: CompareRowDef[] = [
     detailId: "unifiedOnboardingDetail",
     amber: { kind: "no" },
     alby: { kind: "no" },
-    signer: { kind: "yes" },
+    signer: { kind: "yesPill", pill: "signerPlusIdentity" },
   },
   { type: "category", id: "security" },
   {
@@ -101,12 +108,12 @@ export const COMPARISON_ROW_DEFS: CompareRowDef[] = [
     featureId: "clientDecrypt",
     amber: { kind: "yes" },
     alby: { kind: "partial" },
-    signer: { kind: "yes" },
+    signer: { kind: "partial" },
   },
   {
     type: "row",
     featureId: "zeroKnowledgeHosted",
-    amber: { kind: "pill", id: "na" },
+    amber: { kind: "yesPill", pill: "localOnly" },
     alby: { kind: "no" },
     signer: { kind: "yes" },
   },
@@ -122,6 +129,13 @@ export const COMPARISON_ROW_DEFS: CompareRowDef[] = [
     featureId: "auditableCode",
     amber: { kind: "yes" },
     alby: { kind: "yes" },
+    signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    featureId: "encryptedPdfBackup",
+    amber: { kind: "no" },
+    alby: { kind: "no" },
     signer: { kind: "yes" },
   },
   {
@@ -158,7 +172,7 @@ export const COMPARISON_ROW_DEFS: CompareRowDef[] = [
     featureId: "sessionTtl",
     amber: { kind: "no" },
     alby: { kind: "no" },
-    signer: { kind: "yes" },
+    signer: { kind: "partial" },
   },
   {
     type: "row",
@@ -172,7 +186,7 @@ export const COMPARISON_ROW_DEFS: CompareRowDef[] = [
     featureId: "auditLog",
     amber: { kind: "no" },
     alby: { kind: "no" },
-    signer: { kind: "yes" },
+    signer: { kind: "yesPhase2" },
   },
   {
     type: "row",
@@ -187,6 +201,13 @@ export const COMPARISON_ROW_DEFS: CompareRowDef[] = [
     amber: { kind: "yes" },
     alby: { kind: "no" },
     signer: { kind: "yes" },
+  },
+  {
+    type: "row",
+    featureId: "nostrConnect",
+    amber: { kind: "yes" },
+    alby: { kind: "yes" },
+    signer: { kind: "yesPhase2" },
   },
   {
     type: "row",
@@ -219,23 +240,9 @@ export const COMPARISON_ROW_DEFS: CompareRowDef[] = [
   },
   {
     type: "row",
-    featureId: "lightningPayments",
-    amber: { kind: "no" },
-    alby: { kind: "yes" },
-    signer: { kind: "yes" },
-  },
-  {
-    type: "row",
     featureId: "devSdk",
     amber: { kind: "no" },
-    alby: { kind: "no" },
+    alby: { kind: "yes" },
     signer: { kind: "yesPill", pill: "@bitmacro/relay-connect" },
-  },
-  {
-    type: "row",
-    featureId: "fullStack",
-    amber: { kind: "no" },
-    alby: { kind: "no" },
-    signer: { kind: "yes" },
   },
 ];

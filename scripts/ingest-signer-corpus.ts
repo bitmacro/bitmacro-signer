@@ -104,7 +104,7 @@ function chunkByHeadings(markdown: string, fonte: string): Chunk[] {
     }
     if (m3) {
       const sub = m3[1]!.trim();
-      const titulo = h2 ? `${h2} — ${sub}` : sub;
+      const titulo = h2 ? `${h2}: ${sub}` : sub;
       startNew(titulo);
       continue;
     }

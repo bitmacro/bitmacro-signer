@@ -21,7 +21,7 @@
   },
   "recover": {
     "title": "Recover nsec (local)",
-    "subtitle": "Zero-knowledge — nothing is sent to BitMacro servers. Decryption runs only in your browser.",
+    "subtitle": "Zero-knowledge: nothing is sent to BitMacro servers. Decryption runs only in your browser.",
     "jsonLabel": "Backup JSON (bitmacro-signer-offline-vault v1)",
     "jsonPlaceholder": "{ … }",
     "passphraseLabel": "Vault passphrase",
@@ -29,11 +29,11 @@
     "decrypting": "Decrypting…",
     "errorJson": "Invalid or incomplete JSON. If you copied from a PDF, try again, scan the QR from the PDF, or check that blob/salt/iv are complete.",
     "errorDecrypt": "Wrong passphrase for this backup, or the server vault was changed after this PDF was made.",
-    "errorNpubMismatch": "Decrypted key does not match the npub in this file — JSON may be truncated or corrupted (PDF copy). Use the QR from the PDF or paste the full JSON.",
+    "errorNpubMismatch": "Decrypted key does not match the npub in this file: the JSON may be truncated or corrupted (PDF copy). Use the QR from the PDF or paste the full JSON.",
     "pasteHint": "PDF paste: some viewers break long lines; this page fixes that automatically. If it still fails, scan the QR from the PDF or copy the entire JSON block at once.",
     "warningTitle": "Treat as a secret",
     "warningBody": "Anyone with this nsec can sign as you. Do not share it or store it in plaintext in the cloud.",
-    "importHint": "This key should only be used for account recovery.\n\nSharing or pasting it into apps permanently exposes your identity.\n\nFor day-to-day use, BitMacro Signer signs for you — without ever exposing this key.",
+    "importHint": "This key should only be used for account recovery.\n\nSharing or pasting it into apps permanently exposes your identity.\n\nFor day-to-day use, BitMacro Signer signs for you, without ever exposing this key.",
     "copy": "Copy nsec",
     "copied": "Copied",
     "copyFailed": "Could not copy. Copy manually.",
@@ -53,7 +53,7 @@
     "hero": {
       "eyebrow": "NIP-46 · Nostr Connect · Managed bunker",
       "title": "Your NIP-46 bunker, always on.",
-      "body": "Sign Nostr events remotely. Your nsec stays encrypted in the vault; the server never stores it in plaintext — only an encrypted blob, with an optional in-memory session (configurable TTL).",
+      "body": "Sign Nostr events remotely. Your nsec stays encrypted in the vault; the server never stores it in plaintext, only an encrypted blob, with an optional in-memory session (configurable TTL).",
       "ctaPrimary": "Start",
       "ctaSecondary": "View on GitHub",
       "infraLead": "Prefer to run your own stack?",
@@ -61,7 +61,7 @@
     },
     "how": {
       "title": "How it works",
-      "subtitle": "Three steps — from keypair to remote signing in the BitMacro ecosystem.",
+      "subtitle": "Three steps: from keypair to remote signing in the BitMacro ecosystem.",
       "step1Title": "Generate the keypair",
       "step1Body": "In the browser, the vault creates the keypair and prepares the Nostr Connect URI (NIP-46).",
       "step2Title": "Show the QR",
@@ -71,16 +71,16 @@
     },
     "compare": {
       "title": "Comparison",
-      "intro": "BitMacro Signer compared to familiar options in the Nostr ecosystem — features by category.",
+      "intro": "BitMacro Signer compared to familiar options in the Nostr ecosystem (features by category).",
       "featureCol": "Feature",
       "amber": "Amber",
       "alby": "Alby",
       "recommended": "Recommended",
       "signerProduct": "BitMacro Signer",
       "partial": "Partial",
-      "phase2": "phase 2",
+      "phase2": "Coming soon",
       "footnotePhase2": "= on the roadmap, not in the MVP.",
-      "footnoteDisclaimer": "Amber and Alby are independent projects — this compares typical product capabilities, not an absolute ranking.",
+      "footnoteDisclaimer": "Amber and Alby are independent projects (comparison by typical product capabilities, not an absolute ranking).",
       "categories": {
         "platform": "Platform",
         "identity": "Identity",
@@ -102,6 +102,7 @@
         "zeroKnowledgeHosted": "Zero-knowledge on hosted",
         "shamirRecovery": "Recovery via Shamir SSS",
         "auditableCode": "Auditable open source code",
+        "encryptedPdfBackup": "Encrypted offline backup (PDF)",
         "reproducibleBuilds": "Reproducible builds + hash",
         "remoteBunker": "Remote NIP-46 bunker",
         "twentyFourSeven": "24/7 without a device online",
@@ -111,30 +112,32 @@
         "auditLog": "Auditable signature log",
         "webUi": "Web management UI",
         "bunkerQr": "Bunker URI QR code",
+        "nostrConnect": "nostrconnect:// support",
         "managedHosted": "Managed hosted (zero ops)",
         "selfHostDocker": "Self-host available (Docker)",
         "relayIncluded": "Nostr relay included",
         "lightningIntegrated": "Lightning integrated",
-        "lightningPayments": "Native Lightning payments",
-        "devSdk": "Developer SDK",
-        "fullStack": "Full stack in one product"
+        "devSdk": "Developer SDK"
       },
       "details": {
-        "unifiedOnboardingDetail": "(keypair + NIP-05 + relay + bunker in one flow)"
+        "unifiedOnboardingDetail": "(Signer vault + Identity for NIP-05 and Lightning Address)"
       },
       "pills": {
         "android": "Android",
         "desktop": "Desktop",
         "any": "Any",
         "paidAddon": "paid add-on",
-        "na": "N/A"
+        "na": "N/A",
+        "localOnly": "local only",
+        "viaIdentity": "via Identity",
+        "signerPlusIdentity": "Signer + Identity"
       }
     },
     "selfHost": {
       "badge": "Self-host",
       "title": "Run on your infrastructure",
-      "body": "Docker image with Next.js in standalone mode. Copy environment variables, build, and run — no extra steps beyond .env.",
-      "bullet1": "Secrets stay on the host — never commit keys.",
+      "body": "Docker image with Next.js in standalone mode. Copy environment variables, build, and run, with no extra steps beyond .env.",
+      "bullet1": "Secrets stay on the host; never commit keys.",
       "bullet2": "Healthcheck at /api/health for orchestration.",
       "githubLink": "Dockerfile, Compose, and README on GitHub",
       "terminal": "terminal",
@@ -146,7 +149,7 @@
       "items": [
         {
           "q": "What is BitMacro Signer?",
-          "a": "A managed NIP-46 bunker and vault: your Nostr private key (nsec) stays encrypted, and you can sign events 24/7 without handing your nsec to apps or keeping your phone online. Signing requests use NIP-44 over the relay — the relay cannot read the payload."
+          "a": "An NIP-46 bunker and vault: your Nostr private key (nsec) stays encrypted, and you can sign events 24/7 without handing your nsec to apps or keeping your phone online. Signing requests use NIP-44 over the relay; the relay cannot read the payload."
         },
         {
           "q": "What is NIP-46 and what is a bunker?",
@@ -158,7 +161,7 @@
         },
         {
           "q": "Why is the backup PDF required?",
-          "a": "It is how you recover your nsec if you lose your passphrase or account access. Without the PDF (and correct passphrase), recovery is not possible — there is no backdoor. Store the PDF offline and safely."
+          "a": "It is how you recover your nsec if you lose your passphrase or account access. Without the PDF (and correct passphrase), recovery is not possible and there is no backdoor. Store the PDF offline and safely."
         },
         {
           "q": "How do I connect Nostrudel, Primal, or Coracle?",
@@ -166,7 +169,7 @@
         },
         {
           "q": "What are sessions? Can I revoke them?",
-          "a": "Each session binds a client (via app_pubkey) to your bunker. You can revoke in the session list — signing stops immediately. Use clear labels (e.g. Primal iPhone) so you know what to revoke."
+          "a": "Each session binds a client (via app_pubkey) to your bunker. You can revoke in the session list and signing stops immediately. Use clear labels (e.g. Primal iPhone) so you know what to revoke."
         },
         {
           "q": "I forgot my passphrase. What can I do?",
@@ -174,13 +177,13 @@
         },
         {
           "q": "How is BitMacro Signer different from BitMacro Identity?",
-          "a": "Identity (id.bitmacro.io) gives NIP-05 username, Lightning Address, and relays. Signer (signer.bitmacro.io) stores and uses your nsec via NIP-46. They complement each other — you can use one or both."
+          "a": "Identity (id.bitmacro.io) gives NIP-05 username, Lightning Address, and relays. Signer (signer.bitmacro.io) stores and uses your nsec via NIP-46. They complement each other: you can use one or both."
         }
       ]
     },
     "footer": {
       "mit": "MIT License",
-      "tagline": "signer.bitmacro.io — managed NIP-46 bunker"
+      "tagline": "signer.bitmacro.io · managed NIP-46 bunker"
     }
   },
   "onboarding": {
@@ -196,7 +199,7 @@
       "saveVaultFailed": "Failed to save vault",
       "generateOrReload": "Generate the keypair again from the bottom link on the identity section.",
       "enterPassphrase": "Enter the vault passphrase.",
-      "missingIdentityStep1": "Missing identity_id — unlock again with your npub.",
+      "missingIdentityStep1": "Missing identity_id; unlock again with your npub.",
       "pasteNsec": "Paste your nsec.",
       "invalidNsec": "Invalid nsec format (expected nsec1…).",
       "nsecMismatch": "This nsec does not match your npub",
@@ -209,20 +212,20 @@
       "subtitle": "Unlock the vault with your npub and passphrase, generate the NIP-46 QR, and manage app links. To switch accounts, end the session in Identity.",
       "bunkerLabel": "Bunker:",
       "active": "Active",
-      "sessionManaged": "Session active — bunker in managed (server) mode",
+      "sessionManaged": "Session active (bunker in managed server mode)",
       "inactive": "Inactive",
       "lockBunker": "Lock bunker",
-      "serverNote": "The bunker runs on the server — it does not depend on this tab staying open."
+      "serverNote": "The bunker runs on the server and does not depend on this tab staying open."
     },
     "loadingAuth": "Checking session…",
     "identity": {
-      "vaultOpen": "Vault unlocked — active session in this browser.",
+      "vaultOpen": "Vault unlocked, with an active session in this browser.",
       "sessionHint": "This is your Signer session: end it to lock the bunker, clear local state, and unlock with another npub.",
       "endSession": "End session",
       "copyNpub": "Copy npub",
       "copied": "Copied",
       "profileLoading": "Loading profile…",
-      "npubMissing": "Npub unavailable — reload the page or unlock again."
+      "npubMissing": "Npub unavailable; reload the page or unlock again."
     },
     "step1": {
       "title": "Identity",
@@ -231,7 +234,7 @@
       "unlock": "Unlock",
       "freshNpubLink": "Don’t have an npub yet? Generate a keypair in the browser",
       "backToUnlock": "← Back to unlock with existing npub",
-      "warnSaveNpub": "Save this npub — it is your Nostr identity for the bunker. After the vault is set up, you can link it to BitMacro Identity if you want.",
+      "warnSaveNpub": "Save this npub: it is your Nostr identity for the bunker. After the vault is set up, you can link it to BitMacro Identity if you want.",
       "npubReadonly": "Generated npub (read-only)",
       "createVault": "Create vault and activate bunker"
     },
@@ -245,11 +248,11 @@
     "sessionsPreview": {
       "title": "Client sessions",
       "manage": "Details & remove",
-      "empty": "No sessions yet — generate a bunker link below for your first app."
+      "empty": "No sessions yet; generate a bunker link below for your first app."
     },
     "step3": {
       "title": "Connect an app",
-      "explain": "NIP-46 uses a temporary client key (not your profile npub). Generate the QR and paste it in the app — on first connect the client sends that key and the session is bound automatically.",
+      "explain": "NIP-46 uses a temporary client key (not your profile npub). Generate the QR and paste it in the app; on first connect the client sends that key and the session is bound automatically.",
       "labelOptional": "Label (optional)",
       "labelPlaceholder": "e.g. Primal · Coracle · Nostrudel",
       "labelHint": "The protocol does not send the app name (Primal, Coracle, Nostrudel, …). This label is shown in sessions so you can tell them apart.",
@@ -263,13 +266,13 @@
     "backup": {
       "sectionTitle": "Offline recovery backup (required)",
       "intro": "Your vault is encrypted with your passphrase. BitMacro Signer never stores your nsec in plaintext. This PDF is the portable copy you need to recover your identity without BitMacro infrastructure.",
-      "bulletIndependent": "The PDF contains your npub (readable) and the same encrypted vault blob as our servers — not your nsec in clear text.",
+      "bulletIndependent": "The PDF contains your npub (readable) and the same encrypted vault blob as our servers, not your nsec in clear text.",
       "bulletPassphrase": "You must keep your vault passphrase: it decrypts the backup. Without it, the PDF is useless.",
       "bulletStorage": "Store the PDF offline (USB, printed paper in a safe). Avoid cloud folders if you want stronger security.",
       "bulletNoCloud": "Anyone with this file and your passphrase controls your Nostr identity. Do not share.",
       "yourNpub": "Your public key (npub)",
       "vaultPassphraseBlock": "Your vault passphrase is the only key that decrypts this PDF. Store it separately from the PDF.",
-      "confirmationCodeBlock": "The PDF contains a 6-character code: enter it once in the assistant right after you download the backup, to prove you saved the file. It is not for account recovery or decryption — it does not replace your passphrase.",
+      "confirmationCodeBlock": "The PDF contains a 6-character code: enter it once in the assistant right after you download the backup, to prove you saved the file. It is not for account recovery or decryption and does not replace your passphrase.",
       "downloadPdf": "Download encrypted backup PDF",
       "confirmPassphraseUnderstanding": "I understand I need the passphrase to recover my nsec. The 6-letter code does not replace it.",
       "confirmTypeCode": "Type the 6-letter code from the PDF (after downloading)",
@@ -280,19 +283,19 @@
       "pdfGenerationFailed": "Could not generate PDF.",
       "pdf": {
         "fileNamePrefix": "bitmacro-signer-backup",
-        "title": "BitMacro Signer — offline vault backup",
+        "title": "BitMacro Signer: offline vault backup",
         "subtitle": "Keep this file private. The passphrase you chose for the Signer vault decrypts the encrypted payload below (same algorithm as the hosted vault: PBKDF2 + AES-GCM).",
         "criticalTitle": "Security warnings",
-        "criticalBullets": "This file does not replace your passphrase — without it, recovery is impossible.|The nsec is never stored in plain text here; only ciphertext (blob) is included.|If someone obtains this file and your passphrase, they own your keys.|BitMacro cannot recover your passphrase or nsec.",
+        "criticalBullets": "This file does not replace your passphrase; without it, recovery is impossible.|The nsec is never stored in plain text here; only ciphertext (blob) is included.|If someone obtains this file and your passphrase, they own your keys.|BitMacro cannot recover your passphrase or nsec.",
         "didacticTitle": "What this document contains",
-        "didacticBullets": "Your public npub and the encrypted vault — the same ciphertext stored on the server.|The passphrase you set in Signer is the only key that decrypts the blob (PBKDF2 + AES-GCM, on your device only).|This PDF does not replace the passphrase; without it the file is useless.",
+        "didacticBullets": "Your public npub and the encrypted vault, the same ciphertext stored on the server.|The passphrase you set in Signer is the only key that decrypts the blob (PBKDF2 + AES-GCM, on your device only).|This PDF does not replace the passphrase; without it the file is useless.",
         "npubLabel": "Public key (npub)",
         "passphraseReminder": "Decrypt the vault fields below with the same passphrase you use to unlock BitMacro Signer.",
         "codeTitle": "Confirmation code (type this in Signer to continue)",
-        "codeBody": "Use this code once: in the Signer assistant, right after you download this PDF, to confirm you saved the file. It is not for account recovery or decrypting the vault — do not confuse it with your passphrase. It is not shown on the website — only in this document.",
+        "codeBody": "Use this code once: in the Signer assistant, right after you download this PDF, to confirm you saved the file. It is not for account recovery or decrypting the vault; do not confuse it with your passphrase. It is not shown on the website, only in this document.",
         "downloadCheck": "",
-        "qrSectionLead": "Recommended: scan this QR on the recovery page — avoids errors when copying very long text from the PDF.",
-        "qrTitle": "QR — full encrypted vault export",
+        "qrSectionLead": "Recommended: scan this QR on the recovery page to avoid errors when copying very long text from the PDF.",
+        "qrTitle": "QR: full encrypted vault export",
         "jsonSectionTitle": "JSON (manual copy)",
         "jsonSectionWarning": "If you copy the block below line by line, some PDF viewers insert line breaks inside long strings and recovery fails. Prefer the QR above. signer.bitmacro.io/recover also tries to fix broken lines when you paste.",
         "jsonTitle": "JSON text (same data as QR)",
@@ -300,7 +303,7 @@
         "recoveryWebStep": "Open {url}, paste the JSON below, and enter your passphrase. Your nsec is shown only in the browser.",
         "recoverySteps": "Or use any tool that implements the same decryption (PBKDF2-SHA256, 600000 iterations, AES-GCM-256) with your passphrase on blob/salt/iv.|Decode your nsec from the decrypted material (bech32 nsec1…).",
         "stewardshipTitle": "Safe use of this key (BitMacro Signer)",
-        "stewardshipParagraphs": "This key should only be used for account recovery.|Sharing or pasting it into apps permanently exposes your identity.|For day-to-day use, BitMacro Signer signs for you — without ever exposing this key.",
+        "stewardshipParagraphs": "This key should only be used for account recovery.|Sharing or pasting it into apps permanently exposes your identity.|For day-to-day use, BitMacro Signer signs for you, without ever exposing this key.",
         "footer": "Format: bitmacro-signer-offline-vault v1. Open source: github.com/bitmacro/bitmacro-signer"
       }
     },
@@ -310,7 +313,7 @@
     "brand": "BitMacro Signer",
     "title": "Active sessions",
     "body": "NIP-46 does not send the app name: use the session key (npub/hex below). If you set a label when generating the QR, it is shown prominently.",
-    "noLabel": "No label — set when generating the QR in the panel",
+    "noLabel": "No label (set when generating the QR in the panel)",
     "clientKey": "Client session key (NIP-46)",
     "hexTechnical": "Hex (technical)",
     "copyNpub": "Copy npub",

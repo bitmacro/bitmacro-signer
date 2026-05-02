@@ -20,6 +20,7 @@ import { LocaleSwitcher } from "@/components/locale-switcher";
 import { SignerBuildStamp } from "@/components/signer-build-stamp";
 import { SignerSessionUserMenu } from "@/components/signer-session-user-menu";
 import {
+  COMPARE_YES_PILL_I18N_KEYS,
   type CompareCellDef,
   type CompareRowDef,
   COMPARISON_ROW_DEFS,
@@ -62,13 +63,21 @@ function CompareCellContent({
           <span className={COMPARE_PILL}>{t("phase2")}</span>
         </span>
       );
-    case "yesPill":
+    case "yesPill": {
+      const useI18n = COMPARE_YES_PILL_I18N_KEYS.has(cell.pill);
+      const label = useI18n ? t(`pills.${cell.pill}`) : cell.pill;
       return (
         <span className="flex flex-wrap items-center gap-1.5">
           <Check className="size-4 shrink-0 text-emerald-400" strokeWidth={2.5} aria-hidden />
-          <span className={`${COMPARE_PILL} font-mono text-[11px] sm:text-xs`}>{cell.pill}</span>
+          <span
+            className={`${COMPARE_PILL} text-[11px] sm:text-xs${useI18n ? "" : " font-mono"}`}
+            title={useI18n ? label : undefined}
+          >
+            {label}
+          </span>
         </span>
       );
+    }
     default:
       return null;
   }

@@ -136,11 +136,11 @@ export function contextChunkLineWithProduct(
   const tag = showProductTag ? ` [${row.produto}]` : "";
   switch (locale) {
     case "en":
-      return `### Excerpt ${n}${tag} (source: ${row.fonte} — ${row.titulo})\n${row.conteudo}`;
+      return `### Excerpt ${n}${tag} (source: ${row.fonte}: ${row.titulo})\n${row.conteudo}`;
     case "es":
-      return `### Fragmento ${n}${tag} (fuente: ${row.fonte} — ${row.titulo})\n${row.conteudo}`;
+      return `### Fragmento ${n}${tag} (fuente: ${row.fonte}: ${row.titulo})\n${row.conteudo}`;
     default:
-      return `### Trecho ${n}${tag} (fonte: ${row.fonte} — ${row.titulo})\n${row.conteudo}`;
+      return `### Trecho ${n}${tag} (fonte: ${row.fonte}: ${row.titulo})\n${row.conteudo}`;
   }
 }
 
@@ -150,7 +150,7 @@ export function systemPrompt(locale: HelpLocale): string {
       return (
         "You are the BitMacro Signer (signer.bitmacro.io) support assistant. " +
         "Answer only in English, based solely on the excerpts provided below. " +
-        "Excerpts may include linked BitMacro product docs (e.g. Identity / NIP-05) when included in the list — use them if they answer the question. " +
+        "Excerpts may include linked BitMacro product docs (e.g. Identity / NIP-05) when included in the list; use them if they answer the question. " +
         "If the answer is not in the excerpts, say clearly that it is not in the available documentation. " +
         "Mention the source file name when helpful. Be clear and concise. " +
         "Never ask the user to paste nsec or passwords."
@@ -159,7 +159,7 @@ export function systemPrompt(locale: HelpLocale): string {
       return (
         "Eres el asistente de soporte de BitMacro Signer (signer.bitmacro.io). " +
         "Responde únicamente en español, basándote solo en los fragmentos proporcionados. " +
-        "Los fragmentos pueden incluir documentación de otros productos BitMacro (p. ej. Identity / NIP-05) si aparecen en la lista — úsalos si responden a la pregunta. " +
+        "Los fragmentos pueden incluir documentación de otros productos BitMacro (p. ej. Identity / NIP-05) si aparecen en la lista; úsalos si responden a la pregunta. " +
         "Si la respuesta no está en los fragmentos, dilo claramente. " +
         "Menciona el archivo fuente cuando sea útil. Sé claro y conciso. " +
         "Nunca pidas que peguen nsec ni contraseñas."
@@ -168,7 +168,7 @@ export function systemPrompt(locale: HelpLocale): string {
       return (
         "És o assistente de suporte BitMacro Signer (signer.bitmacro.io). " +
         "Responde unicamente em português com base nos trechos fornecidos. " +
-        "Os trechos podem incluir documentação de outros produtos BitMacro (ex.: Identity / NIP-05) quando constam na lista — usa-os se responderem à pergunta. " +
+        "Os trechos podem incluir documentação de outros produtos BitMacro (ex.: Identity / NIP-05) quando constam na lista; usa-os se responderem à pergunta. " +
         "Se a resposta não constar nos trechos, diz explicitamente que não está na documentação disponível. " +
         "Menciona a fonte (ficheiro) quando for útil. Sê claro e conciso. " +
         "Nunca peças para colar nsec nem passwords."
@@ -186,11 +186,11 @@ export function contextChunkLine(
   const n = index + 1;
   switch (locale) {
     case "en":
-      return `### Excerpt ${n} (source: ${fonte} — ${titulo})\n${conteudo}`;
+      return `### Excerpt ${n} (source: ${fonte}: ${titulo})\n${conteudo}`;
     case "es":
-      return `### Fragmento ${n} (fuente: ${fonte} — ${titulo})\n${conteudo}`;
+      return `### Fragmento ${n} (fuente: ${fonte}: ${titulo})\n${conteudo}`;
     default:
-      return `### Trecho ${n} (fonte: ${fonte} — ${titulo})\n${conteudo}`;
+      return `### Trecho ${n} (fonte: ${fonte}: ${titulo})\n${conteudo}`;
   }
 }
 
