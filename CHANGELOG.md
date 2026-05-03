@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **NIP-46 `nostrconnect://` (client-initiated):** `POST /api/sessions` accepts `nostrconnect_uri`; parser validates relay + secret + client pubkey; `signer_sessions.nip46_relay_urls` (migration `00002_signer_sessions_nip46_relays.sql`); bunker listens on env relay **plus** each URL from open sessions; panel textarea to register a pasted URI.
 - **Daemon:** `POST /internal/refresh-nip46-relays` (Bearer) re-subscribes after new client relays without a full unlock when the bunker is already running.
+- **Testing:** Vitest coverage for `nostrconnect` / session hashing (`app-keys.nostrconnect.test.ts`), Zod `sessionCreateBodySchema` (`session.test.ts`); **`vitest.config.ts`**, **`@vitest/coverage-v8`**, **`npm run test:coverage`**; coverage scoped to `src/lib` crypto/session/bunker/schemas/backup; CI uploads `coverage/lcov.info` artifact; README Vitest badge and *Tests and coverage*.
 
 ### Changed
 

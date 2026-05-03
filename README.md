@@ -1,6 +1,7 @@
 # @bitmacro/bitmacro-signer
 
 [![CI](https://github.com/bitmacro/bitmacro-signer/actions/workflows/ci.yml/badge.svg)](https://github.com/bitmacro/bitmacro-signer/actions/workflows/ci.yml)
+[![Vitest](https://img.shields.io/badge/tests-Vitest_%2B_v8_coverage-6E9F18?logo=vitest)](https://github.com/bitmacro/bitmacro-signer/blob/main/vitest.config.ts)
 [![Web GHCR](https://github.com/bitmacro/bitmacro-signer/actions/workflows/web.yml/badge.svg)](https://github.com/bitmacro/bitmacro-signer/actions/workflows/web.yml)
 [![Daemon GHCR](https://github.com/bitmacro/bitmacro-signer/actions/workflows/daemon.yml/badge.svg)](https://github.com/bitmacro/bitmacro-signer/actions/workflows/daemon.yml)
 [![npm](https://img.shields.io/badge/npm-not%20on%20registry%20yet-CBD5E1?logo=npm)](https://github.com/bitmacro/bitmacro-signer)
@@ -97,6 +98,17 @@ npm run lint
 ```
 
 `npm run dev` uses **Turbopack** (`next dev --turbopack`).
+
+### Tests and coverage
+
+```bash
+npm run test            # Vitest (no coverage report)
+npm run test:coverage   # CI command: tests + v8 → coverage/lcov.info, coverage/index.html
+```
+
+CI runs **`npm run test:coverage`** and uploads **`coverage/lcov.info`** as a workflow artifact for inspection.
+
+Coverage is **scoped to library code** under `src/lib` (vault, session / NIP-46 URI parsing, bunker helpers, Zod schemas, backup utilities, session cookie helpers), not the full Next.js UI or every API route. That keeps the percentage meaningful for crypto and session logic; use manual or E2E checks for deploy behaviour.
 
 ### i18n emit (`npm run i18n:emit`)
 
