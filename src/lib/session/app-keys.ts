@@ -5,8 +5,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
+import type { ParsedNostrConnectUri } from "./nostr-connect-uri";
 import type { Session } from "./ttl";
 import { nostrPubkeyInputToHex } from "./ttl";
+
+import { getRelayUrlServer } from "@/lib/relay/env";
 
 function secretBytesToBase64Url(bytes: Buffer): string {
   return bytes.toString("base64url");
@@ -17,15 +20,25 @@ function hashSecret(bytes: Buffer): string {
 }
 
 /**
- * Same hashing as `authorizeApp` for the base64url secret shown once to the client.
- * @throws if the string is not a valid 32-byte secret encoding
+ * Hash for looking up a session by NIP-46 `connect` secret.
+ * - Bunker-initiated: 32-byte random secret encoded as base64url (historical Signer format).
+ * - Client-initiated (`nostrconnect://`): short UTF-8 string per NIP-46 examples.
  */
-export function hashSecretFromPlaintext(secretBase64Url: string): string {
-  const buf = Buffer.from(secretBase64Url, "base64url");
-  if (buf.length !== 32) {
-    throw new Error("invalid secret: expected 32 bytes after base64url decode");
+export function hashSessionSecretForLookup(secret: string): string {
+  const trimmed = secret.trim();
+  if (!trimmed) {
+    throw new Error("invalid secret: empty");
   }
-  return hashSecret(buf);
+  const buf = Buffer.from(trimmed, "base64url");
+  if (buf.length === 32) {
+    return hashSecret(buf);
+  }
+  return createHash("sha256").update(trimmed, "utf8").digest("hex");
+}
+
+/** @alias {@link hashSessionSecretForLookup} */
+export function hashSecretFromPlaintext(secret: string): string {
+  return hashSessionSecretForLookup(secret);
 }
 
 /**
@@ -126,11 +139,109 @@ export async function authorizeApp(
   return { sessionId: data.id, secret };
 }
 
+/**
+ * Register a client-initiated session (`nostrconnect://`) before the client sends `connect`.
+ * Replaces any unused row for the same `app_pubkey` on this vault.
+ */
+export async function authorizeAppFromNostrConnect(
+  identityId: string,
+  parsed: ParsedNostrConnectUri,
+  appNameOverride?: string,
+  ttlHours = 24,
+): Promise<{ sessionId: string }> {
+  const supabase = createServiceRoleClient();
+  const vaultId = await getVaultIdForIdentity(supabase, identityId);
+  const secret_hash = hashSessionSecretForLookup(parsed.secret);
+  const appPk = parsed.clientPubkeyHex.toLowerCase();
+
+  const label =
+    appNameOverride?.trim() ||
+    parsed.appName?.trim() ||
+    null;
+
+  const { error: delErr } = await supabase
+    .from("signer_sessions")
+    .delete()
+    .eq("vault_id", vaultId)
+    .eq("app_pubkey", appPk)
+    .eq("used", false);
+
+  if (delErr) {
+    throw new Error(
+      `authorizeAppFromNostrConnect: failed to clear stale session (${delErr.message})`,
+    );
+  }
+
+  const expires_at = new Date(
+    Date.now() + ttlHours * 60 * 60 * 1000,
+  ).toISOString();
+
+  const { data, error } = await supabase
+    .from("signer_sessions")
+    .insert({
+      vault_id: vaultId,
+      app_pubkey: appPk,
+      app_name: label,
+      secret_hash,
+      nip46_relay_urls: parsed.relayUrls,
+      used: false,
+      expires_at,
+    })
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    const err = new Error(
+      error?.message ?? "authorizeAppFromNostrConnect: insert failed",
+    ) as Error & { pgCode?: string };
+    if (error?.code) err.pgCode = error.code;
+    throw err;
+  }
+
+  return { sessionId: data.id };
+}
+
+/** Union of env default relay and every non-null `nip46_relay_urls` on open sessions for this vault. */
+export async function getActiveNip46RelayUrlsForIdentity(
+  identityId: string,
+): Promise<string[]> {
+  const defaultRelay = getRelayUrlServer();
+  const supabase = createServiceRoleClient();
+  const vaultId = await getVaultIdForIdentity(supabase, identityId);
+  const { data, error } = await supabase
+    .from("signer_sessions")
+    .select("nip46_relay_urls")
+    .eq("vault_id", vaultId)
+    .gt("expires_at", new Date().toISOString());
+
+  if (error) {
+    throw new Error(`getActiveNip46RelayUrlsForIdentity: ${error.message}`);
+  }
+
+  const extras = new Set<string>();
+  for (const row of data ?? []) {
+    const arr = row.nip46_relay_urls as string[] | null;
+    if (!Array.isArray(arr)) continue;
+    for (const u of arr) {
+      if (typeof u === "string" && u.trim().length) {
+        extras.add(u.trim());
+      }
+    }
+  }
+
+  const out: string[] = [defaultRelay];
+  for (const u of extras) {
+    if (!out.includes(u)) out.push(u);
+  }
+  return out;
+}
+
 function connectSecretDiagnostics(secret: string): {
   secretCharLen: number;
   trimmedCharLen: number;
   looksEmpty: boolean;
   base64urlDecodedByteLen: number;
+  utf8ShortSecret: boolean;
 } {
   const trimmed = secret.trim();
   const buf = Buffer.from(trimmed, "base64url");
@@ -139,6 +250,7 @@ function connectSecretDiagnostics(secret: string): {
     trimmedCharLen: trimmed.length,
     looksEmpty: trimmed.length === 0,
     base64urlDecodedByteLen: buf.length,
+    utf8ShortSecret: trimmed.length > 0 && buf.length !== 32,
   };
 }
 
@@ -161,7 +273,7 @@ export async function completeConnect(
   const diag = connectSecretDiagnostics(secret);
   let secret_hash: string;
   try {
-    secret_hash = hashSecretFromPlaintext(secret);
+    secret_hash = hashSessionSecretForLookup(secret);
   } catch {
     relayConnectLog("warn", "completeConnect: invalid secret encoding", {
       component: "app-keys",
@@ -388,7 +500,7 @@ export async function listSessions(identityId: string): Promise<Session[]> {
   const { data, error } = await supabase
     .from("signer_sessions")
     .select(
-      "id, vault_id, app_pubkey, app_name, secret_hash, used, expires_at, created_at",
+      "id, vault_id, app_pubkey, app_name, nip46_relay_urls, secret_hash, used, expires_at, created_at",
     )
     .eq("vault_id", vaultId)
     .order("created_at", { ascending: false });

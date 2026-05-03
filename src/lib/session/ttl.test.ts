@@ -13,6 +13,7 @@ function session(partial: Partial<Session> & Pick<Session, "expires_at">): Sessi
     vault_id: "00000000-0000-4000-8000-000000000002",
     app_pubkey: "abc",
     app_name: null,
+    nip46_relay_urls: null,
     secret_hash: "deadbeef",
     used: false,
     created_at: "2025-01-01T00:00:00.000Z",

@@ -88,6 +88,8 @@ export default function PanelPage() {
   const [bunkerUri, setBunkerUri] = useState<string | null>(null);
   /** Human-readable label for this connection (stored as app_name; NIP-46 does not send the app name). */
   const [sessionLabel, setSessionLabel] = useState("");
+  /** Paste `nostrconnect://…` from a client (e.g. Primal Remote Signer). */
+  const [nostrConnectPaste, setNostrConnectPaste] = useState("");
   const [copied, setCopied] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -269,6 +271,49 @@ export default function PanelPage() {
       setLoading(false);
     }
   }, [sessionLabel, t, refreshSessions]);
+
+  const registerNostrConnectUri = useCallback(
+    async (id: string) => {
+      const uri = nostrConnectPaste.trim();
+      if (!uri) {
+        setError(t("step3.nostrConnectRequired"));
+        return;
+      }
+      setLoading(true);
+      setError(null);
+      const body: Record<string, unknown> = {
+        identity_id: id,
+        nostrconnect_uri: uri,
+      };
+      const label = sessionLabel.trim();
+      if (label) body.app_name = label;
+      try {
+        const res = await fetch("/api/sessions", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+          mode?: string;
+        };
+        if (!res.ok) {
+          throw new Error(data.error ?? t("errors.couldNotCreateSession"));
+        }
+        if (data.mode !== "nostrconnect") {
+          throw new Error(t("errors.couldNotCreateSession"));
+        }
+        setNostrConnectPaste("");
+        void refreshSessions(id);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : t("errors.generic"));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [nostrConnectPaste, sessionLabel, t, refreshSessions],
+  );
 
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -952,6 +997,41 @@ export default function PanelPage() {
                   />
                   <p className="mt-2 text-sm leading-[1.5] text-zinc-400">{t("step3.labelHint")}</p>
                 </div>
+                <div>
+                  <label
+                    htmlFor="nostrconnect_paste"
+                    className="bm-label text-zinc-300"
+                  >
+                    {t("step3.nostrConnectLabel")}
+                  </label>
+                  <textarea
+                    id="nostrconnect_paste"
+                    value={nostrConnectPaste}
+                    onChange={(e) => setNostrConnectPaste(e.target.value)}
+                    rows={3}
+                    autoComplete="off"
+                    spellCheck={false}
+                    placeholder={t("step3.nostrConnectPlaceholder")}
+                    className="bm-input w-full resize-y border-zinc-700 bg-zinc-900/50 font-mono text-sm text-white ring-offset-[#080808] placeholder:text-zinc-500 focus:ring-[#0066ff]"
+                  />
+                  <p className="mt-2 text-sm leading-[1.5] text-zinc-400">
+                    {t("step3.nostrConnectHint")}
+                  </p>
+                  <button
+                    type="button"
+                    disabled={loading || !identityId.trim()}
+                    onClick={() => {
+                      void registerNostrConnectUri(identityId.trim());
+                    }}
+                    className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg border border-zinc-600 px-4 text-base font-semibold text-zinc-100 transition-colors hover:bg-zinc-800 disabled:opacity-60"
+                  >
+                    {loading ? (
+                      <Loader2 className="size-4 animate-spin" aria-hidden />
+                    ) : null}
+                    {t("step3.nostrConnectSubmit")}
+                  </button>
+                </div>
+                <p className="text-center text-sm text-zinc-500">{t("step3.orDivider")}</p>
                 <button
                   type="button"
                   disabled={loading || !identityId.trim()}

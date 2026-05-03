@@ -63,7 +63,7 @@ describe("runNip46Method", () => {
       { id: "2", method: "connect", params: [bunkerPk, secret] },
       deps,
     );
-    expect(out.result).toBe("ack");
+    expect(out.result).toBe(secret);
     expect(completeConnect).toHaveBeenCalledWith("b".repeat(64), secret, {
       rpcId: "2",
     });
@@ -87,7 +87,7 @@ describe("runNip46Method", () => {
       },
       deps,
     );
-    expect(out.result).toBe("ack");
+    expect(out.result).toBe("sec");
     expect(completeConnect).toHaveBeenCalledWith("b".repeat(64), "sec", {
       rpcId: "2b",
     });

@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **NIP-46 `nostrconnect://` (client-initiated):** `POST /api/sessions` accepts `nostrconnect_uri`; parser validates relay + secret + client pubkey; `signer_sessions.nip46_relay_urls` (migration `00002_signer_sessions_nip46_relays.sql`); bunker listens on env relay **plus** each URL from open sessions; panel textarea to register a pasted URI.
+- **Daemon:** `POST /internal/refresh-nip46-relays` (Bearer) re-subscribes after new client relays without a full unlock when the bunker is already running.
+
+### Changed
+
+- **`connect` RPC result:** returns the plaintext `secret` when non-empty (NIP-46 client-initiated validation); empty secret still yields `ack`.
+- **Session secret hashing:** short UTF-8 secrets (URI style) hash as SHA-256 of UTF-8; existing 32-byte base64url bunker secrets unchanged.
+
 ## [0.4.21] - 2026-05-03
 
 ### Changed

@@ -10,10 +10,10 @@ import * as nip44 from "nostr-tools/nip44";
 import { Relay } from "nostr-tools/relay";
 import { NostrConnect } from "nostr-tools/kinds";
 
-import { getRelayUrlServer } from "@/lib/relay/env";
 import {
   assertAppMayUseSigner,
   completeConnect,
+  getActiveNip46RelayUrlsForIdentity,
 } from "@/lib/session/app-keys";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
@@ -48,15 +48,16 @@ function decodeNsec(nsec: string): Uint8Array {
   return new Uint8Array(d.data);
 }
 
-function requireRelayUrl(): string {
-  return getRelayUrlServer();
-}
+type RelaySubscription = {
+  relay: Relay;
+  sub: { close: (reason?: string) => void };
+  relayUrl: string;
+};
 
 type BunkerRuntime = {
   secretKey: Uint8Array;
   bunkerPubkeyHex: string;
-  relay: Relay;
-  sub: { close: (reason?: string) => void };
+  relaySubs: RelaySubscription[];
   ttlTimer: ReturnType<typeof setTimeout>;
 };
 
@@ -78,20 +79,47 @@ function clearSecretKeyBytes(sk: Uint8Array): void {
   sk.fill(0);
 }
 
+/**
+ * Re-subscribe on all relays needed for open sessions (e.g. after registering `nostrconnect://`).
+ * No-op if this process has no active bunker for the identity.
+ */
+export async function restartBunkerSubscriptions(
+  identityId: string,
+): Promise<void> {
+  const rt = active.get(identityId);
+  if (!rt) return;
+
+  const skCopy = new Uint8Array(rt.secretKey);
+  let nsec = "";
+  try {
+    nsec = nip19.nsecEncode(skCopy);
+  } finally {
+    skCopy.fill(0);
+  }
+  try {
+    await stopBunker(identityId);
+    await startBunker(identityId, nsec);
+  } finally {
+    nsec = "";
+  }
+}
+
 export async function stopBunker(identityId: string): Promise<void> {
   const rt = active.get(identityId);
   if (!rt) return;
 
   clearTimeout(rt.ttlTimer);
-  try {
-    rt.sub.close();
-  } catch {
-    /* ignore */
-  }
-  try {
-    rt.relay.close();
-  } catch {
-    /* ignore */
+  for (const { sub, relay } of rt.relaySubs) {
+    try {
+      sub.close();
+    } catch {
+      /* ignore */
+    }
+    try {
+      relay.close();
+    } catch {
+      /* ignore */
+    }
   }
   clearSecretKeyBytes(rt.secretKey);
   active.delete(identityId);
@@ -134,13 +162,12 @@ export async function startBunker(
     await stopBunker(identityId);
   }
 
-  const relayUrl = requireRelayUrl();
   const secretKey = decodeNsec(nsec);
   const bunkerPubkeyHex = getPublicKey(secretKey);
 
   await verifyVaultMatchesNsec(identityId, secretKey);
 
-  const relay = await Relay.connect(relayUrl, { enableReconnect: true });
+  const relayUrls = await getActiveNip46RelayUrlsForIdentity(identityId);
 
   const filters = [
     {
@@ -149,8 +176,8 @@ export async function startBunker(
     },
   ];
 
-  const sub = relay.subscribe(filters, {
-    onevent: async (event: Event) => {
+  const attachOnevent = (relay: Relay, relayUrl: string) =>
+    async function onevent(event: Event) {
       if (event.kind !== NostrConnect) return;
       try {
         const convKey = nip44.getConversationKey(secretKey, event.pubkey);
@@ -160,6 +187,7 @@ export async function startBunker(
         } catch (e) {
           log("warn", "NIP-44 decrypt failed (ignored)", {
             identityId,
+            relayUrl,
             from: event.pubkey.slice(0, 12),
             err: e instanceof Error ? e.message : String(e),
           });
@@ -180,6 +208,7 @@ export async function startBunker(
 
         const inboundLog = {
           identityId,
+          relayUrl,
           method: req.method,
           rpcId: req.id,
           clientPk,
@@ -205,6 +234,7 @@ export async function startBunker(
           if (res.error) {
             log("warn", "NIP-46 connect RPC error response", {
               identityId,
+              relayUrl,
               rpcId: res.id,
               clientPk,
               errorPreview: res.error.slice(0, 160),
@@ -212,6 +242,7 @@ export async function startBunker(
           } else {
             log("info", "NIP-46 connect RPC ok", {
               identityId,
+              relayUrl,
               rpcId: res.id,
               clientPk,
               resultPreview: (res.result ?? "").slice(0, 24),
@@ -232,14 +263,23 @@ export async function startBunker(
       } catch (e) {
         log("error", "onevent handler failed", {
           identityId,
+          relayUrl,
           err: e instanceof Error ? e.message : String(e),
         });
       }
-    },
-    onclose: (reason) => {
-      log("debug", "subscription closed", { identityId, reason });
-    },
-  });
+    };
+
+  const relaySubs: RelaySubscription[] = [];
+  for (const relayUrl of relayUrls) {
+    const relay = await Relay.connect(relayUrl, { enableReconnect: true });
+    const sub = relay.subscribe(filters, {
+      onevent: attachOnevent(relay, relayUrl),
+      onclose: (reason) => {
+        log("debug", "subscription closed", { identityId, relayUrl, reason });
+      },
+    });
+    relaySubs.push({ relay, sub, relayUrl });
+  }
 
   const ttlTimer = setTimeout(() => {
     log("info", "RAM TTL expired; clearing nsec", { identityId });
@@ -249,14 +289,13 @@ export async function startBunker(
   active.set(identityId, {
     secretKey,
     bunkerPubkeyHex,
-    relay,
-    sub,
+    relaySubs,
     ttlTimer,
   });
 
   log("info", "bunker started", {
     identityId,
-    relay: relayUrl,
+    relays: relayUrls,
     bunkerPk: bunkerPubkeyHex.slice(0, 12),
   });
 }
