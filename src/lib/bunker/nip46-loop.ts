@@ -412,6 +412,9 @@ async function publishResponse(
       responseEventIdPrefix: ev.id.slice(0, 16),
       relay: relayUrl,
       ok: !res.error,
+      ...(res.error
+        ? { rpcErrorPreview: res.error.slice(0, 220) }
+        : {}),
       encryptedOutCharLen: content.length,
     });
   } catch (e) {

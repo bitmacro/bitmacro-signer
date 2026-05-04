@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **NIP-46:** quando uma resposta RPC contém **`error`** (ex.: `sign_event` antes de `connect`), o log Loki inclui **`rpcErrorPreview`** (truncado) para diagnóstico no Grafana.
+
 ## [0.5.8] - 2026-05-04
 
 ### Added
