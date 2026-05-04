@@ -32,6 +32,13 @@ function log(
   relayConnectLog(level, message, { component: "nip46-loop", ...context });
 }
 
+/** nostr-tools `AbstractRelay` rejects with plain strings in some paths (e.g. `connection failed`). */
+function thrownReason(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  if (typeof e === "string") return e;
+  return String(e);
+}
+
 function defaultRamTtlMs(): number {
   const raw = process.env.BUNKER_SESSION_RAM_TTL_MS;
   if (raw && /^\d+$/.test(raw.trim())) {
@@ -271,7 +278,15 @@ export async function startBunker(
 
   const relaySubs: RelaySubscription[] = [];
   for (const relayUrl of relayUrls) {
-    const relay = await Relay.connect(relayUrl, { enableReconnect: true });
+    let relay: Relay;
+    try {
+      relay = await Relay.connect(relayUrl, { enableReconnect: true });
+    } catch (e) {
+      const detail = thrownReason(e);
+      throw new Error(
+        `nip46-loop: relay connect failed (${relayUrl}): ${detail}`,
+      );
+    }
     const sub = relay.subscribe(filters, {
       onevent: attachOnevent(relay, relayUrl),
       onclose: (reason) => {

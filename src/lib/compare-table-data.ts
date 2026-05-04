@@ -207,7 +207,7 @@ export const COMPARISON_ROW_DEFS: CompareRowDef[] = [
     featureId: "nostrConnect",
     amber: { kind: "yes" },
     alby: { kind: "yes" },
-    signer: { kind: "yesPhase2" },
+    signer: { kind: "yes" },
   },
   {
     type: "row",

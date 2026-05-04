@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-05-04
+
+### Fixed
+
+- **Daemon `/internal/unlock`:** quando `Relay.connect()` falha, o nostr-tools rejeita por vezes com **string** (ex.: `"connection timed out"` / `"connection failed"`), não um `Error` — os logs diziam apenas `startBunker failed`. Agora a mensagem inclui **URL do relay** e o motivo real; útil quando o daemon não tem rota até `RELAY_URL` (VPN, nome do host Docker, firewall).
+
+### Changed
+
+- **`nip46-loop`:** envolve cada `Relay.connect` e propaga erro com contexto **`(relay URL): …`** para diagnóstico em produção.
+- **Landing (tabela de comparação):** linha **nostrconnect://** — mesmo selo ✅ que outros itens já disponíveis; removido o pill **“Coming soon / Em breve”** ligado ao `yesPhase2` (funcional desde **v0.5.0**).
+
 ## [0.5.0] - 2026-05-04
 
 ### Added
@@ -230,6 +241,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.5.1]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.21...v0.5.0
 [0.4.21]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.20...v0.4.21
 [0.4.20]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.19...v0.4.20

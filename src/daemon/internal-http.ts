@@ -165,7 +165,14 @@ export function startInternalHttpServer(opts: {
         try {
           await startBunker(identityId, nsecMaterial);
         } catch (e) {
-          const msg = e instanceof Error ? e.message : "startBunker failed";
+          const msg =
+            e instanceof Error
+              ? e.message
+              : typeof e === "string"
+                ? e
+                : e != null && typeof e === "object" && "message" in e
+                  ? String((e as { message: unknown }).message)
+                  : `startBunker failed (${String(e)})`;
           log("error", "internal unlock startBunker failed", {
             identityId,
             err: msg,
