@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **NIP-46:** quando uma resposta RPC contém **`error`** (ex.: `sign_event` antes de `connect`), o log Loki inclui **`rpcErrorPreview`** (truncado) para diagnóstico no Grafana.
+- **NIP-46 (`startBunker`):** falha de **`Relay.connect`** num URL (ex.: `wss://relay.bitmacro.cloud` inatingível a partir do contentor) **não** aborta o unlock — tenta os outros relays; erro só se **nenhum** ligar. **Warn** em Loki com `attempted` vs `connected` quando há URLs que falham.
 
 ## [0.5.8] - 2026-05-04
 

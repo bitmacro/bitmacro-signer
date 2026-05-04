@@ -330,15 +330,20 @@ export async function startBunker(
     };
 
   const relaySubs: RelaySubscription[] = [];
+  const connectFailures: { relayUrl: string; detail: string }[] = [];
   for (const relayUrl of relayUrls) {
     let relay: Relay;
     try {
       relay = await Relay.connect(relayUrl, { enableReconnect: true });
     } catch (e) {
       const detail = thrownReason(e);
-      throw new Error(
-        `nip46-loop: relay connect failed (${relayUrl}): ${detail}`,
-      );
+      connectFailures.push({ relayUrl, detail });
+      log("warn", "NIP-46 relay WebSocket connect failed (trying next URL)", {
+        identityId,
+        relayUrl,
+        err: detail,
+      });
+      continue;
     }
     const sub = relay.subscribe(filters, {
       onevent: attachOnevent(relay, relayUrl),
@@ -361,6 +366,24 @@ export async function startBunker(
     });
   }
 
+  if (relaySubs.length === 0) {
+    const summary = connectFailures
+      .map((f) => `${f.relayUrl}: ${f.detail}`)
+      .join("; ");
+    throw new Error(
+      `nip46-loop: no relay connected (tried ${relayUrls.length}): ${summary}`,
+    );
+  }
+
+  if (connectFailures.length > 0) {
+    log("warn", "NIP-46 bunker uses subset of configured relays (some URLs unreachable)", {
+      identityId,
+      attempted: relayUrls,
+      connected: relaySubs.map((s) => s.relayUrl),
+      failedCount: connectFailures.length,
+    });
+  }
+
   const ttlTimer = setTimeout(() => {
     log("info", "RAM TTL expired; clearing nsec", { identityId });
     void stopBunker(identityId);
@@ -375,7 +398,8 @@ export async function startBunker(
 
   log("info", "bunker started", {
     identityId,
-    relays: relayUrls,
+    relays: relaySubs.map((s) => s.relayUrl),
+    attemptedRelayCount: relayUrls.length,
     bunkerPk: bunkerPubkeyHex.slice(0, 12),
   });
 }
