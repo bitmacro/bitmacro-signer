@@ -66,6 +66,8 @@ export type Session = {
   vault_id: string;
   app_pubkey: string;
   app_name: string | null;
+  /** When set, extra NIP-46 relays from nostrconnect:// (daemon subscribes in addition to env relay). */
+  nip46_relay_urls: string[] | null;
   secret_hash: string;
   used: boolean;
   expires_at: string;

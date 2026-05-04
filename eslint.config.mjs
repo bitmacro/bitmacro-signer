@@ -4,7 +4,7 @@ import nextTypescript from "eslint-config-next/typescript";
 
 export default defineConfig([
   {
-    ignores: ["dist/**", ".next/**"],
+    ignores: ["coverage/**", "dist/**", ".next/**"],
   },
   ...nextCoreWebVitals,
   ...nextTypescript,

@@ -24,6 +24,30 @@ async function fetchWithAuth(
   }
 }
 
+/** Ask the daemon to re-run `startBunker` subscriptions (e.g. after `nostrconnect://` relays change). No-op if that identity is not running. */
+export async function notifyDaemonRefreshNip46Relays(
+  cfg: DaemonInternalConfig,
+  identityId: string,
+): Promise<{ ok: true } | { ok: false; status: number; message: string }> {
+  const res = await fetchWithAuth(cfg, "/internal/refresh-nip46-relays", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ identity_id: identityId }),
+  });
+  if (res.ok) {
+    return { ok: true };
+  }
+  let message = res.statusText;
+  try {
+    const j = (await res.json()) as { error?: string };
+    if (j.error) message = j.error;
+  } catch {
+    const t = await res.text();
+    if (t) message = t.slice(0, 200);
+  }
+  return { ok: false, status: res.status, message };
+}
+
 /**
  * Sends nsec to the daemon (internal network). The caller should clear the string after success/failure.
  */

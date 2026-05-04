@@ -1,12 +1,22 @@
 import { NextResponse } from "next/server";
 
 import { getSessionCookie } from "@/lib/auth/session-cookie";
+import {
+  getDaemonInternalConfig,
+  notifyDaemonRefreshNip46Relays,
+} from "@/lib/daemon-internal";
 import { apiGET, apiPOST } from "@/lib/observability/api-route-wrapper";
-import { sessionCreateBodySchema } from "@/lib/schemas/session";
+import { sessionCreateBodySchema, sessionIdentityIdQuerySchema } from "@/lib/schemas/session";
+import {
+  isRunning,
+  restartBunkerSubscriptions,
+} from "@/lib/bunker";
 import {
   authorizeApp,
+  authorizeAppFromNostrConnect,
   listSessions,
 } from "@/lib/session/app-keys";
+import { parseNostrConnectUri } from "@/lib/session/nostr-connect-uri";
 import { getRelayUrlServer } from "@/lib/relay/env";
 import { buildBunkerUri } from "@/lib/session/ttl";
 import type { Session } from "@/lib/session/ttl";
@@ -31,10 +41,32 @@ function toPublicSession(s: Session): SessionListItem {
     vault_id: s.vault_id,
     app_pubkey: s.app_pubkey,
     app_name: s.app_name,
+    nip46_relay_urls: s.nip46_relay_urls,
     used: s.used,
     expires_at: s.expires_at,
     created_at: s.created_at,
   };
+}
+
+async function refreshBunkerNip46Relays(identityId: string): Promise<void> {
+  try {
+    let daemonCfg: ReturnType<typeof getDaemonInternalConfig>;
+    try {
+      daemonCfg = getDaemonInternalConfig();
+    } catch {
+      return;
+    }
+    if (daemonCfg) {
+      const out = await notifyDaemonRefreshNip46Relays(daemonCfg, identityId);
+      if (!out.ok) {
+        console.warn("[POST /api/sessions] daemon refresh-nip46-relays:", out.message);
+      }
+    } else if (isRunning(identityId)) {
+      await restartBunkerSubscriptions(identityId);
+    }
+  } catch (e) {
+    console.warn("[POST /api/sessions] refreshBunkerNip46Relays:", e);
+  }
 }
 
 /**
@@ -74,18 +106,9 @@ async function handlePost(request: Request) {
     return jsonError("Forbidden", 403);
   }
 
-  const { identity_id, app_name, ttl_hours } = parsed.data;
-  const appPubkeyRaw = parsed.data.app_pubkey?.trim() ?? "";
-
-  let relayUrl: string;
-  try {
-    relayUrl = getRelayUrlServer();
-  } catch {
-    return jsonError(
-      "Server misconfigured: RELAY_URL or NEXT_PUBLIC_RELAY_URL is not set",
-      503,
-    );
-  }
+  const { identity_id, app_name, ttl_hours: ttlHoursRaw } = parsed.data;
+  const ttl_hours = ttlHoursRaw ?? 24;
+  const ncUri = parsed.data.nostrconnect_uri;
 
   const { data: vault, error: vaultError } = await supabase
     .from("signer_vaults")
@@ -98,6 +121,54 @@ async function handlePost(request: Request) {
   }
   if (!vault?.bunker_pubkey) {
     return jsonError("Vault not found for this identity", 404);
+  }
+
+  if (ncUri) {
+    let parsedNc: ReturnType<typeof parseNostrConnectUri>;
+    try {
+      parsedNc = parseNostrConnectUri(ncUri);
+    } catch (e) {
+      return jsonError(
+        e instanceof Error ? e.message : "Invalid nostrconnect URI",
+        400,
+      );
+    }
+
+    try {
+      const out = await authorizeAppFromNostrConnect(
+        identity_id,
+        parsedNc,
+        app_name,
+        ttl_hours,
+      );
+      await refreshBunkerNip46Relays(identity_id);
+      return NextResponse.json({
+        session_id: out.sessionId,
+        mode: "nostrconnect" as const,
+        relays: parsedNc.relayUrls,
+        app_name: parsedNc.appName ?? app_name ?? null,
+      });
+    } catch (e: unknown) {
+      if (isPgError(e) && e.pgCode === "23505") {
+        return jsonError(
+          "Session already exists for this app_pubkey (unexpected conflict)",
+          409,
+        );
+      }
+      throw e;
+    }
+  }
+
+  const appPubkeyRaw = parsed.data.app_pubkey?.trim() ?? "";
+
+  let relayUrl: string;
+  try {
+    relayUrl = getRelayUrlServer();
+  } catch {
+    return jsonError(
+      "Server misconfigured: RELAY_URL or NEXT_PUBLIC_RELAY_URL is not set",
+      503,
+    );
   }
 
   let sessionId: string;
@@ -157,7 +228,7 @@ async function handleGet(request: Request) {
     return jsonError("Query parameter identity_id is required", 400);
   }
 
-  const idResult = sessionCreateBodySchema.shape.identity_id.safeParse(rawId);
+  const idResult = sessionIdentityIdQuerySchema.safeParse(rawId);
   if (!idResult.success) {
     return jsonError("Invalid identity_id", 400);
   }

@@ -6,7 +6,12 @@
 import http from "node:http";
 import { URL } from "node:url";
 
-import { isRunning, startBunker, stopBunker } from "@/lib/bunker";
+import {
+  isRunning,
+  restartBunkerSubscriptions,
+  startBunker,
+  stopBunker,
+} from "@/lib/bunker";
 
 function json(
   res: http.ServerResponse,
@@ -99,6 +104,41 @@ export function startInternalHttpServer(opts: {
         await stopBunker(identityId).catch(() => {});
         log("info", "internal lock", { identityId });
         json(res, 200, { ok: true });
+        return;
+      }
+
+      if (req.method === "POST" && url.pathname === "/internal/refresh-nip46-relays") {
+        const raw = await readBody(req);
+        let body: { identity_id?: string };
+        try {
+          body = JSON.parse(raw) as { identity_id?: string };
+        } catch {
+          json(res, 400, { error: "Invalid JSON" });
+          return;
+        }
+        const identityId = body.identity_id?.trim() ?? "";
+        if (!identityId || !isUuid(identityId)) {
+          json(res, 400, { error: "identity_id required (uuid)" });
+          return;
+        }
+        if (!isRunning(identityId)) {
+          json(res, 200, { ok: true, restarted: false });
+          return;
+        }
+        try {
+          await restartBunkerSubscriptions(identityId);
+        } catch (e) {
+          const msg =
+            e instanceof Error ? e.message : "restartBunkerSubscriptions failed";
+          log("error", "internal refresh-nip46-relays", {
+            identityId,
+            err: msg,
+          });
+          json(res, 502, { error: msg });
+          return;
+        }
+        log("info", "internal refresh-nip46-relays", { identityId });
+        json(res, 200, { ok: true, restarted: true });
         return;
       }
 

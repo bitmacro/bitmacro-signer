@@ -85,9 +85,10 @@ export async function runNip46Method(
           throw new Error("connect: bunker pubkey mismatch");
         }
         await deps.completeConnect(appPubkey, secret, { rpcId: id });
-        // NIP-46: result should be "ack" (or empty). Welshman/Coracle only treat
-        // `result === "ack"` or `result === connectSecret` as success — not remote-signer hex.
-        return { id, result: "ack" };
+        // NIP-46 (client-initiated): client MUST validate `result` equals the URI `secret`.
+        // Welshman/Coracle also accept `ack` for bunker-initiated flows; echoing `secret`
+        // satisfies both when the client sent a non-empty secret.
+        return { id, result: secret.length > 0 ? secret : "ack" };
       }
       case "get_public_key": {
         await deps.assertAppMayUseSigner(appPubkey);

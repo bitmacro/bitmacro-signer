@@ -36,7 +36,8 @@
     "ingest:signer": "tsx scripts/ingest-signer-corpus.ts",
     "ingest:signer:replace": "tsx scripts/ingest-signer-corpus.ts --replace",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@bitmacro/relay-connect": "^0.1.1",
@@ -64,6 +65,7 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^3.2.4",
     "dotenv": "^16.4.7",
     "esbuild": "^0.25.0",
     "eslint": "^9",

@@ -4,6 +4,7 @@
 
 export {
   isRunning,
+  restartBunkerSubscriptions,
   startBunker,
   stopAllBunkers,
   stopBunker,
