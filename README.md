@@ -88,6 +88,22 @@ docker pull ghcr.io/bitmacro/bitmacro-signer-daemon:latest
 docker run --env-file .env ghcr.io/bitmacro/bitmacro-signer-daemon:latest
 ```
 
+### Observability (Grafana / Loki)
+
+Both **signer-web** and **signer-daemon** can push JSON log lines to **Loki** over HTTP when **`LOKI_HOST`**, **`LOKI_USER`**, and **`LOKI_PASSWORD`** are set (see [`.env.example`](.env.example)).
+
+- **Web** uses the default `BITMACRO_LOG_SERVICE` / `bitmacro-signer` label and may add `{subsystem="signer-web-api"}` on route-level events (e.g. successful **nostrconnect** session registration).
+- **Daemon** sets **`BITMACRO_LOG_DAEMON_SERVICE`** (default **`bitmacro-signer-daemon`**) and stream labels **`subsystem=signer-daemon`**, **`source=relay-connect-sink`** for every relay-connect / NIP-46 related line; context is **sanitized** (no `content` / token-like fields, long strings truncated).
+
+Example **LogQL** in Grafana Explore:
+
+```logql
+{service_name="bitmacro-signer-daemon"} |= `relay-connect`
+{service_name="bitmacro-signer"} | json | event="nostrconnect_registered"
+```
+
+**`RELAY_CONNECT_LOG_MIN_LEVEL`** on the daemon defaults to **`debug`** for maximum NIP-46 visibility; set **`info`** if the volume is too high.
+
 ## Development
 
 ```bash

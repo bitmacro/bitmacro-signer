@@ -22,9 +22,15 @@ function basicAuthHeader(user: string, pass: string): string {
   return `Basic ${btoa(pair)}`
 }
 
+export type PushLokiOptions = {
+  /** Merged into Loki stream labels (`subsystem`, `deployment`, …). */
+  streamLabels?: Record<string, string>
+}
+
 export async function pushLokiStructured(
   level: 'info' | 'warn' | 'error' | 'debug',
-  input: StructuredLogInput
+  input: StructuredLogInput,
+  options?: PushLokiOptions,
 ): Promise<void> {
   const base = process.env.LOKI_HOST?.replace(/\/$/, '')
   const user = process.env.LOKI_USER
@@ -36,10 +42,19 @@ export async function pushLokiStructured(
   const line = JSON.stringify({ level, msg: message, service, ...rest })
   const tsNs = String(BigInt(Date.now()) * BigInt(1_000_000))
 
+  const stream: Record<string, string> = { service, service_name: service }
+  if (options?.streamLabels) {
+    for (const [k, v] of Object.entries(options.streamLabels)) {
+      const ks = k.trim()
+      const vs = String(v).trim()
+      if (ks && vs) stream[ks] = vs
+    }
+  }
+
   const body = {
     streams: [
       {
-        stream: { service, service_name: service },
+        stream,
         values: [[tsNs, line]],
       },
     ],

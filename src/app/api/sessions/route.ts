@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
 
 import { getSessionCookie } from "@/lib/auth/session-cookie";
 import {
@@ -6,6 +7,7 @@ import {
   notifyDaemonRefreshNip46Relays,
 } from "@/lib/daemon-internal";
 import { apiGET, apiPOST } from "@/lib/observability/api-route-wrapper";
+import { pushLokiStructured } from "@/lib/observability/loki-http-push";
 import { sessionCreateBodySchema, sessionIdentityIdQuerySchema } from "@/lib/schemas/session";
 import {
   isRunning,
@@ -142,6 +144,24 @@ async function handlePost(request: Request) {
         ttl_hours,
       );
       await refreshBunkerNip46Relays(identity_id);
+      void pushLokiStructured(
+        "info",
+        {
+          component: "sessions-api",
+          event: "nostrconnect_registered",
+          journey_id: identity_id.slice(0, 8),
+          request_id: randomUUID(),
+          message: "POST /api/sessions: nostrconnect URI registered",
+          identityIdShort: identity_id.slice(0, 8),
+          relayCount: parsedNc.relayUrls.length,
+          relaysListed: parsedNc.relayUrls,
+          clientPkHexPrefix: parsedNc.clientPubkeyHex.slice(0, 16),
+          appNameReturned: parsedNc.appName ?? app_name ?? null,
+        },
+        { streamLabels: { subsystem: "signer-web-api" } },
+      ).catch(() => {
+        /* Loki optional */
+      });
       return NextResponse.json({
         session_id: out.sessionId,
         mode: "nostrconnect" as const,

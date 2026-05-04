@@ -5,8 +5,12 @@
 
 import type http from "node:http";
 
-import { setRelayConnectLogSink } from "@bitmacro/relay-connect";
+import {
+  type RelayConnectLogLevel,
+  setRelayConnectLogSink,
+} from "@bitmacro/relay-connect";
 
+import { enqueueDaemonRelayConnectLoki } from "@/daemon/loki-forward";
 import { stopAllBunkers } from "@/lib/bunker";
 import { getRelayUrlServer } from "@/lib/relay/env";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
@@ -26,6 +30,13 @@ function log(
   } else {
     console.log(line);
   }
+}
+
+function relayConnectMinLevel(): RelayConnectLogLevel {
+  const v = process.env.RELAY_CONNECT_LOG_MIN_LEVEL?.trim().toLowerCase();
+  if (v === "debug" || v === "info" || v === "warn" || v === "error") return v;
+  /* Default noisy for bunker/NIP-46 troubleshooting; tighten with RELAY_CONNECT_LOG_MIN_LEVEL=info */
+  return "debug";
 }
 
 function envPort(name: string, fallback: number): number {
@@ -73,8 +84,9 @@ function main(): void {
       } else {
         console.log(line);
       }
+      enqueueDaemonRelayConnectLoki(entry);
     },
-    { minLevel: "info" },
+    { minLevel: relayConnectMinLevel() },
   );
 
   const token = process.env.DAEMON_INTERNAL_TOKEN?.trim();
@@ -112,6 +124,8 @@ function main(): void {
 
   log("info", "daemon starting (cold — unlock via signer-web POST /internal/unlock)", {
     internalPort: port,
+    lokiPushRelayConnectSink: Boolean(process.env.LOKI_HOST?.trim()),
+    relayConnectLogMinLevel: relayConnectMinLevel(),
   });
 
   process.on("SIGTERM", () => {

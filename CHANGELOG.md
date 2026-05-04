@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.8] - 2026-05-04
+
+### Added
+
+- **Loki/Grafana observability:** `pushLokiStructured` accepts **`streamLabels`** (e.g. `subsystem`). **signer-daemon** forwards **every** `@bitmacro/relay-connect` sink entry to Loki when `LOKI_*` is set (**`sanitizeTelemetryContext`** strips high-risk keys and truncates long strings). **`BITMACRO_LOG_DAEMON_SERVICE`** labels daemon lines separately from signer-web (`BITMACRO_LOG_SERVICE`).
+- **POST `/api/sessions`** (nostrconnect): one structured Loki event on successful **`nostrconnect_registered`** (`relayCount`, relay URLs from URI, **`clientPkHexPrefix`**, **`identityIdShort`**) — **no secrets**.
+- **NIP-46 loop (`nip46-loop`):** extra **info** logs: relay subscription active, **`kind`** 24133 envelope **before** decrypt (sizes + pubkey/id prefixes only), subscription **close** reason length/snippet; response **publish** at **info** with encrypted payload character count.
+
+### Changed
+
+- **Daemon relay-connect logs:** **`RELAY_CONNECT_LOG_MIN_LEVEL`** defaults to **`debug`** when unset (`info`/`warn`/`error` respected). Set **`RELAY_CONNECT_LOG_MIN_LEVEL=info`** when volume is too high.
+
 ## [0.5.7] - 2026-05-05
 
 ### Changed
@@ -280,6 +292,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.5.8]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.7...v0.5.8
 [0.5.7]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.6...v0.5.7
 [0.5.6]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.5...v0.5.6
 [0.5.5]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.4...v0.5.5

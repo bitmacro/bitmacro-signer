@@ -226,6 +226,19 @@ export async function startBunker(
         });
         return;
       }
+      {
+        const pTag = event.tags.find((t) => t[0] === "p")?.[1];
+        log("info", "NIP-46 kind 24133 envelope received (before NIP-44 decrypt)", {
+          identityId,
+          relayUrl,
+          eventIdPrefix: event.id.slice(0, 16),
+          authorPrefix: event.pubkey.slice(0, 12),
+          contentCharLen: event.content.length,
+          eventCreatedAt: event.created_at,
+          pRecipientPrefix:
+            typeof pTag === "string" ? pTag.slice(0, 12) : null,
+        });
+      }
       try {
         const convKey = nip44.getConversationKey(secretKey, event.pubkey);
         let plaintext: string;
@@ -330,10 +343,22 @@ export async function startBunker(
     const sub = relay.subscribe(filters, {
       onevent: attachOnevent(relay, relayUrl),
       onclose: (reason) => {
-        log("debug", "subscription closed", { identityId, relayUrl, reason });
+        log("info", "NIP-46 relay subscription closed", {
+          identityId,
+          relayUrl,
+          closeReasonLen: typeof reason === "string" ? reason.length : 0,
+          closeReasonSnippet:
+            typeof reason === "string" ? reason.slice(0, 80) : String(reason),
+        });
       },
     });
     relaySubs.push({ relay, sub, relayUrl });
+    log("info", "NIP-46 relay WebSocket subscribed (kind #p bunker filter)", {
+      identityId,
+      relayUrl,
+      bunkerPkPrefix: bunkerPubkeyHex.slice(0, 12),
+      kindFilter: NOSTR_CONNECT_KIND,
+    });
   }
 
   const ttlTimer = setTimeout(() => {
@@ -379,14 +404,15 @@ async function publishResponse(
 
   try {
     await relay.publish(ev);
-    log("debug", "NIP-46 response published", {
+    log("info", "NIP-46 response published to relay", {
       identityId,
       method,
       rpcId,
       responseTo: appPubkey.slice(0, 12),
-      eventId: ev.id,
+      responseEventIdPrefix: ev.id.slice(0, 16),
       relay: relayUrl,
       ok: !res.error,
+      encryptedOutCharLen: content.length,
     });
   } catch (e) {
     log("error", "publish response failed", {
