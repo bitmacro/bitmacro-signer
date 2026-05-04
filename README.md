@@ -23,7 +23,7 @@
 
 ## Status
 
-**MVP in progress:** vault client-side (AES-GCM), API vault/sessions, auth cookies, onboarding, NIP-46 bunker loop in a **daemon** process, GHCR images for `signer-web` and `signer-daemon`. Product semantics (NIP-46 session keys vs profile `npub`, one-time bunker secrets, optional session labels) are documented in [bitmacro-docs `03-produtos/signer.md`](https://github.com/bitmacro/bitmacro-docs/blob/main/03-produtos/signer.md).
+**MVP in progress:** vault client-side (AES-GCM), API vault/sessions, auth cookies, onboarding, NIP-46 bunker loop (`bunker://` and **`nostrconnect://`** from **v0.5.0**) in a **daemon** process, GHCR images for `signer-web` and `signer-daemon`. Product semantics (NIP-46 session keys vs profile `npub`, one-time bunker secrets, optional session labels, client relay URLs) are documented in [bitmacro-docs `03-produtos/signer.md`](https://github.com/bitmacro/bitmacro-docs/blob/main/03-produtos/signer.md).
 
 ## Install
 

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-05-04
+
 ### Added
 
 - **NIP-46 `nostrconnect://` (client-initiated):** `POST /api/sessions` accepts `nostrconnect_uri`; parser validates relay + secret + client pubkey; `signer_sessions.nip46_relay_urls` (migration `00002_signer_sessions_nip46_relays.sql`); bunker listens on env relay **plus** each URL from open sessions; panel textarea to register a pasted URI.
@@ -17,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`connect` RPC result:** returns the plaintext `secret` when non-empty (NIP-46 client-initiated validation); empty secret still yields `ack`.
 - **Session secret hashing:** short UTF-8 secrets (URI style) hash as SHA-256 of UTF-8; existing 32-byte base64url bunker secrets unchanged.
+
+### Notes
+
+- **Supabase:** coluna **`nip46_relay_urls`** em **`signer_sessions`** — migração **`00002_signer_sessions_nip46_relays.sql`**. Executar antes (ou como parte do deploy de) web + daemon **≥ 0.5.0**.
 
 ## [0.4.21] - 2026-05-03
 
@@ -224,6 +230,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.5.0]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.21...v0.5.0
 [0.4.21]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.20...v0.4.21
 [0.4.20]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.19...v0.4.20
 [0.4.19]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.18...v0.4.19
