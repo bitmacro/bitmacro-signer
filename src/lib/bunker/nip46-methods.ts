@@ -8,6 +8,8 @@ import { finalizeEvent, getPublicKey, verifyEvent } from "nostr-tools";
 import * as nip04 from "nostr-tools/nip04";
 import * as nip44 from "nostr-tools/nip44";
 
+import { nostrPubkeyInputToHex } from "@/lib/session/ttl";
+
 /** Same as `nostr-tools/kinds` NostrConnect */
 export const NOSTR_CONNECT_KIND = 24133;
 
@@ -81,7 +83,14 @@ export async function runNip46Method(
         const claimedBunker = params[0] ?? "";
         const secret = params[1] ?? "";
         // params[2] may be requested perms (Welshman / Coracle send 3 strings).
-        if (claimedBunker.toLowerCase() !== deps.bunkerPubkeyHex.toLowerCase()) {
+        // bunker:// URIs carry hex; some web clients (e.g. Primal) send npub1… in `connect`.
+        let claimedHex: string;
+        try {
+          claimedHex = nostrPubkeyInputToHex(claimedBunker);
+        } catch {
+          throw new Error("connect: invalid bunker pubkey (params[0])");
+        }
+        if (claimedHex !== deps.bunkerPubkeyHex.toLowerCase()) {
           throw new Error("connect: bunker pubkey mismatch");
         }
         await deps.completeConnect(appPubkey, secret, { rpcId: id });

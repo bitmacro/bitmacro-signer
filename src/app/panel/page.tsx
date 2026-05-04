@@ -46,6 +46,8 @@ type SessionPreviewRow = {
   expires_at: string;
 };
 
+type ConnectFlowTab = "nostrconnect" | "bunker";
+
 function truncateMiddle(s: string, keep = 14): string {
   if (s.length <= keep * 2 + 3) return s;
   return `${s.slice(0, keep)}…${s.slice(-keep)}`;
@@ -90,6 +92,7 @@ export default function PanelPage() {
   const [sessionLabel, setSessionLabel] = useState("");
   /** Paste `nostrconnect://…` from a client (e.g. Primal Remote Signer). */
   const [nostrConnectPaste, setNostrConnectPaste] = useState("");
+  const [connectTab, setConnectTab] = useState<ConnectFlowTab>("bunker");
   const [copied, setCopied] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -536,6 +539,7 @@ export default function PanelPage() {
       setBackupVaultPayload(null);
       setBunkerUri(null);
       setSessionLabel("");
+      setConnectTab("bunker");
       setSessionNpub("");
       setPhase(1);
       vaultNsecRef.current = null;
@@ -981,73 +985,161 @@ export default function PanelPage() {
 
             {!bunkerUri ? (
               <div className="space-y-5">
-                <p className="text-base leading-[1.5] text-zinc-300">{t("step3.explain")}</p>
-                <div>
-                  <label htmlFor="session_label" className="bm-label text-zinc-300">
-                    {t("step3.labelOptional")}
-                  </label>
-                  <input
-                    id="session_label"
-                    value={sessionLabel}
-                    onChange={(e) => setSessionLabel(e.target.value)}
-                    maxLength={120}
-                    autoComplete="off"
-                    placeholder={t("step3.labelPlaceholder")}
-                    className="bm-input border-zinc-700 bg-zinc-900/50 text-white ring-offset-[#080808] placeholder:text-zinc-500 focus:ring-[#0066ff]"
-                  />
-                  <p className="mt-2 text-sm leading-[1.5] text-zinc-400">{t("step3.labelHint")}</p>
-                </div>
-                <div>
-                  <label
-                    htmlFor="nostrconnect_paste"
-                    className="bm-label text-zinc-300"
-                  >
-                    {t("step3.nostrConnectLabel")}
-                  </label>
-                  <textarea
-                    id="nostrconnect_paste"
-                    value={nostrConnectPaste}
-                    onChange={(e) => setNostrConnectPaste(e.target.value)}
-                    rows={3}
-                    autoComplete="off"
-                    spellCheck={false}
-                    placeholder={t("step3.nostrConnectPlaceholder")}
-                    className="bm-input w-full resize-y border-zinc-700 bg-zinc-900/50 font-mono text-sm text-white ring-offset-[#080808] placeholder:text-zinc-500 focus:ring-[#0066ff]"
-                  />
-                  <p className="mt-2 text-sm leading-[1.5] text-zinc-400">
-                    {t("step3.nostrConnectHint")}
-                  </p>
+                <div
+                  role="tablist"
+                  aria-label={t("step3.tablistAria")}
+                  className="grid grid-cols-2 gap-1 rounded-xl border border-zinc-800 bg-zinc-950/60 p-1"
+                >
                   <button
                     type="button"
-                    disabled={loading || !identityId.trim()}
+                    role="tab"
+                    id="connect-tab-bunker"
+                    aria-selected={connectTab === "bunker"}
+                    tabIndex={connectTab === "bunker" ? 0 : -1}
+                    aria-controls="connect-panel-bunker"
                     onClick={() => {
-                      void registerNostrConnectUri(identityId.trim());
+                      setError(null);
+                      setConnectTab("bunker");
                     }}
-                    className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg border border-zinc-600 px-4 text-base font-semibold text-zinc-100 transition-colors hover:bg-zinc-800 disabled:opacity-60"
+                    className={`rounded-lg py-3 text-sm font-semibold transition-colors ${
+                      connectTab === "bunker"
+                        ? "bg-zinc-800 text-white shadow-sm ring-1 ring-zinc-700/80"
+                        : "text-zinc-400 hover:text-zinc-200"
+                    }`}
                   >
-                    {loading ? (
-                      <Loader2 className="size-4 animate-spin" aria-hidden />
-                    ) : null}
-                    {t("step3.nostrConnectSubmit")}
+                    {t("step3.tabBunker")}
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    id="connect-tab-nostrconnect"
+                    aria-selected={connectTab === "nostrconnect"}
+                    tabIndex={connectTab === "nostrconnect" ? 0 : -1}
+                    aria-controls="connect-panel-nostrconnect"
+                    onClick={() => {
+                      setError(null);
+                      setConnectTab("nostrconnect");
+                    }}
+                    className={`rounded-lg py-3 text-sm font-semibold transition-colors ${
+                      connectTab === "nostrconnect"
+                        ? "bg-zinc-800 text-white shadow-sm ring-1 ring-zinc-700/80"
+                        : "text-zinc-400 hover:text-zinc-200"
+                    }`}
+                  >
+                    {t("step3.tabNostrConnect")}
                   </button>
                 </div>
-                <p className="text-center text-sm text-zinc-500">{t("step3.orDivider")}</p>
-                <button
-                  type="button"
-                  disabled={loading || !identityId.trim()}
-                  onClick={() => {
-                    void createSessionAndQr(identityId.trim());
-                  }}
-                  className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-lg px-4 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-                  style={{ backgroundColor: ACCENT }}
-                >
-                  {loading ? (
-                    <Loader2 className="size-4 animate-spin" aria-hidden />
-                  ) : (
-                    <Radio className="size-4" aria-hidden />
-                  )}
-                  {t("step3.generateQr")}
-                </button>
+
+                {connectTab === "nostrconnect" ? (
+                  <div
+                    role="tabpanel"
+                    id="connect-panel-nostrconnect"
+                    aria-labelledby="connect-tab-nostrconnect"
+                    className="space-y-5"
+                  >
+                    <p className="text-base leading-[1.5] text-zinc-300">
+                      {t("step3.explainNostrConnect")}
+                    </p>
+                    <div>
+                      <label
+                        htmlFor="nostrconnect_paste"
+                        className="bm-label text-zinc-300"
+                      >
+                        {t("step3.nostrConnectLabel")}
+                      </label>
+                      <textarea
+                        id="nostrconnect_paste"
+                        value={nostrConnectPaste}
+                        onChange={(e) => setNostrConnectPaste(e.target.value)}
+                        rows={3}
+                        autoComplete="off"
+                        spellCheck={false}
+                        placeholder={t("step3.nostrConnectPlaceholder")}
+                        className="bm-input w-full resize-y border-zinc-700 bg-zinc-900/50 font-mono text-sm text-white ring-offset-[#080808] placeholder:text-zinc-500 focus:ring-[#0066ff]"
+                      />
+                      <p className="mt-2 text-sm leading-[1.5] text-zinc-400">
+                        {t("step3.nostrConnectHint")}
+                      </p>
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="session_label_nc"
+                        className="bm-label text-zinc-300"
+                      >
+                        {t("step3.labelOptional")}
+                      </label>
+                      <input
+                        id="session_label_nc"
+                        value={sessionLabel}
+                        onChange={(e) => setSessionLabel(e.target.value)}
+                        maxLength={120}
+                        autoComplete="off"
+                        placeholder={t("step3.labelPlaceholder")}
+                        className="bm-input border-zinc-700 bg-zinc-900/50 text-white ring-offset-[#080808] placeholder:text-zinc-500 focus:ring-[#0066ff]"
+                      />
+                      <p className="mt-2 text-sm leading-[1.5] text-zinc-400">
+                        {t("step3.nostrLabelHint")}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={loading || !identityId.trim()}
+                      onClick={() => {
+                        void registerNostrConnectUri(identityId.trim());
+                      }}
+                      className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-lg border border-zinc-600 px-4 text-base font-semibold text-zinc-100 transition-colors hover:bg-zinc-800 disabled:opacity-60"
+                    >
+                      {loading ? (
+                        <Loader2 className="size-4 animate-spin" aria-hidden />
+                      ) : null}
+                      {t("step3.nostrConnectSubmit")}
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    role="tabpanel"
+                    id="connect-panel-bunker"
+                    aria-labelledby="connect-tab-bunker"
+                    className="space-y-5"
+                  >
+                    <p className="text-base leading-[1.5] text-zinc-300">
+                      {t("step3.explainBunker")}
+                    </p>
+                    <div>
+                      <label htmlFor="session_label" className="bm-label text-zinc-300">
+                        {t("step3.labelOptional")}
+                      </label>
+                      <input
+                        id="session_label"
+                        value={sessionLabel}
+                        onChange={(e) => setSessionLabel(e.target.value)}
+                        maxLength={120}
+                        autoComplete="off"
+                        placeholder={t("step3.labelPlaceholder")}
+                        className="bm-input border-zinc-700 bg-zinc-900/50 text-white ring-offset-[#080808] placeholder:text-zinc-500 focus:ring-[#0066ff]"
+                      />
+                      <p className="mt-2 text-sm leading-[1.5] text-zinc-400">
+                        {t("step3.labelHint")}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={loading || !identityId.trim()}
+                      onClick={() => {
+                        void createSessionAndQr(identityId.trim());
+                      }}
+                      className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-lg px-4 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                      style={{ backgroundColor: ACCENT }}
+                    >
+                      {loading ? (
+                        <Loader2 className="size-4 animate-spin" aria-hidden />
+                      ) : (
+                        <Radio className="size-4" aria-hidden />
+                      )}
+                      {t("step3.generateQr")}
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <>

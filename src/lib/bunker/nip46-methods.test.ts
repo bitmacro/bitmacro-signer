@@ -69,6 +69,29 @@ describe("runNip46Method", () => {
     });
   });
 
+  it("connect accepts bunker pubkey as npub (Primal-style params[0])", async () => {
+    const sk = generateSecretKey();
+    const bunkerPk = getPublicKey(sk);
+    const npub = nip19.npubEncode(bunkerPk);
+    const completeConnect = vi.fn().mockResolvedValue(undefined);
+    const deps = testDeps({
+      bunkerSecretKey: sk,
+      bunkerPubkeyHex: bunkerPk,
+      completeConnect,
+    });
+    const secret = "s3cr3t";
+    const out = await runNip46Method(
+      "b".repeat(64),
+      { id: "np", method: "connect", params: [npub, secret] },
+      deps,
+    );
+    expect(out.result).toBe(secret);
+    expect(out.error).toBeUndefined();
+    expect(completeConnect).toHaveBeenCalledWith("b".repeat(64), secret, {
+      rpcId: "np",
+    });
+  });
+
   it("connect accepts Welshman-style third param (perms)", async () => {
     const sk = generateSecretKey();
     const bunkerPk = getPublicKey(sk);

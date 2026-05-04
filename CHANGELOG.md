@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-05-03
+
+### Fixed
+
+- **NIP-46 `connect`:** aceita **`npub1…`** em `params[0]` para além de hex (como no `bunker://`). Clientes como Primal («Remote Signer») podiam enviar **npub** e o Signer só comparava a **hex string** ⇒ `bunker pubkey mismatch` e sessão **pending** sem passar a **used**.
+
+### Changed
+
+- **Painel (`/panel`):** fluxos **nostrconnect://** vs **QR / bunker** em **abas** (`role="tablist"`): texto, campo principal e botão por modo; etiqueta opcional com hints distintos (`nostrLabelHint` vs `labelHint`). EN / pt-BR / ES.
+
 ## [0.5.1] - 2026-05-04
 
 ### Fixed
@@ -241,6 +251,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.5.3]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.1...v0.5.3
 [0.5.1]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.21...v0.5.0
 [0.4.21]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.20...v0.4.21
