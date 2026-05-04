@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.7] - 2026-05-05
+
+### Changed
+
+- **Painel nostrconnect:** após **Register link** com sucesso, aparece confirmação com a lista **`relay=`** devolvida pela API (a partir do URI), mais texto para validar que relays como **nrs.primal.net** estão mesmo no link e passos se continuar **pending** (logs do daemon). EN / pt-BR / ES.
+
 ## [0.5.6] - 2026-05-05
 
 ### Changed
@@ -274,6 +280,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.5.7]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.6...v0.5.7
 [0.5.6]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.5...v0.5.6
 [0.5.5]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.4...v0.5.5
 [0.5.4]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.3...v0.5.4

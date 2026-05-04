@@ -94,6 +94,10 @@ export default function PanelPage() {
   const [nostrConnectPaste, setNostrConnectPaste] = useState("");
   const [connectTab, setConnectTab] = useState<ConnectFlowTab>("nostrconnect");
   const [copied, setCopied] = useState(false);
+  /** Relays returned by POST /api/sessions after a successful nostrconnect register (from the URI only). */
+  const [nostrConnectRelayAck, setNostrConnectRelayAck] = useState<
+    string[] | null
+  >(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -284,6 +288,7 @@ export default function PanelPage() {
       }
       setLoading(true);
       setError(null);
+      setNostrConnectRelayAck(null);
       const body = {
         identity_id: id,
         nostrconnect_uri: uri,
@@ -298,6 +303,7 @@ export default function PanelPage() {
         const data = (await res.json().catch(() => ({}))) as {
           error?: string;
           mode?: string;
+          relays?: string[];
         };
         if (!res.ok) {
           throw new Error(data.error ?? t("errors.couldNotCreateSession"));
@@ -305,6 +311,11 @@ export default function PanelPage() {
         if (data.mode !== "nostrconnect") {
           throw new Error(t("errors.couldNotCreateSession"));
         }
+        setNostrConnectRelayAck(
+          Array.isArray(data.relays) && data.relays.length > 0
+            ? data.relays
+            : null,
+        );
         setNostrConnectPaste("");
         void refreshSessions(id);
       } catch (err) {
@@ -538,6 +549,7 @@ export default function PanelPage() {
       setBunkerUri(null);
       setSessionLabel("");
       setConnectTab("nostrconnect");
+      setNostrConnectRelayAck(null);
       setSessionNpub("");
       setPhase(1);
       vaultNsecRef.current = null;
@@ -1063,7 +1075,10 @@ export default function PanelPage() {
                       <textarea
                         id="nostrconnect_paste"
                         value={nostrConnectPaste}
-                        onChange={(e) => setNostrConnectPaste(e.target.value)}
+                        onChange={(e) => {
+                          setNostrConnectRelayAck(null);
+                          setNostrConnectPaste(e.target.value);
+                        }}
                         rows={3}
                         autoComplete="off"
                         spellCheck={false}
@@ -1090,6 +1105,27 @@ export default function PanelPage() {
                       )}
                       {t("step3.nostrConnectSubmit")}
                     </button>
+                    {nostrConnectRelayAck && nostrConnectRelayAck.length > 0 ? (
+                      <div
+                        className="rounded-lg border border-emerald-900/50 bg-emerald-950/30 px-3 py-3 text-sm leading-[1.5] text-emerald-50/95"
+                        role="status"
+                      >
+                        <p className="font-semibold text-emerald-100">
+                          {t("step3.registerRelayAckTitle")}
+                        </p>
+                        <p className="mt-1 text-emerald-100/90">
+                          {t("step3.registerRelayAckIntro")}
+                        </p>
+                        <ul className="mt-2 space-y-1 font-mono text-xs leading-normal text-emerald-200/95 break-all">
+                          {nostrConnectRelayAck.map((u) => (
+                            <li key={u}>{u}</li>
+                          ))}
+                        </ul>
+                        <p className="mt-3 text-emerald-100/85">
+                          {t("step3.registerRelayAckFooter")}
+                        </p>
+                      </div>
+                    ) : null}
                   </div>
                 ) : (
                   <div
