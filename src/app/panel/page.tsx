@@ -92,7 +92,7 @@ export default function PanelPage() {
   const [sessionLabel, setSessionLabel] = useState("");
   /** Paste `nostrconnect://…` from a client (e.g. Primal Remote Signer). */
   const [nostrConnectPaste, setNostrConnectPaste] = useState("");
-  const [connectTab, setConnectTab] = useState<ConnectFlowTab>("bunker");
+  const [connectTab, setConnectTab] = useState<ConnectFlowTab>("nostrconnect");
   const [copied, setCopied] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -284,12 +284,10 @@ export default function PanelPage() {
       }
       setLoading(true);
       setError(null);
-      const body: Record<string, unknown> = {
+      const body = {
         identity_id: id,
         nostrconnect_uri: uri,
       };
-      const label = sessionLabel.trim();
-      if (label) body.app_name = label;
       try {
         const res = await fetch("/api/sessions", {
           method: "POST",
@@ -315,7 +313,7 @@ export default function PanelPage() {
         setLoading(false);
       }
     },
-    [nostrConnectPaste, sessionLabel, t, refreshSessions],
+    [nostrConnectPaste, t, refreshSessions],
   );
 
   const handleUnlock = async (e: React.FormEvent) => {
@@ -539,7 +537,7 @@ export default function PanelPage() {
       setBackupVaultPayload(null);
       setBunkerUri(null);
       setSessionLabel("");
-      setConnectTab("bunker");
+      setConnectTab("nostrconnect");
       setSessionNpub("");
       setPhase(1);
       vaultNsecRef.current = null;
@@ -983,6 +981,18 @@ export default function PanelPage() {
               </h2>
             </div>
 
+            {statusIdentity &&
+            phase >= 3 &&
+            !needsVaultBackup &&
+            statusRunning === false ? (
+              <div
+                className="mb-5 rounded-lg border border-amber-900/50 bg-amber-950/30 px-4 py-3 text-sm leading-[1.5] text-amber-100"
+                role="status"
+              >
+                {t("step3.bunkerNotListening")}
+              </div>
+            ) : null}
+
             {!bunkerUri ? (
               <div className="space-y-5">
                 <div
@@ -990,25 +1000,6 @@ export default function PanelPage() {
                   aria-label={t("step3.tablistAria")}
                   className="grid grid-cols-2 gap-1 rounded-xl border border-zinc-800 bg-zinc-950/60 p-1"
                 >
-                  <button
-                    type="button"
-                    role="tab"
-                    id="connect-tab-bunker"
-                    aria-selected={connectTab === "bunker"}
-                    tabIndex={connectTab === "bunker" ? 0 : -1}
-                    aria-controls="connect-panel-bunker"
-                    onClick={() => {
-                      setError(null);
-                      setConnectTab("bunker");
-                    }}
-                    className={`rounded-lg py-3 text-sm font-semibold transition-colors ${
-                      connectTab === "bunker"
-                        ? "bg-zinc-800 text-white shadow-sm ring-1 ring-zinc-700/80"
-                        : "text-zinc-400 hover:text-zinc-200"
-                    }`}
-                  >
-                    {t("step3.tabBunker")}
-                  </button>
                   <button
                     type="button"
                     role="tab"
@@ -1027,6 +1018,25 @@ export default function PanelPage() {
                     }`}
                   >
                     {t("step3.tabNostrConnect")}
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    id="connect-tab-bunker"
+                    aria-selected={connectTab === "bunker"}
+                    tabIndex={connectTab === "bunker" ? 0 : -1}
+                    aria-controls="connect-panel-bunker"
+                    onClick={() => {
+                      setError(null);
+                      setConnectTab("bunker");
+                    }}
+                    className={`rounded-lg py-3 text-sm font-semibold transition-colors ${
+                      connectTab === "bunker"
+                        ? "bg-zinc-800 text-white shadow-sm ring-1 ring-zinc-700/80"
+                        : "text-zinc-400 hover:text-zinc-200"
+                    }`}
+                  >
+                    {t("step3.tabBunker")}
                   </button>
                 </div>
 
@@ -1059,26 +1069,6 @@ export default function PanelPage() {
                       />
                       <p className="mt-2 text-sm leading-[1.5] text-zinc-400">
                         {t("step3.nostrConnectHint")}
-                      </p>
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="session_label_nc"
-                        className="bm-label text-zinc-300"
-                      >
-                        {t("step3.labelOptional")}
-                      </label>
-                      <input
-                        id="session_label_nc"
-                        value={sessionLabel}
-                        onChange={(e) => setSessionLabel(e.target.value)}
-                        maxLength={120}
-                        autoComplete="off"
-                        placeholder={t("step3.labelPlaceholder")}
-                        className="bm-input border-zinc-700 bg-zinc-900/50 text-white ring-offset-[#080808] placeholder:text-zinc-500 focus:ring-[#0066ff]"
-                      />
-                      <p className="mt-2 text-sm leading-[1.5] text-zinc-400">
-                        {t("step3.nostrLabelHint")}
                       </p>
                     </div>
                     <button

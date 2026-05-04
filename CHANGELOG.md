@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.4] - 2026-05-05
+
+### Changed
+
+- **Painel (`/panel`):** primeira aba **nostrconnect://**, segunda **Bunker QR / link** (default na primeira); campo **Etiqueta (opcional)** removido do fluxo nostrconnect (`app_name` continua só a partir do URI). Aviso visível (**`step3.bunkerNotListening`**) quando **`is_running` é falso**, explicando porque **pending** após restart do daemon (desbloquear outra vez). EN / pt-BR / ES.
+
 ## [0.5.3] - 2026-05-03
 
 ### Fixed
@@ -15,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Painel (`/panel`):** fluxos **nostrconnect://** vs **QR / bunker** em **abas** (`role="tablist"`): texto, campo principal e botão por modo; etiqueta opcional com hints distintos (`nostrLabelHint` vs `labelHint`). EN / pt-BR / ES.
+- **Painel (`/panel`):** fluxos **nostrconnect://** vs **QR / bunker** em **abas** (`role="tablist"`): texto, campo principal e botão por modo; etiqueta opcional no fluxo bunker (`labelHint`). EN / pt-BR / ES.
 
 ## [0.5.1] - 2026-05-04
 
@@ -251,6 +257,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.5.4]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.1...v0.5.3
 [0.5.1]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/bitmacro/bitmacro-signer/compare/v0.4.21...v0.5.0
