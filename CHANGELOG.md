@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.6] - 2026-05-05
+
+### Changed
+
+- **Daemon `restartBunkerSubscriptions`:** quando o conjunto de URLs relay (dedup normalizado) **não mudou** em relação à subscrição activa, **não** voltar a fazer stop/start do bunker (`avoids nip46 flap`) — reduz falhas quando `refresh-nip46-relays` dispara repetidamente ou o URI não acrescenta relays.
+- **Painel nostrconnect:** caixa **`connectOrderReminder`** (ordem: Registar primeiro, depois concluir na app; cancelar pairing antigo).
+
+### Added
+
+- **`nip46-loop`:** log **warn** em eventos com **kind ≠ 24133** (antes era silencioso), para diagnóstico em relays que encaminham ruído.
+
 ## [0.5.5] - 2026-05-05
 
 ### Changed
@@ -263,6 +274,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.5.6]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.5...v0.5.6
 [0.5.5]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.4...v0.5.5
 [0.5.4]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.1...v0.5.3

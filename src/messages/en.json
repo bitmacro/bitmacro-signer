@@ -256,6 +256,7 @@
       "tabNostrConnect": "nostrconnect://",
       "tabBunker": "Bunker QR / link",
       "explainNostrConnect": "Some apps show a nostrconnect://… URI (Remote Signer, NIP-46). Paste it here and register so this Signer can complete the handshake on the relays that app picks—display name is taken from the URI when the client sends it.",
+      "connectOrderReminder": "Order: Tap Register here before you finish pairing in Primal/other clients. If the app was already stuck “connecting”, cancel Remote Signer, Register a fresh nostrconnect:// link here first, then start login again in the app.",
       "explainBunker": "Use this path when the app scans a bunker QR or accepts a bunker URL. You get a single-use bunker:// link for a temporary client key (not your profile npub). After the client connects once, the session is bound.",
       "bunkerNotListening": "Remote signing is not listening on relays yet, so new connections can stay stuck on pending. If you restarted signer-daemon or the status above is not Active, use End session once and unlock again with your npub and vault passphrase so subscriptions come back.",
       "labelOptional": "Label (optional)",

@@ -39,6 +39,15 @@ function thrownReason(e: unknown): string {
   return String(e);
 }
 
+/** Dedup + sort URLs for comparing subscription sets across refresh-nip46-relays. */
+function relaySetFingerprint(urls: string[]): string {
+  const norm = urls
+    .map((u) => u.trim())
+    .filter(Boolean)
+    .map((u) => (u.endsWith("/") ? u.slice(0, -1) : u));
+  return [...new Set(norm)].sort().join("|");
+}
+
 function defaultRamTtlMs(): number {
   const raw = process.env.BUNKER_SESSION_RAM_TTL_MS;
   if (raw && /^\d+$/.test(raw.trim())) {
@@ -95,6 +104,29 @@ export async function restartBunkerSubscriptions(
 ): Promise<void> {
   const rt = active.get(identityId);
   if (!rt) return;
+
+  let nextRelayUrls: string[] | null = null;
+  try {
+    nextRelayUrls = await getActiveNip46RelayUrlsForIdentity(identityId);
+  } catch {
+    /* fall through: cannot compare fingerprints; safest to restart subscriptions */
+  }
+
+  const currentFp = relaySetFingerprint(rt.relaySubs.map((s) => s.relayUrl));
+  if (
+    nextRelayUrls !== null &&
+    relaySetFingerprint(nextRelayUrls) === currentFp
+  ) {
+    log(
+      "info",
+      "bunker relay set unchanged — skip subscription restart (avoids nip46 flap)",
+      {
+        identityId,
+        relayCount: rt.relaySubs.length,
+      },
+    );
+    return;
+  }
 
   const skCopy = new Uint8Array(rt.secretKey);
   let nsec = "";
@@ -185,7 +217,15 @@ export async function startBunker(
 
   const attachOnevent = (relay: Relay, relayUrl: string) =>
     async function onevent(event: Event) {
-      if (event.kind !== NostrConnect) return;
+      if (event.kind !== NostrConnect) {
+        log("warn", "ignored event (not Nostr Connect / kind 24133)", {
+          identityId,
+          relayUrl,
+          kind: event.kind,
+          from: event.pubkey.slice(0, 12),
+        });
+        return;
+      }
       try {
         const convKey = nip44.getConversationKey(secretKey, event.pubkey);
         let plaintext: string;

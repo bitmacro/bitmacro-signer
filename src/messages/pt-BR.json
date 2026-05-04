@@ -256,6 +256,7 @@
       "tabNostrConnect": "nostrconnect://",
       "tabBunker": "QR / link bunker",
       "explainNostrConnect": "Algumas apps mostram um URI nostrconnect://… (Remote Signer, NIP-46). Cola aqui e regista para o Signer completar o handshake nos relays que a app escolheu—o nome amigável vem do URI quando a app o envia.",
+      "connectOrderReminder": "Ordem: primeiro regista aqui («Registar ligação»); só depois concluis o pareamento na Primal/outra app. Se a app já estava «a ligar», cancela Remote Signer, regista aqui um URI nostrconnect:// novo e volta a iniciar o login.",
       "explainBunker": "Para apps que mostram QR bunker ou aceitam URL bunker obténs uma ligação bunker:// de uso único ligada a uma chave de cliente temporária (não o npub do perfil). Depois da primeira ligação do cliente a sessão fica associada.",
       "bunkerNotListening": "A assinatura remota ainda não está a escutar nos relays, por isso ligações novas podem ficar em pending. Se reiniciaste o signer-daemon ou o estado em cima não está Activo, usa Terminar sessão uma vez e volta a desbloquear com o npub e a passphrase do cofre para reactivar as subscrições.",
       "labelOptional": "Etiqueta (opcional)",

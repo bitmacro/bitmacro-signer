@@ -1050,6 +1050,9 @@ export default function PanelPage() {
                     <p className="text-base leading-[1.5] text-zinc-300">
                       {t("step3.explainNostrConnect")}
                     </p>
+                    <p className="rounded-lg border border-sky-900/45 bg-sky-950/25 px-3 py-2 text-sm leading-[1.5] text-sky-100/95">
+                      {t("step3.connectOrderReminder")}
+                    </p>
                     <div>
                       <label
                         htmlFor="nostrconnect_paste"
