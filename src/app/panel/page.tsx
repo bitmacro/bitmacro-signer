@@ -1077,11 +1077,14 @@ export default function PanelPage() {
                       onClick={() => {
                         void registerNostrConnectUri(identityId.trim());
                       }}
-                      className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-lg border border-zinc-600 px-4 text-base font-semibold text-zinc-100 transition-colors hover:bg-zinc-800 disabled:opacity-60"
+                      className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-lg px-4 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                      style={{ backgroundColor: ACCENT }}
                     >
                       {loading ? (
                         <Loader2 className="size-4 animate-spin" aria-hidden />
-                      ) : null}
+                      ) : (
+                        <Radio className="size-4" aria-hidden />
+                      )}
                       {t("step3.nostrConnectSubmit")}
                     </button>
                   </div>

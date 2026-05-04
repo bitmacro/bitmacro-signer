@@ -266,7 +266,7 @@
       "nostrConnectHint": "El URI trae relays, el secreto de sesión y a menudo un nombre (se guarda automáticamente si viene). Luego pulsa Registrar.",
       "nostrConnectSubmit": "Registrar enlace",
       "nostrConnectRequired": "Pega primero un URI nostrconnect://.",
-      "generateQr": "Generar QR / enlace bunker",
+      "generateQr": "Generar QR",
       "qrHelp1": "Pega este QR en el cliente o copia el enlace completo. Cada enlace es de un solo uso: tras conectar una app con éxito, deja de valer.",
       "qrHelp2": "Otro dispositivo o app necesita un enlace nuevo. Elimina conexiones antiguas al bunker en el cliente si aún cachea un URI previo.",
       "copy": "Copiar",
