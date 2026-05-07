@@ -46,7 +46,7 @@ docker compose up --build
 
 Compose defines **`web`** (Next on port **3000**, health check `GET /api/health`) and **`daemon`** (bunker loop — see `Dockerfile.daemon` and `src/daemon/index.ts`).
 
-**MVP (self-host):** the daemon holds NIP-46 signing state **in RAM** only. After a **daemon container restart** (recreate, deploy, crash), users must **unlock again** in the Signer UI — there is no automatic bunker restore on cold start. Product docs: [bitmacro-docs `03-produtos/signer.md`](https://github.com/bitmacro/bitmacro-docs/blob/main/03-produtos/signer.md) (*Comportamento esperado (MVP)*).
+**MVP (self-host):** the daemon holds NIP-46 signing state **in RAM** only. After a **daemon container restart** (recreate, deploy, crash), users must **unlock again** in the Signer UI — there is no automatic bunker restore on cold start. Product docs: [bitmacro-docs signer product doc](https://github.com/bitmacro/bitmacro-docs/blob/main/03-produtos/signer.md) *(expected MVP behavior)*.
 
 ### Web image on GHCR (Next.js standalone)
 
@@ -56,7 +56,7 @@ Compose defines **`web`** (Next on port **3000**, health check `GET /api/health`
 - `ghcr.io/bitmacro/bitmacro-signer-web:<semver>` (e.g. `0.2.0`)
 - `ghcr.io/bitmacro/bitmacro-signer-web:<short-sha>`
 
-Runs on `push` to `main` when listed paths change (incl. `src/**`). Alterações só em `src/daemon/` também casam `src/**`, por isso o build web pode correr em paralelo com o workflow do daemon — é redundante mas válido. GitHub não permite `paths` e `paths-ignore` no mesmo gatilho.
+Runs on `push` to `main` when listed paths change (incl. `src/**`). Edits confined to `src/daemon/` still match `src/**`, so the web image workflow may run in parallel with the daemon workflow — redundant but harmless. GitHub Actions does not allow `paths` and `paths-ignore` on the same trigger.
 
 ### Daemon image on GHCR (self-host)
 

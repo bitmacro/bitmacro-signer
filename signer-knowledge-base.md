@@ -1,247 +1,248 @@
-# BitMacro Signer — Base de Conhecimento para Suporte
+# BitMacro Signer — support knowledge base
 
-> **Uso:** Documento de referência para o assistente de IA do BitMacro Signer (signer.bitmacro.io).
-> **Audiência:** Utilizadores reais com dúvidas sobre o bunker NIP-46 e a gestão segura de chaves Nostr.
-> **Tom:** Directo, simples, sem jargão técnico excessivo. Explica os conceitos à medida que surgem.
-> **Última actualização:** Abril 2026
-
----
-
-## 1. O que é o BitMacro Signer e para que serve?
-
-**Pergunta típica:** *"O que é isto? Preciso disto?"*
-
-O BitMacro Signer é um cofre digital para a tua chave Nostr — e uma forma de usares essa chave 24 horas por dia, 7 dias por semana, sem teres o telemóvel ligado ou uma extensão de browser instalada.
-
-### O problema que resolve
-
-No Nostr, a tua identidade é uma chave criptográfica privada chamada `nsec`. É como a senha-mestra da tua vida digital nesse protocolo: quem a tiver pode publicar em teu nome, seguir e deixar de seguir contactos, enviar mensagens directas, receber Zaps. Se a perderes, perdes a tua identidade. Se alguém a roubar, pode fazer-se passar por ti.
-
-O problema é que as aplicações Nostr (Nostrudel, Primal, Coracle, etc.) precisam da tua `nsec` para assinar eventos — cada publicação, cada mensagem, cada reacção. As opções tradicionais são:
-
-- **Guardar a `nsec` na aplicação**: arriscado, a app tem acesso total permanente.
-- **Usar uma extensão de browser** (tipo Alby): só funciona no computador e só quando o browser está aberto.
-- **Usar Amber no Android**: só funciona nesse dispositivo Android específico.
-
-O BitMacro Signer resolve isto com um **bunker remoto**: a tua chave fica cifrada nos nossos servidores, e um processo permanente responde aos pedidos de assinatura em teu nome, seguindo o protocolo NIP-46. Nunca tens de partilhar a `nsec` com nenhuma aplicação.
-
-### O que ganhas
-
-- **Assinatura 24/7** sem precisar de ter o telemóvel ou o browser ligados.
-- **Zero-knowledge**: a tua `nsec` é cifrada no browser antes de chegar ao servidor — nunca a vemos em texto simples.
-- **Funciona em qualquer dispositivo**: iOS, Android, browser, desktop — sem instalar nada.
-- **Controlo por sessão**: autorizas cada aplicação individualmente e podes revogar esse acesso quando quiseres.
-- **Backup offline**: em caso de perda total do acesso, um PDF guardado localmente permite recuperar a chave.
-
-**Frase resumo:** O BitMacro Signer é o teu guarda-costas criptográfico — assina em teu nome, nunca sai de casa, e só tu tens a chave do cofre.
+> **Use:** Reference for the BitMacro Signer AI assistant (signer.bitmacro.io).
+> **Audience:** End users with questions about NIP-46 bunkers and safe Nostr key management.
+> **Tone:** Direct, simple, minimal jargon. Concepts are explained as they appear.
+> **Last updated:** April 2026
 
 ---
 
-## 2. O que é NIP-46 e o que é um bunker?
+## 1. What is BitMacro Signer and what is it for?
 
-**Pergunta típica:** *"Ouço falar em NIP-46 e bunker mas não percebo o que é. Podes explicar?"*
+**Typical question:** *"What is this? Do I need it?"*
 
-### O Nostr em duas linhas
+BitMacro Signer is a digital vault for your Nostr private key — and a way to use that key 24/7 without leaving your phone unlocked or installing a browser extension.
 
-O Nostr é uma rede social descentralizada. A tua identidade é uma chave criptográfica. Quando publicas algo, o teu cliente assina esse conteúdo com a tua chave privada (`nsec`), provando que és tu.
+### The problem it solves
 
-### O problema com a assinatura directa
+On Nostr your identity is a private key called `nsec`. Like a master credential for that ecosystem: whoever has it can publish as you, change follows, send direct messages, receive Zaps. If you lose it, you lose your identity. If someone steals it, they can impersonate you.
 
-Se deres a tua `nsec` a uma aplicação, essa aplicação pode assinar qualquer coisa em teu nome — mesmo que não quisesses. E se a aplicação for comprometida, a tua chave vai com ela.
+Nostr clients (Nostrudel, Primal, Coracle, etc.) traditionally need your `nsec` to sign events — every post, message, reaction. Common options are:
 
-### O que é NIP-46
+- **Store `nsec` in the app:** risky; the app keeps full access.
+- **Use a browser extension** (e.g. Alby): only on desktop and only when the browser is open.
+- **Use Amber on Android:** only on that device.
 
-NIP-46 é uma especificação do protocolo Nostr que define como separar a assinatura da aplicação. Em vez de a aplicação ter a tua `nsec`, ela envia os pedidos de assinatura para um **bunker** — um processo seguro que tem a chave — e o bunker responde com o evento já assinado.
+BitMacro Signer solves this with a **remote bunker**: your key is encrypted on our servers; a long-running process answers signing requests on your behalf via NIP-46. You never hand your `nsec` to an app.
+
+### What you get
+
+- **24/7 signing** without keeping the phone or browser on.
+- **Zero-knowledge style design:** your `nsec` is encrypted in the browser before it reaches our servers — we never see it in plaintext at rest.
+- **Works on any device:** iOS, Android, browser, desktop — nothing to install for basic use.
+- **Per-session control:** you authorize each app and can revoke access.
+- **Offline backup:** a PDF you keep locally can recover the key if you lose everything else.
+
+**One-liner:** BitMacro Signer is your cryptographic bodyguard — signs for you, stays on the server in encrypted form, and only you hold the vault passphrase.
+
+---
+
+## 2. What is NIP-46 and what is a bunker?
+
+**Typical question:** *"People mention NIP-46 and bunkers — what does that mean?"*
+
+### Nostr in two lines
+
+Nostr is a decentralized social network. Your identity is cryptographic. When you post, your client signs content with your private key (`nsec`) to prove it is you.
+
+### The problem with handing `nsec` to apps
+
+If you give an app your `nsec`, it can sign anything as you — including things you would not want. If the app is compromised, your key goes with it.
+
+### What NIP-46 is
+
+NIP-46 is a Nostr spec for **separating signing from the client**. Instead of the client holding your `nsec`, it sends signing requests to a **bunker** — a process that holds the key — and gets back a signed event.
 
 ```
-Aplicação (Nostrudel)                   Bunker (BitMacro Signer)
-    │                                         │
-    │── "Assina este evento" ────────────────►│
-    │   (encriptado com NIP-44)               │
-    │                                         │── Decifra pedido
-    │                                         │── Assina com nsec
-    │◄── "Evento assinado" ───────────────────│
-    │   (encriptado com NIP-44)               │
+Client (e.g. Nostrudel)                    Bunker (BitMacro Signer)
+    │                                             │
+    │── "Sign this event" ───────────────────────►│
+    │   (encrypted with NIP-44)                   │
+    │                                             │── decrypt request
+    │                                             │── sign with nsec
+    │◄── "Signed event" ──────────────────────────│
+    │   (encrypted with NIP-44)                   │
 ```
 
-Toda esta comunicação passa por um relay Nostr (como `wss://relay.bitmacro.io`) e está encriptada de ponta a ponta (NIP-44) — nem o relay consegue ler o conteúdo.
+Traffic goes through a Nostr relay (e.g. `wss://relay.bitmacro.io`) end-to-end encrypted (NIP-44) — relays cannot read payloads.
 
-### O que é um bunker
+### What a bunker is here
 
-O bunker é o processo que corre 24/7 no servidor e responde aos pedidos de assinatura. No BitMacro Signer:
+The bunker is the server process that listens 24/7 and answers signing requests. In BitMacro Signer:
 
-1. A tua `nsec` está cifrada no nosso servidor (AES-GCM, encriptação no browser).
-2. Quando desbloqueias o vault com a tua password, a `nsec` decifrada fica temporariamente em memória RAM (nunca em disco nem em base de dados em texto claro).
-3. O bunker entra em loop de escuta no relay.
-4. Quando uma aplicação autorizada envia um pedido de assinatura, o bunker responde.
-5. Após o tempo configurado (por defeito, 24 horas), a `nsec` é apagada da RAM e tens de desbloquear novamente.
+1. Your `nsec` is stored encrypted (AES-GCM; encryption happens in the browser).
+2. When you unlock the vault, decrypted `nsec` lives in RAM only (not on disk or in the DB in plaintext).
+3. The bunker subscribes on the relay(s).
+4. When an authorized client sends a signing request, the bunker responds.
+5. After the configured TTL (default 24 hours), `nsec` is cleared from RAM and you must unlock again.
 
-**Resumo simples:** O bunker é como um funcionário de confiança que tem uma cópia encriptada das tuas chaves, só as usa quando tu o autorizas, e esquece-as ao fim do dia.
-
----
-
-## 3. Como criar e configurar o meu vault? (passo a passo)
-
-**Pergunta típica:** *"Por onde começo? Como registo a minha chave?"*
-
-### O que é o vault
-
-O vault (cofre) é onde a tua `nsec` fica guardada de forma cifrada. É criado uma vez, no teu browser, e depois guardado nos servidores BitMacro. Só tu consegues decifrar o conteúdo — com a tua password.
-
-### Passo a passo
-
-**1. Vai a [signer.bitmacro.io](https://signer.bitmacro.io)**
-
-**2. Cria conta ou inicia sessão**
-- Podes usar email + password ou entrar com Google.
-- A conta BitMacro é a mesma usada no BitMacro App, Identity e outros produtos.
-
-**3. No painel, gera ou importa o teu keypair**
-
-*Opção A — Gerar novo keypair (recomendado para começar):*
-- Clica em "Gerar novo keypair"
-- O browser gera um par de chaves completamente aleatório
-- Vês a tua `npub` (chave pública) — esta é a tua identidade Nostr
-
-*Opção B — Importar `nsec` existente:*
-- Cola a tua chave privada (`nsec1...` em formato bech32)
-- O sistema valida e encripta-a antes de sair do browser
-
-**4. Define uma password forte**
-- Esta password é a única forma de desbloquear o vault
-- **O BitMacro nunca a vê nem a guarda** — se a perderes, a única recuperação é o PDF de backup
-- Usa uma password longa e única, que não uses noutros serviços
-
-**5. Descarrega o PDF de backup**
-- Este passo é obrigatório antes de continuares
-- O PDF contém um bundle offline cifrado e instruções de recuperação
-- Guarda-o num local seguro (dispositivo offline, cofre físico, USB encriptada)
-- O sistema pede-te o código de 6 caracteres que aparece no PDF, para confirmar que o descarregaste
-
-**6. Confirma o código de 6 caracteres**
-- Introduz o código que aparece no PDF
-- Só após isto o vault fica activo
-
-**7. Desbloqueia o bunker**
-- Introduz a tua password para desbloquear o vault
-- O bunker arranca e fica em escuta no relay
-- A `nsec` fica em RAM durante 24h (ou o tempo configurado)
-
-**8. Gera um QR code para ligar uma aplicação**
-- Vai a "Sessões" → "Nova sessão"
-- Dá um nome à sessão (ex: "Nostrudel", "Primal", "Coracle")
-- Aparece um QR code com uma `bunker://` URI
-- Na aplicação cliente, escolhe "Ligar com bunker" e faz scan do QR
+**Plain summary:** the bunker is like a trusted clerk with an encrypted copy of your keys — uses them only when you allow, and forgets them after the session window.
 
 ---
 
-## 4. O que é o vault e como funciona a encriptação?
+## 3. How do I create and set up my vault? (step by step)
 
-**Pergunta típica:** *"A minha chave está segura nos vossos servidores? Como funciona tecnicamente?"*
+**Typical question:** *"Where do I start? How do I register my key?"*
 
-### A premissa: zero-knowledge
+### What the vault is
 
-"Zero-knowledge" significa que o BitMacro nunca tem acesso à tua `nsec` em texto claro. Toda a encriptação e desencriptação acontece exclusivamente no teu browser.
+The vault holds your `nsec` encrypted. It is created once in your browser and the ciphertext is stored on BitMacro servers. Only you can decrypt it — with your password.
 
-### O processo de encriptação (detalhado)
+### Steps
 
-Quando guardas a tua `nsec` no vault:
+**1. Go to [signer.bitmacro.io](https://signer.bitmacro.io)**
 
-1. **No teu browser**, a tua password é processada pelo algoritmo PBKDF2-SHA256 com 600.000 iterações e um salt aleatório de 32 bytes. Isto gera uma chave de 256 bits.
-2. Essa chave é usada para cifrar a `nsec` com AES-GCM (padrão militar, 256-bit) e um IV aleatório de 12 bytes.
-3. O resultado — um blob de ciphertext + salt + IV, todos em base64 — é enviado para os servidores BitMacro e guardado na base de dados.
-4. **A tua password nunca sai do browser.** O servidor recebe apenas o blob cifrado.
+**2. Sign up or log in**
+- Email + password or Google sign-in.
+- The same BitMacro account is used across BitMacro App, Identity, and related products.
 
-### O que o BitMacro guarda
+**3. In the panel, generate or import a keypair**
 
-| Campo | O que é | Seguro sem password? |
-|-------|---------|----------------------|
-| `blob` | Ciphertext AES-GCM da tua nsec | ✅ Sim — inútil sem password |
-| `salt` | Salt aleatório do PBKDF2 | ✅ Sim — não revela a password |
-| `iv` | Vector de inicialização do AES-GCM | ✅ Sim — não revela a nsec |
-| `bunker_pubkey` | A tua npub (chave pública) | ✅ É pública por natureza |
+*Option A — Generate a new keypair (good default):*
+- Choose “Generate new keypair”
+- The browser creates a random keypair
+- You see your `npub` — your public Nostr identity
 
-### O que o BitMacro NÃO guarda
+*Option B — Import an existing `nsec`:*
+- Paste your private key (`nsec1…` bech32)
+- The client validates and encrypts before leaving the browser
 
-- A tua password — nunca.
-- A tua `nsec` em texto claro — nunca.
-- Logs de pedidos de assinatura — nunca.
+**4. Set a strong password**
+- This password is how you unlock the vault
+- **BitMacro never sees or stores it** — if you lose it, the backup PDF is your only recovery path
+- Use a long, unique passphrase you do not reuse elsewhere
 
-### E durante uma sessão activa?
+**5. Download the backup PDF**
+- Required before you can continue
+- The PDF contains an offline encrypted bundle and recovery instructions
+- Store it somewhere safe (offline device, safe, encrypted USB)
+- The app asks for a 6-character code from the PDF to confirm you downloaded it
 
-Quando desbloqueias o vault com a tua password:
-1. O browser decifra a `nsec` localmente.
-2. A `nsec` decifrada é enviada de forma segura (HTTPS + token interno) para o processo daemon no servidor.
-3. O daemon guarda a `nsec` **apenas em RAM**, nunca em disco.
-4. Após o TTL (por defeito 24 horas), a `nsec` é apagada da RAM automaticamente.
-5. Para voltar a assinar, tens de desbloquear novamente.
+**6. Enter the 6-character confirmation code**
+- Type the code shown in the PDF
+- The vault only becomes active after this
 
-### Analogia
+**7. Unlock the bunker**
+- Enter your password to unlock
+- The bunker starts and listens on the relay
+- `nsec` stays in RAM for 24h (or your configured TTL)
 
-É como um cofre físico em que só tu tens a combinação. O banco (BitMacro) guarda o cofre, mas não conhece a combinação e nunca abre o cofre. Quando precisas de acesso, abre-o tu mesmo, usas o que precisas, e o cofre fecha-se sozinho ao fim do dia.
-
----
-
-## 5. Como gerar um QR code e ligar uma aplicação?
-
-**Pergunta típica:** *"Como conecto o Nostrudel / Primal / Coracle ao Signer?"*
-
-### Pré-requisitos
-
-- Ter o vault criado e desbloqueado (bunker activo).
-- Ter a aplicação cliente aberta (ex: Nostrudel, Coracle, Primal).
-
-### Passo a passo
-
-**1. No painel do BitMacro Signer, vai a "Sessões"**
-
-**2. Clica em "Nova Sessão"**
-
-**3. Dá um nome à sessão**
-- Exemplos: "Nostrudel desktop", "Primal iOS", "Coracle trabalho"
-- O nome é só para tua referência — não é transmitido à aplicação
-
-**4. Aparece o QR code (bunker:// URI)**
-- A URI tem este formato: `bunker://npub1...?relay=wss://relay.bitmacro.io&secret=<token>`
-- O `secret` é um código de uso único — só serve para o handshake inicial
-
-**5. Na aplicação cliente:**
-- Procura "Ligar com bunker NIP-46" ou "Nostr Connect" nas definições de conta
-- Faz scan do QR code ou cola a URI manualmente
-- A aplicação envia o pedido de `connect` ao relay
-- O bunker valida o secret, confirma a ligação, e a sessão fica activa
-
-**6. A partir deste momento:**
-- A aplicação envia pedidos de assinatura ao relay
-- O bunker responde com os eventos assinados
-- A tua `nsec` nunca saiu do servidor
-
-### Notas importantes
-
-- **Cada QR code é de uso único**: o secret só é válido para uma ligação. Se precisares de ligar outra instância da mesma app, gera um QR novo.
-- **Podes ter múltiplas sessões activas**: uma para Nostrudel, outra para Primal, outra para Coracle — cada uma independente.
-- **Podes revogar qualquer sessão**: vai à lista de sessões e clica em "Revogar". A aplicação deixa de conseguir assinar imediatamente.
-- **Se o bunker não estiver activo** (vault bloqueado), os pedidos de assinatura ficam em fila no relay até o bunker arrancar — ou falham com timeout, dependendo do cliente.
+**8. Generate a QR code to connect an app**
+- Go to **Sessions** → **New session**
+- Optionally name the session (e.g. “Nostrudel”, “Primal”, “Coracle”)
+- A QR with a `bunker://` URI appears
+- In the client app, choose bunker / Nostr Connect and scan the QR
 
 ---
 
-## 6. O que é o PDF de backup e por que é tão importante?
+## 4. What is the vault and how does encryption work?
 
-**Pergunta típica:** *"Tenho de descarregar um PDF. Para que é isso? Posso saltar este passo?"*
+**Typical question:** *"Is my key safe on your servers? How does it work technically?"*
 
-### Não podes saltar este passo
+### Zero-knowledge premise
 
-O PDF de backup é o único mecanismo de recuperação da tua `nsec` caso percas o acesso ao vault. Se o servidor for inacessível, se perderes a conta, ou se esqueceres a password, **o PDF é a única forma de recuperar a tua chave privada**. Sem ele, a perda da conta significa perda permanente da identidade Nostr.
+“Zero-knowledge” here means BitMacro never sees your `nsec` in plaintext. Encryption and decryption happen only in your browser.
 
-### O que contém o PDF
+### Encryption flow (detail)
 
-- A tua `npub` (chave pública, para verificação)
-- Um bundle offline cifrado em JSON, contendo o ciphertext, salt e IV do vault
-- Um QR code com esse bundle (para recuperação via câmara)
-- Um código de confirmação de 6 caracteres (para confirmar que descarregaste o PDF)
-- Instruções de recuperação independentes do BitMacro (o algoritmo de desencriptação descrito em detalhe)
+When saving `nsec` to the vault:
 
-### O bundle offline (formato técnico)
+1. **In your browser**, your password is run through PBKDF2-SHA256 with 600,000 iterations and a random 32-byte salt — producing a 256-bit key.
+2. That key encrypts `nsec` with AES-GCM and a random 12-byte IV.
+3. The result — ciphertext + salt + IV encoded as base64 — is sent to BitMacro and stored.
+4. **Your password never leaves the browser.** The server only receives the ciphertext blob.
+
+### What BitMacro stores
+
+| Field | Meaning | Safe without password? |
+|-------|---------|-------------------------|
+| `blob` | AES-GCM ciphertext of your nsec | ✅ yes — useless alone |
+| `salt` | PBKDF2 salt | ✅ yes — does not reveal password |
+| `iv` | AES-GCM initialization vector | ✅ yes — does not reveal nsec |
+| `bunker_pubkey` | Your npub | ✅ public by nature |
+
+### What BitMacro does **not** store
+
+- Your password — ever.
+- Plaintext `nsec` — ever.
+- Signing request content logs — ever.
+
+### During an active vault session
+
+After you unlock:
+
+1. The browser decrypts `nsec` locally.
+2. Decrypted `nsec` is passed securely (HTTPS + internal token) to the daemon.
+3. The daemon keeps `nsec` **only in RAM**, never on disk.
+4. After TTL (default 24h), RAM is cleared.
+5. To sign again, unlock again.
+
+### Analogy
+
+Like a safe deposit box where only you know the combination. The bank (BitMacro) stores the box but not the combination. When you need access, you open it yourself, use what you need, and the box “locks” automatically when the TTL ends.
+
+---
+
+## 5. How do I generate a QR and connect an app?
+
+**Typical question:** *"How do I connect Nostrudel / Primal / Coracle to Signer?"*
+
+### Prerequisites
+
+- Vault created and unlocked (bunker running).
+- Client app ready (e.g. Nostrudel, Coracle, Primal).
+
+### Steps
+
+**1. In BitMacro Signer, open Sessions**
+
+**2. Click New session**
+
+**3. Optional session name**
+- e.g. “Nostrudel desktop”, “Primal iOS”
+- The label is **for your reference only** — it is not sent to the client as identity metadata
+
+**4. QR appears (`bunker://` URI)**
+- Typical shape: `bunker://npub1...?relay=wss://relay.bitmacro.io&secret=<token>`
+- `secret` is one-time for the handshake
+
+**5. In the client:**
+- Look for “Connect bunker NIP-46” or “Nostr Connect” in account settings
+- Scan the QR or paste the URI
+- The client sends `connect` on the relay
+- The bunker verifies the secret, completes the handshake, session becomes active
+
+**6. After that:**
+- The client sends signing requests via relay
+- The bunker returns signed events
+- Your `nsec` never leaves the server to the client
+
+### Notes
+
+- **Each QR is one-time:** the secret binds one connection — use a new QR for another device/instance.
+- **Multiple sessions OK:** independent sessions per client.
+- **You can revoke any session:** Sessions list → **Revoke** — signing stops immediately for that session.
+- **If the bunker is not running** (vault locked), requests may queue on relay or time out depending on the client.
+
+---
+
+## 6. What is the backup PDF and why does it matter?
+
+**Typical question:** *"I have to download a PDF — why? Can I skip it?"*
+
+### You cannot skip it
+
+The PDF is the **only** recovery path for your `nsec` if you lose vault access — server outage, lost account access, forgotten password scenarios. **Without the PDF**, losing vault access typically means permanent loss of that Nostr identity.
+
+### What the PDF contains
+
+- Your `npub` for verification
+- Offline encrypted JSON bundle (ciphertext, salt, IV)
+- QR carrying that bundle (camera recovery path)
+- 6-character confirmation code
+- Vendor-independent recovery notes (algorithm described for offline use)
+
+### Offline bundle (technical JSON)
 
 ```json
 {
@@ -255,185 +256,181 @@ O PDF de backup é o único mecanismo de recuperação da tua `nsec` caso percas
 }
 ```
 
-Este bundle contém tudo o que é necessário para recuperar a `nsec` — desde que tenhas a password.
+With that JSON + your vault password you can decrypt `nsec`.
 
-### Como guardar o PDF em segurança
+### Keeping the PDF safe
 
-- **Imprime e guarda num cofre físico** (recomendado para máxima segurança)
-- **Guarda numa pen USB encriptada** que não liges à internet
-- **Guarda numa pasta encriptada** no computador (ex: com VeraCrypt)
-- **Não guardes em serviços cloud** (Google Drive, iCloud, Dropbox) sem encriptação adicional
-- **Não partilhes com ninguém** — quem tiver o PDF e a tua password tem a tua chave
+- **Print** and lock in a physical safe when practical
+- **Encrypted USB** you do not expose online
+- **Encrypted folder** on a machine you control
+- Do **not** leave it raw in commodity cloud (Drive / iCloud / Dropbox) unless you encrypt the file separately
+- **Never share** — PDF + password = full key
 
-### O código de 6 caracteres
+### The 6-character code
 
-Este código aparece apenas no PDF (nunca no ecrã do browser). Ao pedi-lo, o sistema confirma que descarregaste e abriste o ficheiro. Só após inserires o código correcto o vault fica activo.
-
----
-
-## 7. Como recuperar o acesso se perder a password ou o acesso à conta?
-
-**Pergunta típica:** *"Esqueci a password. O que faço? Perdi tudo?"*
-
-### Cenário 1 — Esqueceste a password mas tens o PDF de backup
-
-Esta é a situação em que o PDF serve. Vai a [signer.bitmacro.io/recover](https://signer.bitmacro.io/recover):
-
-1. **Abre o PDF** e localiza o bundle JSON (ou usa a câmara para ler o QR code)
-2. **Cola o JSON** no campo de recuperação na página `/recover`
-3. **Introduz a password** que usaste quando criaste o vault
-4. O browser executa a desencriptação localmente — a `nsec` aparece no ecrã
-5. **Copia a `nsec` imediatamente** e guarda-a num gestor de passwords seguro
-6. Com a `nsec` recuperada, podes criar um novo vault com uma nova password
-
-**Importante:** A página `/recover` é pública e não requer login. Toda a desencriptação acontece no teu browser — nada é enviado para o servidor.
-
-### Cenário 2 — Perdeste o acesso à conta BitMacro mas tens o PDF
-
-O processo é o mesmo. A página `/recover` funciona sem autenticação. Com o JSON do PDF e a tua password, recuperas a `nsec` independentemente da conta BitMacro.
-
-### Cenário 3 — Esqueceste a password E não tens o PDF
-
-Neste caso, **a recuperação é impossível**. A `nsec` está cifrada com a tua password, que nunca foi enviada ao servidor. Não existe backdoor. É uma perda permanente da identidade Nostr associada a esse keypair.
-
-Esta é a razão pela qual o backup em PDF é obrigatório durante o onboarding.
-
-### Cenário 4 — O bunker parou (servidor reiniciou, TTL expirou)
-
-Este não é uma perda — apenas precisas de desbloquear novamente:
-
-1. Vai a [signer.bitmacro.io](https://signer.bitmacro.io)
-2. Faz login com a tua conta
-3. Introduz a tua password no painel
-4. O vault é desbloqueado e o bunker arranca novamente
-5. As sessões existentes (aplicações ligadas) continuam a funcionar
-
-### Como saber se o bunker está activo
-
-No painel, o estado do bunker aparece claramente: activo (verde) ou bloqueado (cinzento). Se bloqueado, os pedidos de assinatura das aplicações não serão respondidos.
+It appears **only** in the PDF (not on the signup screen alone). Entering it proves you downloaded and opened the file; the vault activates only after a correct entry.
 
 ---
 
-## 8. Como funcionam as sessões e como as gerir?
+## 7. How do I recover if I lose my password or account access?
 
-**Pergunta típica:** *"O que é uma sessão? Como sei quais as aplicações que têm acesso à minha chave?"*
+**Typical question:** *"I forgot my password — is everything gone?"*
 
-### O que é uma sessão
+### Scenario 1 — Forgot password but you have the PDF
 
-Uma sessão representa a ligação entre o teu bunker e uma aplicação cliente específica (Nostrudel, Primal, Coracle, etc.). Cada sessão tem:
+Use [signer.bitmacro.io/recover](https://signer.bitmacro.io/recover):
 
-- Um **nome** (que tu defines, ex: "Nostrudel desktop")
-- Uma **chave de sessão** (`app_pubkey`) — gerada pela aplicação cliente, não pela tua identidade
-- Uma **data de expiração** (por defeito, 24 horas; configurável no futuro)
-- Um estado: activa ou revogada
+1. Open the PDF, copy the bundle JSON **or** scan the QR
+2. Paste JSON into `/recover`
+3. Enter the vault password you used **when creating** the vault
+4. Browser decrypts locally — `nsec` appears on screen
+5. **Copy `nsec` immediately** into a reputable password manager
+6. Optionally create a new vault with a new password and generate a fresh PDF
 
-### O que acontece durante uma sessão
+**Important:** `/recover` is public; no login. Decryption is local — nothing sensitive is uploaded for recovery.
 
-1. A aplicação envia pedidos de assinatura encriptados ao relay
-2. O bunker recebe, desencripta (NIP-44), verifica que vem desta `app_pubkey` autorizada
-3. Assina o evento com a tua `nsec`
-4. Devolve o evento assinado, encriptado para a `app_pubkey` da aplicação
-5. A aplicação publica o evento no Nostr
+### Scenario 2 — Lost BitMacro account but you have the PDF
 
-**A aplicação nunca vê a tua `nsec`**. Vê apenas os eventos já assinados.
+Same flow. `/recover` needs no authenticated account — JSON + original vault password restores `nsec`.
 
-### Criar uma nova sessão
+### Scenario 3 — Forgot password **and** no PDF
 
-1. Painel → "Sessões" → "Nova Sessão"
-2. Define o nome
-3. Faz scan do QR code na aplicação
+Recovery is **not possible.** `nsec` is ciphertext under a password BitMacro never had. No backdoor. That Nostr keypair identity is permanently lost unless you exported `nsec` elsewhere.
 
-### Revogar uma sessão
+Hence the mandatory onboarding PDF step.
 
-1. Painel → "Sessões"
-2. Encontra a sessão que queres terminar
-3. Clica em "Revogar"
-4. A partir desse momento, pedidos daquela `app_pubkey` são rejeitados
+### Scenario 4 — Bunker stopped (daemon restart, TTL expiry)
 
-### Boas práticas
+Not the same as losing identity — unlock again:
 
-- **Dá nomes descritivos** a cada sessão (dispositivo + app, ex: "Coracle MacBook", "Primal iPhone")
-- **Revoga sessões de dispositivos que já não uses** ou de aplicações que desinstalaste
-- **Gera QR novo** se mudares de dispositivo — não partilhes URIs entre dispositivos
-- **Sessões expiram automaticamente** — se uma aplicação parar de funcionar, verifica se a sessão expirou
+1. Go to [signer.bitmacro.io](https://signer.bitmacro.io)
+2. Sign in
+3. Enter vault password to unlock — bunker restarts
+4. Existing client sessions typically keep working (`app_pubkey` sessions)
 
-### A app_pubkey não é a tua identidade
+### Bunker activity indicator
 
-É um erro comum de confusão: a `app_pubkey` mostrada nos detalhes da sessão é a chave da **aplicação cliente** (Nostrudel, Coracle), gerada por ela para esta sessão específica. Não é a tua `npub` de identidade.
+The panel shows **running** vs **locked**. If locked, signing requests will not be answered until you unlock again.
 
 ---
 
-## 9. Privacidade e segurança — o que o BitMacro guarda?
+## 8. How do sessions work and how do I manage them?
 
-**Pergunta típica:** *"Que dados tendes sobre mim? A minha chave está segura?"*
+**Typical question:** *"What is a session? How do I see which apps can sign?"*
 
-### O que guardamos
+### Session definition
 
-| Dado | Para quê |
-|------|---------|
-| `npub` (chave pública) | Identificação do vault — é pública por natureza |
-| Blob cifrado (ciphertext) | O vault encriptado — inútil sem a tua password |
-| Salt e IV | Parâmetros de desencriptação — inúteis sem a tua password |
-| Sessões activas (app_pubkey, nome, expiração) | Gestão das aplicações autorizadas |
-| Email e dados de conta | Autenticação na plataforma |
+A session links **your bunker** to **one client app/device** instance (Nostrudel, Primal, …). Fields include:
 
-### O que NÃO guardamos
+- **Label** (your choice)
+- **Session pubkey** (`app_pubkey`) — from the client, not your identity `npub`
+- **Expiry** (default ~24 hours; roadmap may widen)
+- **State** active vs revoked
 
-- **A tua `nsec` em texto claro** — nunca, em nenhum momento
-- **A tua password** — nunca sai do browser
-- **O conteúdo dos eventos assinados** — não registamos o que assinas
-- **Logs de pedidos de assinatura** — não guardamos histórico das tuas acções no Nostr
+### During a session
 
-### Ameaças e mitigação
+1. Client sends encrypted signing requests to relay
+2. Bunker verifies NIP-44 and authorized `app_pubkey`
+3. Signs with your `nsec`
+4. Returns ciphertext to the client’s `app_pubkey`
+5. Client publishes on Nostr
 
-| Ameaça | Impacto | Mitigação |
-|--------|---------|-----------|
-| **Base de dados comprometida** | Acesso ao blob cifrado | Inútil sem a password — PBKDF2 + AES-GCM com 600k iterações |
-| **Servidor comprometido durante sessão activa** | Acesso à nsec em RAM | TTL curto (24h); revogação imediata possível; sem persistência em disco |
-| **Relay intercepts** | Acesso aos pedidos NIP-46 | Encriptação NIP-44 — o relay não consegue ler o conteúdo |
-| **Aplicação cliente maliciosa** | Pode pedir assinaturas não desejadas | Cada sessão é individual e revogável; âmbito de métodos (Fase 2) |
-| **Perda do PDF sem backup** | Perda permanente da nsec | Obrigatoriedade do PDF no onboarding |
+**The client never sees your `nsec`** — only signed events.
 
-### O bunker pode assinar qualquer coisa?
+### New session
 
-Por agora, sim — durante uma sessão activa, o bunker responde a qualquer pedido NIP-46 válido da `app_pubkey` autorizada. Nas versões futuras (Fase 2), será possível limitar os métodos por sessão (ex: permitir apenas `sign_event` de kind 1, bloquear `follow`, etc.).
+1. Panel → **Sessions** → **New session**
+2. Optionally name + show QR — scan in client
 
-### Posso confiar no servidor BitMacro?
+### Revoke
 
-O design zero-knowledge significa que, mesmo que não confies no servidor, a tua `nsec` está segura enquanto a tua password não for comprometida. O código-fonte está disponível em [github.com/bitmacro/bitmacro-signer](https://github.com/bitmacro/bitmacro-signer) para auditoria.
+1. Sessions list → **Revoke** on the row
+2. Subsequent requests from that `app_pubkey` are rejected
 
-Adicionalmente, a página `/recover` funciona completamente offline — podes verificar que a desencriptação não envia dados ao servidor (abre o DevTools e monitoriza os pedidos de rede).
+### Good habits
+
+- **Descriptive labels** (“Coracle laptop”, “Primal phone”)
+- **Revoke** old devices and uninstalled clients
+- **New QR per device** — do not forward URIs casually
+- **Sessions expire** — if a client “stops working”, check expiry
+
+### `app_pubkey` is not your `npub`
+
+Common confusion: the session detail `app_pubkey` is the **client app’s ephemeral key for that session**. It is **not** your profile `npub`.
 
 ---
 
-## 10. Posso correr o BitMacro Signer na minha própria infra-estrutura?
+## 9. Privacy and security — what does BitMacro retain?
 
-**Pergunta típica:** *"Posso fazer self-host? Como?"*
+**Typical question:** *"What data do you hold? How safe is my key?"*
 
-### Sim — o BitMacro Signer é open-source e auto-hospedável
+### What we retain
 
-O código está disponível em [github.com/bitmacro/bitmacro-signer](https://github.com/bitmacro/bitmacro-signer) com licença MIT. Podes correr a tua própria instância.
+| Data | Why |
+|------|-----|
+| `npub` | Vault routing — inherently public |
+| Encrypted vault blob | Ciphertext meaningless without password |
+| Salt / IV | Decryption metadata — meaningless without password |
+| Active sessions (app_pubkey, label, expiry) | Authorization management |
+| Account email etc. | Platform login |
 
-### Arquitectura para self-host
+### What we **do not** retain as policy
 
-O Signer tem dois componentes separados:
+- Plaintext `nsec`
+- Vault password from the browser path
+- **Detailed audit trail of signed event content** — not stored today
+- **Full signing-request history** of your social graph actions on Nostr
+
+### Threat sketch
+
+| Threat | Impact | Mitigation |
+|--------|--------|------------|
+| DB breach | ciphertext only | worthless without passphrase (PBKDF2 + AES-GCM, 600k iter) |
+| Server compromise mid-session | RAM might hold key | Short TTL + revoke + RAM-only |
+| Relay in the middle | sees encrypted frames | NIP-44 payloads |
+| Malicious client session | unwanted signing requests | per-session revocation; roadmap method scopes |
+| Lost PDF without other backup | loses key | onboarding requires PDF acknowledgment |
+
+### Can the bunker sign “anything?”
+
+Currently **within NIP-46**, authorized sessions receive responses for eligible RPCs. Phase-2 roadmap: optional per-session **method scopes** (e.g. narrow `sign_event`, block `nip04_encrypt` patterns, etc.).
+
+### Trusting BitMacro?
+
+The cryptography is designed so the platform never needs your plaintext `nsec`. Source code: [github.com/bitmacro/bitmacro-signer](https://github.com/bitmacro/bitmacro-signer).
+
+`/recover` can be used fully offline once assets load — inspect DevTools Network to confirm decryption does not call home.
+
+---
+
+## 10. Can I self-host BitMacro Signer?
+
+**Typical question:** *"Can I run my own?"*
+
+### Yes — MIT OSS
+
+Repository: [github.com/bitmacro/bitmacro-signer](https://github.com/bitmacro/bitmacro-signer).
+
+### Self-host topology
+
+Two moving parts:
 
 ```
 ┌─────────────────────────────────────────┐
 │  signer-web (Next.js)                   │
-│  Serve a UI e as API routes             │
-│  Porta: 3000                            │
+│  UI + API routes                        │
+│  Port: 3000                             │
 └────────────────┬────────────────────────┘
-                 │ HTTP interno + token
+                 │ Internal HTTP + token
 ┌────────────────▼────────────────────────┐
 │  signer-daemon (Node.js)                │
-│  Loop NIP-46 permanente                 │
-│  Guarda nsec em RAM com TTL             │
-│  Porta: 47777 (interna)                 │
+│  Long-lived NIP-46 loop                  │
+│  Holds nsec in RAM with TTL             │
+│  Port 47777 (internal)                   │
 └─────────────────────────────────────────┘
 ```
 
-### Docker Compose (exemplo simplificado)
+### Example Docker Compose (minimal)
 
 ```yaml
 services:
@@ -447,146 +444,146 @@ services:
       - NEXT_PUBLIC_APP_URL=https://signer.example.com
       - NEXT_PUBLIC_RELAY_URL=wss://relay.example.com
       - SUPABASE_SERVICE_ROLE_KEY=eyJ...
-      - AUTH_SESSION_SECRET=uma-string-aleatoria-longa
+      - AUTH_SESSION_SECRET=replace-with-long-random-string
       - DAEMON_INTERNAL_URL=http://daemon:47777
-      - DAEMON_INTERNAL_TOKEN=outro-token-secreto
+      - DAEMON_INTERNAL_TOKEN=replace-with-strong-token
 
   daemon:
     image: ghcr.io/bitmacro/bitmacro-signer-daemon:latest
     environment:
-      - DAEMON_INTERNAL_TOKEN=outro-token-secreto
+      - DAEMON_INTERNAL_TOKEN=replace-with-strong-token
       - SUPABASE_SERVICE_ROLE_KEY=eyJ...
       - RELAY_URL=wss://relay.example.com
 ```
 
-### Pré-requisitos para self-host
+### Requirements
 
-1. **Supabase** — base de dados PostgreSQL (podes usar o plano gratuito Supabase Cloud ou self-host)
-2. **Relay Nostr** — qualquer relay que suporte NIP-46 (`wss://relay.bitmacro.cloud` funciona para testes; recomendamos relay próprio para produção)
-3. **Docker + Docker Compose** — para correr os dois contentores
-4. **Domínio com SSL** — o web precisa de HTTPS para a Web Crypto API funcionar
+1. **PostgreSQL / Supabase** — managed cloud or self-hosted
+2. **Nostr relay** with NIP-46 (`wss://relay.bitmacro.cloud` OK for sandbox; prod should use relays you operate)
+3. **Docker Compose** — run both containers
+4. **TLS domain** — Web Crypto expects a secure origin
 
-### Imagens disponíveis
+### Images
 
-As imagens são publicadas no GitHub Container Registry após cada commit:
+Published to GHCR on relevant pushes:
+
 - `ghcr.io/bitmacro/bitmacro-signer-web:latest`
 - `ghcr.io/bitmacro/bitmacro-signer-daemon:latest`
 
-Também existem tags com versão semântica (ex: `v0.3.6`) e SHA curto do commit.
+Semver (`v0.3.6`, …) and short commit tags also exist.
 
-### Limitações do self-host
+### Self-host caveats today
 
-- O daemon reinicia sem a `nsec` em RAM — terás de desbloquear manualmente após cada reinício
-- Não há painel de administração multi-utilizador (cada instância serve uma identidade)
-- A integração com BitMacro Identity (NIP-05, Lightning Address) não está disponível em instâncias externas
-
----
-
-## 11. Perguntas Frequentes (FAQ)
+- After daemon restart RAM is cold — operators log in/unlock manually (per MVP semantics)
+- No multi-user “admin tenant” pane — typical install is effectively one-operator stack
+- BitMacro Identity (NIP-05, Lightning Address) integrations are SaaS-hosted; third-party installs would wire their own equivalents
 
 ---
 
-**Qual é a diferença entre o BitMacro Signer e o BitMacro Identity?**
-
-São produtos complementares:
-- O **Identity** (`id.bitmacro.io`) dá-te um username Nostr verificado (NIP-05), um Lightning Address para receber Bitcoin, e acesso a relays curados.
-- O **Signer** (`signer.bitmacro.io`) guarda a tua chave Nostr de forma segura e assina eventos 24/7 sem expor a `nsec` às aplicações.
-
-Podes usar cada um de forma independente, mas juntos formam uma identidade Nostr completa e soberana. No futuro, o onboarding será unificado.
+## 11. FAQ
 
 ---
 
-**Posso usar o Signer com qualquer aplicação Nostr?**
+**What is the difference between BitMacro Signer and BitMacro Identity?**
 
-Sim, desde que a aplicação suporte NIP-46 (Nostr Connect). As mais populares que suportam:
+They complement:
+
+- **Identity** (`id.bitmacro.io`): verified username (NIP-05), Lightning address, curated relay access themes.
+- **Signer** (`signer.bitmacro.io`): holds your Nostr key encrypted and signs 24/7 without handing `nsec` to arbitrary clients.
+
+You can adopt either alone; paired they give hosted identity plus remote signing convenience. Unified onboarding is on the roadmap.
+
+---
+
+**Which Nostr apps work with Signer?**
+
+Anything supporting NIP-46 / “Nostr Connect”. Common examples:
+
 - Nostrudel (web)
 - Coracle (web)
 - Primal (iOS, Android, web)
 - Snort (web)
 - Iris (web)
 
-Se a tua aplicação preferida não suportar NIP-46, ainda não consegues ligá-la ao Signer. Consulta a documentação da aplicação.
+If your client lacks NIP-46, Signer pairing is unavailable until upstream adds it.
 
 ---
 
-**O que é a `bunker://` URI e posso partilhá-la?**
+**What is a `bunker://` URI? Can I share it?**
 
-A `bunker://` URI é o endereço do teu bunker, incluindo um secret de uso único. **Não a partilhes** — quem a tiver pode completar o handshake NIP-46 e obter uma sessão de assinatura. Cada URI expira após uma ligação bem-sucedida, mas enquanto estiver pendente é sensível.
-
----
-
-**O que acontece se o servidor BitMacro ficar offline?**
-
-Se o servidor estiver offline:
-- Não consegues desbloquear o vault nem criar novas sessões.
-- As sessões activas param de funcionar (o bunker não responde).
-- A tua identidade Nostr não é afectada — os teus eventos anteriores continuam visíveis.
-- Com o PDF de backup, podes recuperar a `nsec` e importá-la noutro cliente ou bunker.
-
-Para self-hosters, esta dependência é eliminada.
+It encodes bunker reachability plus a short-lived handshake secret. **Do not share casually** — anyone with a pending URI can complete NIP-46 pairing. URIs invalidate after successful use but are sensitive until then.
 
 ---
 
-**O bunker tem de estar sempre activo para o Nostr funcionar?**
+**If BitMacro’s servers go offline?**
 
-Não para leres conteúdo, mas sim para publicares, reagires, enviares mensagens ou receberes Zaps (que requerem assinatura). Se o bunker estiver bloqueado, as aplicações não conseguem assinar eventos em teu nome.
+- You cannot unlock or create sessions through that deployment.
+- Active bunkers stop responding.
+- Existing Nostr history still exists on relays — relays are decentralized.
+- With the backup PDF + password you retain `nsec` and may import elsewhere.
 
----
-
-**Posso ter mais do que um keypair / vault?**
-
-Por agora, cada conta BitMacro suporta um vault. Suporte para múltiplos keypairs por conta está no roadmap.
-
----
-
-**O que é o TTL do bunker e como funciona?**
-
-TTL (Time To Live) é o tempo que a `nsec` fica em memória RAM no servidor após desbloqueares o vault. Por defeito são 24 horas. Após esse período, a `nsec` é automaticamente apagada da RAM e o bunker pára. Para voltar a assinar, tens de desbloquear com a tua password.
-
-O TTL é uma medida de segurança: limita o tempo de exposição da chave em memória, mesmo em caso de compromisso do servidor.
+Self-host eliminates dependency on BitMacro infra as operator.
 
 ---
 
-**Posso alterar a password do vault?**
+**Must the bunker be always-on to “use” Nostr?**
 
-Sim — a funcionalidade de alteração de password está prevista. No momento (Abril 2026), podes fazer manualmente: recupera a `nsec` com o PDF + password antiga, cria um novo vault com a nova password, e descarrega um novo PDF.
-
----
-
-**O que é o Shamir Secret Sharing que vejo mencionado?**
-
-É uma técnica criptográfica que divide a `nsec` em N fragmentos, dos quais precisas de K para reconstruir a chave original (ex: 3 de 5). Está planeada para a Fase 2 do roadmap como alternativa ao backup em PDF, permitindo dividir a recuperação entre múltiplos dispositivos ou pessoas de confiança sem que nenhum individualmente tenha a chave completa.
+Reading timelines does not depend on bunker uptime. Publishing, reacts, messaging, Zap flows need signing — bunker must run (vault unlocked/TTL alive) while you expect automatic signing behavior.
 
 ---
 
-**Posso usar o BitMacro Signer para assinar com Zaps?**
+**Multiple vaults / keypairs in one BitMacro account?**
 
-Sim. Os Zaps são eventos Nostr (kind:9734) que requerem assinatura. Quando uma aplicação Nostr compatível processa um Zap, envia o pedido de assinatura ao bunker como qualquer outro evento. O processo é transparente para o utilizador.
-
----
-
-**O BitMacro tem acesso às minhas mensagens directas?**
-
-Não. As mensagens directas no Nostr (NIP-04 ou NIP-44) são encriptadas entre as chaves dos participantes. O bunker assina os eventos de mensagem mas não tem capacidade de ler o conteúdo das mensagens destinadas a outros — apenas assina o envelope.
+Today — one vault identity per BitMacro login. Multiple keypairs roadmap item.
 
 ---
 
-**Posso ver o histórico de eventos que o bunker assinou?**
+**What does bunker TTL mean?**
 
-Por agora não. O bunker não guarda registo dos eventos assinados — assina e responde sem persistir histórico. Logs de auditoria estão planeados para versões futuras.
-
----
-
-**Como sei a versão do Signer que está a correr?**
-
-Podes consultar a API pública `/api/build-info` na instância (ex: `https://signer.bitmacro.io/api/build-info`). Retorna o commit Git e a versão do build para transparência e auditabilidade.
+TTL is how long decrypted `nsec` lives in daemon RAM post-unlock. Default ~24 hours, then erased and bunker loop stops until re-unlock — limits exposure windows.
 
 ---
 
-**Qual é o email de suporte?**
+**Change vault password?**
 
-Podes contactar a equipa em **contact@bitmacro.io** ou via Nostr em `thiago@bitmacro.io`.
+Dedicated flow is planned (April 2026). Manual workaround: recover `nsec` via PDF + old password → create vault with new password → new backup PDF.
 
 ---
 
-*Base de conhecimento BitMacro Signer — versão Abril 2026*
+**Shamir / secret-splitting roadmap blurb**
+
+Shamir secret sharing shards `nsec` across *N* pieces with threshold *k* reconstruction (classic `k-of-N`). Planned phase-2 enhancement vs sole PDF reliance — split recovery custody across devices/trusted peers without granting any single shard full usability.
+
+---
+
+**Zaps?**
+
+Zap flows are normal Nostr events that need a signature. When a compatible client handles a Zap, it sends the signing request through the bunker like any other event.
+
+---
+
+**Does BitMacro read encrypted DMs?**
+
+No. Classical NIPs keep DM ciphertext between participants’ keys — bunker signs transports but lacks meaningful plaintext introspection obligations beyond cryptographic necessity.
+
+---
+
+**Audit logs of signatures?**
+
+Signer does **not** today persist immutable history of payloads it signed — respond-and-forget posture. Operational logging improvements are backlog.
+
+---
+
+**How do I confirm running version?**
+
+`GET https://signer.bitmacro.io/api/build-info` (or your hostname) exposes semver/Git metadata for reproducibility audits.
+
+---
+
+**Support contacts**
+
+Reach **contact@bitmacro.io** or Nostr `thiago@bitmacro.io`.
+
+---
+
+*BitMacro Signer knowledge base — April 2026*

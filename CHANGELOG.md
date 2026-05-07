@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **NIP-46:** quando uma resposta RPC contém **`error`** (ex.: `sign_event` antes de `connect`), o log Loki inclui **`rpcErrorPreview`** (truncado) para diagnóstico no Grafana.
-- **NIP-46 (`startBunker`):** falha de **`Relay.connect`** num URL (ex.: `wss://relay.bitmacro.cloud` inatingível a partir do contentor) **não** aborta o unlock — tenta os outros relays; erro só se **nenhum** ligar. **Warn** em Loki com `attempted` vs `connected` quando há URLs que falham.
+- **NIP-46:** when an RPC response contains **`error`** (e.g. `sign_event` before `connect`), the Loki log includes **`rpcErrorPreview`** (truncated) for Grafana diagnostics.
+- **NIP-46 (`startBunker`):** a failed **`Relay.connect`** on one URL (e.g. `wss://relay.bitmacro.cloud` unreachable from the container) **does not** abort unlock — other relays are tried; failure only if **none** connect. **Warn** in Loki with `attempted` vs `connected` when some URLs fail.
 
 ## [0.5.8] - 2026-05-04
 
@@ -28,51 +28,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Painel nostrconnect:** após **Register link** com sucesso, aparece confirmação com a lista **`relay=`** devolvida pela API (a partir do URI), mais texto para validar que relays como **nrs.primal.net** estão mesmo no link e passos se continuar **pending** (logs do daemon). EN / pt-BR / ES.
+- **Nostrconnect panel:** after successful **Register link**, a confirmation lists **`relay=`** values returned by the API (derived from the URI), plus copy to verify relays such as **nrs.primal.net** are included and steps when status stays **pending** (daemon logs). Locale strings updated for EN / pt-BR / ES.
 
 ## [0.5.6] - 2026-05-05
 
 ### Changed
 
-- **Daemon `restartBunkerSubscriptions`:** quando o conjunto de URLs relay (dedup normalizado) **não mudou** em relação à subscrição activa, **não** voltar a fazer stop/start do bunker (`avoids nip46 flap`) — reduz falhas quando `refresh-nip46-relays` dispara repetidamente ou o URI não acrescenta relays.
-- **Painel nostrconnect:** caixa **`connectOrderReminder`** (ordem: Registar primeiro, depois concluir na app; cancelar pairing antigo).
+- **Daemon `restartBunkerSubscriptions`:** when the relay URL set (normalized dedupe) **unchanged** vs the active subscription, **skip** bunker stop/start (`avoids nip46 flap`) — fewer failures when `refresh-nip46-relays` fires repeatedly or the URI adds no new relays.
+- **Nostrconnect panel:** **`connectOrderReminder`** callout (order: register first, then finish in the app; cancel stale pairing).
 
 ### Added
 
-- **`nip46-loop`:** log **warn** em eventos com **kind ≠ 24133** (antes era silencioso), para diagnóstico em relays que encaminham ruído.
+- **`nip46-loop`:** **warn** log on events with **kind ≠ 24133** (previously silent) for diagnosing relays that forward noise.
 
 ## [0.5.5] - 2026-05-05
 
 ### Changed
 
-- **Painel (`/panel`):** botão **Register link** (nostrconnect) com o mesmo estilo primário azul e ícone **Radio** que **Generate QR**; texto do botão bunker passa a **«Generate QR»** / **«Gerar QR»** / **«Generar QR»** (removido sufixo «bunker link»). EN / pt-BR / ES.
+- **Panel (`/panel`):** **Register link** (nostrconnect) uses the same primary blue style and **Radio** icon as **Generate QR**; bunker connect button labels localized (EN / pt-BR / ES), “bunker link” suffix removed from copy.
 
 ## [0.5.4] - 2026-05-05
 
 ### Changed
 
-- **Painel (`/panel`):** primeira aba **nostrconnect://**, segunda **Bunker QR / link** (default na primeira); campo **Etiqueta (opcional)** removido do fluxo nostrconnect (`app_name` continua só a partir do URI). Aviso visível (**`step3.bunkerNotListening`**) quando **`is_running` é falso**, explicando porque **pending** após restart do daemon (desbloquear outra vez). EN / pt-BR / ES.
+- **Panel (`/panel`):** first tab **nostrconnect://**, second **Bunker QR / link** (default first); optional **label** field removed from nostrconnect flow (`app_name` still from URI only). Visible warning (**`step3.bunkerNotListening`**) when **`is_running` is false**, explaining **pending** after daemon restart (unlock again). EN / pt-BR / ES.
 
 ## [0.5.3] - 2026-05-03
 
 ### Fixed
 
-- **NIP-46 `connect`:** aceita **`npub1…`** em `params[0]` para além de hex (como no `bunker://`). Clientes como Primal («Remote Signer») podiam enviar **npub** e o Signer só comparava a **hex string** ⇒ `bunker pubkey mismatch` e sessão **pending** sem passar a **used**.
+- **NIP-46 `connect`:** accepts **`npub1…`** in `params[0]` in addition to hex (like `bunker://`). Clients such as Primal (“Remote Signer”) could send **npub** while Signer only compared **hex** ⇒ `bunker pubkey mismatch` and session stuck **pending** instead of **used**.
 
 ### Changed
 
-- **Painel (`/panel`):** fluxos **nostrconnect://** vs **QR / bunker** em **abas** (`role="tablist"`): texto, campo principal e botão por modo; etiqueta opcional no fluxo bunker (`labelHint`). EN / pt-BR / ES.
+- **Panel (`/panel`):** **nostrconnect://** vs **QR / bunker** flows in **tabs** (`role="tablist"`): copy, main field, and button per mode; optional label in bunker flow (`labelHint`). EN / pt-BR / ES.
 
 ## [0.5.1] - 2026-05-04
 
 ### Fixed
 
-- **Daemon `/internal/unlock`:** quando `Relay.connect()` falha, o nostr-tools rejeita por vezes com **string** (ex.: `"connection timed out"` / `"connection failed"`), não um `Error` — os logs diziam apenas `startBunker failed`. Agora a mensagem inclui **URL do relay** e o motivo real; útil quando o daemon não tem rota até `RELAY_URL` (VPN, nome do host Docker, firewall).
+- **Daemon `/internal/unlock`:** when `Relay.connect()` fails, nostr-tools sometimes rejects with a **string** (e.g. `"connection timed out"` / `"connection failed"`), not an `Error` — logs only showed `startBunker failed`. Messages now include the **relay URL** and the real reason; helps when the daemon has no route to `RELAY_URL` (VPN, Docker hostname, firewall).
 
 ### Changed
 
-- **`nip46-loop`:** envolve cada `Relay.connect` e propaga erro com contexto **`(relay URL): …`** para diagnóstico em produção.
-- **Landing (tabela de comparação):** linha **nostrconnect://** — mesmo selo ✅ que outros itens já disponíveis; removido o pill **“Coming soon / Em breve”** ligado ao `yesPhase2` (funcional desde **v0.5.0**).
+- **`nip46-loop`:** wraps each `Relay.connect` and propagates errors with **`(relay URL): …`** context for production diagnostics.
+- **Landing (comparison table):** **nostrconnect://** row — same ✅ badge as other shipped items; removed **“Coming soon”** pill tied to `yesPhase2` (available since **v0.5.0**).
 
 ## [0.5.0] - 2026-05-04
 
@@ -89,7 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Notes
 
-- **Supabase:** coluna **`nip46_relay_urls`** em **`signer_sessions`** — migração **`00002_signer_sessions_nip46_relays.sql`**. Executar antes (ou como parte do deploy de) web + daemon **≥ 0.5.0**.
+- **Supabase:** **`nip46_relay_urls`** column on **`signer_sessions`** — migration **`00002_signer_sessions_nip46_relays.sql`**. Run before (or as part of deploying) web + daemon **≥ 0.5.0**.
 
 ## [0.4.21] - 2026-05-03
 
@@ -125,7 +125,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **i18n (pt-BR, en, es):** FAQ Signer wording; punctuation pass replacing em dashes with colons, semicolons, commas, or middots where it reads more naturally; compare **phase 2** pill copy (“Coming soon” / “Em breve” / “Próximamente”); `unifiedOnboarding` detail reflects Signer + Identity; SEO strings (root layout, Open Graph, sessions metadata, package description).
+- **i18n (EN, pt-BR, es):** FAQ Signer wording; punctuation pass replacing em dashes with colons, semicolons, commas, or middots where it reads more naturally; compare **phase 2** pill copy localized per locale (“coming soon” equivalents); `unifiedOnboarding` detail reflects Signer + Identity; SEO strings (root layout, Open Graph, sessions metadata, package description).
 - **Comparison matrix** (`COMPARISON_ROW_DEFS`): dropped `lightningPayments` and `fullStack`; adjusted cells for `clientDecrypt`, `sessionTtl`, `auditLog`, `nip05Plan`, `lightningAddress`, `unifiedOnboarding`, `zeroKnowledgeHosted`, `devSdk`; `yesPill` cells can resolve pill text from messages (package name still monospace).
 - **Help chat** context lines: source/title separator and system-prompt wording (no em dash in those strings).
 - **`scripts/i18n-emit.mjs`:** feature list and labels aligned with the live message files.
@@ -157,7 +157,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - RAG: when the help widget is **signer**, run an extra **`match_documents` with `filter_produto: identity`** (on by default; disable with `RAG_IDENTITY_SIDECAR=0`) and merge into the global pool so Identity-only topics (e.g. NIP-05) are not excluded when they rank below the global top-K.
-- Help chat **system prompt** (pt/en/es): excerpts may include other BitMacro products (e.g. Identity / NIP-05) — instructs the model to use them when present so it does not dismiss cross-product context.
+- Help chat **system prompt** (EN / pt-BR / ES): excerpts may include other BitMacro products (e.g. Identity / NIP-05) — instructs the model to use them when present so it does not dismiss cross-product context.
 
 ## [0.4.13] - 2026-04-22
 
