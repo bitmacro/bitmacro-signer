@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-05-08
+
 ### Fixed
 
 - **POST `/api/sessions` (classic bunker QR):** call **`refreshBunkerNip46Relays`** after **`authorizeApp`**, matching the nostrconnect path. Previously, changing **`RELAY_URL`** / **`NEXT_PUBLIC_RELAY_URL`** produced a new **`bunker_uri`** while the daemon could stay subscribed to the previous relay until a full unlock; clients then failed pairing on the new relay.
@@ -301,6 +303,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.6.0]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.8...v0.6.0
 [0.5.8]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.7...v0.5.8
 [0.5.7]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.6...v0.5.7
 [0.5.6]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.5...v0.5.6
