@@ -417,11 +417,13 @@ export async function startBunker(
       },
     });
     relaySubs.push({ relay, sub, relayUrl });
-    log("info", "NIP-46 relay WebSocket subscribed (kind #p bunker filter)", {
+    log("info", "NIP-46 relay WebSocket subscribed (REQ filter snapshot)", {
       identityId,
       relayUrl,
       bunkerPkPrefix: bunkerPubkeyHex.slice(0, 12),
+      bunkerPFilterHex: bunkerPubkeyHex,
       kindFilter: NOSTR_CONNECT_KIND,
+      subscriptionFiltersJson: JSON.stringify(filters),
     });
   }
 

@@ -96,3 +96,23 @@ export function buildBunkerUri(
   const sec = encodeURIComponent(secret);
   return `bunker://${pkHex}?relay=${relay}&secret=${sec}`;
 }
+
+/** Bunker pubkey hex from `bunker://<64hex>?…` — public; no secret segment read. */
+export function bunkerPubkeyHexFromBunkerUri(uri: string): string | null {
+  const m = /^bunker:\/\/([0-9a-fA-F]{64})(?:\?|$)/i.exec(uri.trim());
+  return m ? m[1]!.toLowerCase() : null;
+}
+
+/** Decoded `relay` query from a `bunker://` URI (omit `secret` before logging full URIs). */
+export function relayUrlFromBunkerUri(uri: string): string | null {
+  const cut = uri.indexOf("?");
+  if (cut < 0) return null;
+  try {
+    const sp = new URLSearchParams(uri.slice(cut + 1));
+    const r = sp.get("relay");
+    if (!r?.trim()) return null;
+    return decodeURIComponent(r.trim());
+  } catch {
+    return null;
+  }
+}

@@ -1,9 +1,11 @@
 export type { Session } from "./ttl";
 export {
   buildBunkerUri,
+  bunkerPubkeyHexFromBunkerUri,
   bunkerPubkeyToHex,
   isSessionValid,
   nostrPubkeyInputToHex,
+  relayUrlFromBunkerUri,
 } from "./ttl";
 export { parseNostrConnectUri, type ParsedNostrConnectUri } from "./nostr-connect-uri";
 export {

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.3] - 2026-05-08
+
+### Added
+
+- **Grafana parity checks:** Loki event **`session_bunker_qr_issued`** (`signer-web-api`) logs **`bunkerRelayUsedServer`**, decoded **`relayInQr`**, **`relayMatchesConfigured`**, and bunker pk prefix — use to confirm the QR matches what the daemon listens on.
+- **Daemon:** after each `relay.subscribe`, log **`subscriptionFiltersJson`** and full **`bunkerPFilterHex`** (debug “no inbound” vs wrong relay / wrong `#p`).
+- **`relayUrlFromBunkerUri`** / **`bunkerPubkeyHexFromBunkerUri`** helpers (unit-tested).
+
 ## [0.6.2] - 2026-05-08
 
 ### Fixed
@@ -315,6 +323,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.6.3]: https://github.com/bitmacro/bitmacro-signer/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/bitmacro/bitmacro-signer/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/bitmacro/bitmacro-signer/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.8...v0.6.0

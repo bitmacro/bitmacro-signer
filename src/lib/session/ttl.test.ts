@@ -1,9 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildBunkerUri,
+  bunkerPubkeyHexFromBunkerUri,
   bunkerPubkeyToHex,
   isSessionValid,
   nostrHexPubkeyToNpub,
+  relayUrlFromBunkerUri,
   type Session,
 } from "./ttl";
 
@@ -70,6 +72,15 @@ describe("session / ttl", () => {
         "s",
       );
       expect(uri.startsWith(`bunker://${hex}?`)).toBe(true);
+    });
+
+    it("round-trips relay and pubkey via parsers", () => {
+      const pkHex =
+        "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789";
+      const relay = "wss://nip46.example/nostr";
+      const uri = buildBunkerUri(pkHex, relay, "sek");
+      expect(bunkerPubkeyHexFromBunkerUri(uri)).toBe(pkHex);
+      expect(relayUrlFromBunkerUri(uri)).toBe(relay);
     });
   });
 

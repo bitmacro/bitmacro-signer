@@ -20,7 +20,11 @@ import {
 } from "@/lib/session/app-keys";
 import { parseNostrConnectUri } from "@/lib/session/nostr-connect-uri";
 import { getBunkerRelayUrlServer } from "@/lib/relay/env";
-import { buildBunkerUri } from "@/lib/session/ttl";
+import {
+  buildBunkerUri,
+  bunkerPubkeyHexFromBunkerUri,
+  relayUrlFromBunkerUri,
+} from "@/lib/session/ttl";
 import type { Session } from "@/lib/session/ttl";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 
@@ -216,6 +220,26 @@ async function handlePost(request: Request) {
   await refreshBunkerNip46Relays(identity_id);
 
   const bunker_uri = buildBunkerUri(vault.bunker_pubkey, relayUrl, secret);
+
+  const relayDecodedFromQr = relayUrlFromBunkerUri(bunker_uri);
+  const pkFromQr = bunkerPubkeyHexFromBunkerUri(bunker_uri);
+  void pushLokiStructured(
+    "info",
+    {
+      component: "sessions-api",
+      event: "session_bunker_qr_issued",
+      journey_id: identity_id.slice(0, 8),
+      request_id: randomUUID(),
+      message:
+        "Classic bunker QR: confirm Primal/connect client uses relayInQr — must overlap daemon relayUrls or handshake never reaches nip46-loop",
+      identityIdShort: identity_id.slice(0, 8),
+      bunkerRelayUsedServer: relayUrl,
+      relayInQr: relayDecodedFromQr,
+      relayMatchesConfigured: relayDecodedFromQr === relayUrl,
+      bunkerPkHexInQrPrefix: pkFromQr?.slice(0, 16) ?? null,
+    },
+    { streamLabels: { subsystem: "signer-web-api" } },
+  ).catch(() => {});
 
   return NextResponse.json({
     session_id: sessionId,
