@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.4] - 2026-05-08
+
+### Added
+
+- **Daemon:** configurable **`BUNKER_IDLE_INBOUND_WARN_MS`** (default `120000`, `0` = off) logs **`event=nip46_idle_no_inbound`** when the bunker is subscribed but receives **no kind 24133** in that window — useful in Grafana when clients time out but the WebSocket looks healthy.
+
+### Documentation
+
+- **README:** troubleshooting — Relay Manager **Eventos** (**Meus eventos** filters by event `pubkey` = author of the 24133 message, often not your profile key); testing NIP-46 on **`wss://relay.bitmacro.cloud`** via compose env; note that **relay-api** does not see end-user WSS traffic.
+
 ## [0.6.3] - 2026-05-08
 
 ### Added
@@ -323,6 +333,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.6.4]: https://github.com/bitmacro/bitmacro-signer/compare/v0.6.3...v0.6.4
 [0.6.3]: https://github.com/bitmacro/bitmacro-signer/compare/v0.6.2...v0.6.3
 [0.6.2]: https://github.com/bitmacro/bitmacro-signer/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/bitmacro/bitmacro-signer/compare/v0.6.0...v0.6.1

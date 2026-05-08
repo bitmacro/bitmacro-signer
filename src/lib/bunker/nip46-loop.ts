@@ -56,6 +56,21 @@ function defaultRamTtlMs(): number {
   return 24 * 60 * 60 * 1000;
 }
 
+/** After unlock, log once if no kind 24133 arrived (Grafana: "connected but deaf"). 0 = off. */
+function idleInboundWarnMs(): number {
+  const raw = process.env.BUNKER_IDLE_INBOUND_WARN_MS;
+  if (raw?.trim() === "0") return 0;
+  if (raw && /^\d+$/.test(raw.trim())) return Number.parseInt(raw.trim(), 10);
+  return 120_000;
+}
+
+function clearIdleInboundWarnTimer(identityId: string): void {
+  const rt = active.get(identityId);
+  if (!rt?.idleInboundWarnTimer) return;
+  clearTimeout(rt.idleInboundWarnTimer);
+  rt.idleInboundWarnTimer = undefined;
+}
+
 function decodeNsec(nsec: string): Uint8Array {
   const d = nip19.decode(nsec.trim());
   if (d.type !== "nsec") {
@@ -75,6 +90,7 @@ type BunkerRuntime = {
   bunkerPubkeyHex: string;
   relaySubs: RelaySubscription[];
   ttlTimer: ReturnType<typeof setTimeout>;
+  idleInboundWarnTimer?: ReturnType<typeof setTimeout>;
 };
 
 const active = new Map<string, BunkerRuntime>();
@@ -171,6 +187,7 @@ export async function stopBunker(identityId: string): Promise<void> {
   if (!rt) return;
 
   clearTimeout(rt.ttlTimer);
+  if (rt.idleInboundWarnTimer) clearTimeout(rt.idleInboundWarnTimer);
   for (const { sub, relay } of rt.relaySubs) {
     try {
       sub.close();
@@ -249,6 +266,8 @@ export async function startBunker(
     },
   ];
 
+  const inboundSeenRef = { v: false };
+
   const attachOnevent = (relay: Relay, relayUrl: string) =>
     async function onevent(event: Event) {
       if (event.kind !== NostrConnect) {
@@ -260,6 +279,8 @@ export async function startBunker(
         });
         return;
       }
+      inboundSeenRef.v = true;
+      clearIdleInboundWarnTimer(identityId);
       {
         const pTag = event.tags.find((t) => t[0] === "p")?.[1];
         log("info", "NIP-46 kind 24133 envelope received (before NIP-44 decrypt)", {
@@ -459,11 +480,32 @@ export async function startBunker(
     void stopBunker(identityId);
   }, defaultRamTtlMs());
 
+  const warnMs = idleInboundWarnMs();
+  let idleInboundWarnTimer: ReturnType<typeof setTimeout> | undefined;
+  if (warnMs > 0) {
+    idleInboundWarnTimer = setTimeout(() => {
+      const rt = active.get(identityId);
+      if (!rt || inboundSeenRef.v) return;
+      log(
+        "warn",
+        "NIP-46 subscription idle: no kind 24133 received yet (relay may be wrong for clients or panel author filter hiding events)",
+        {
+          identityId,
+          event: "nip46_idle_no_inbound",
+          warnAfterMs: warnMs,
+          relayUrls: relaySubs.map((s) => s.relayUrl),
+          bunkerPFilterHexPrefix: bunkerPubkeyHex.slice(0, 24),
+        },
+      );
+    }, warnMs);
+  }
+
   active.set(identityId, {
     secretKey,
     bunkerPubkeyHex,
     relaySubs,
     ttlTimer,
+    idleInboundWarnTimer,
   });
 
   log("info", "bunker started", {

@@ -121,10 +121,23 @@ Example **LogQL** in Grafana Explore:
 
 ```logql
 {service_name="bitmacro-signer-daemon"} |= `relay-connect`
+{service_name="bitmacro-signer-daemon"} | json | event="nip46_idle_no_inbound"
 {service_name="bitmacro-signer"} | json | event="nostrconnect_registered"
 ```
 
 **`RELAY_CONNECT_LOG_MIN_LEVEL`** on the daemon defaults to **`debug`** for maximum NIP-46 visibility; set **`info`** if the volume is too high.
+
+### Troubleshooting (operators)
+
+- **relay-api / panel — no NIP-46 in HTTP logs:** Signing clients open a **WebSocket** to the relay host (e.g. `wss://nip46.bitmacro.io` or `wss://relay.bitmacro.cloud`). That path **does not** pass through **relay-api**; only the Relay Manager **agent** talks to relay-api. Use **Loki** on **signer-daemon** (`NIP-46 inbound`, `nip46_idle_no_inbound`, subscribe snapshot) instead.
+- **Relay Manager → Eventos empty on “Relay NIP-46 VPS”:** The header **WebSocket** line is the **`relay-agent` base URL** (`https://…relay-agent…` / management), not the public `wss://` clients use. Eventos are read from **strfry** via the agent. If you clicked **“Meus eventos”**, the request adds `authors=<your npub hex>`; **kind 24133** NIP-46 messages are usually authored by the **remote app** key, **not** your profile pubkey — the table looks empty even when the relay has traffic. Clear the author field, widen the time range (“Todas”), pick **kind 24133** in the kind filter, or category **“Todos” / “Replaceable”**.
+- **Test bunker on the public relay:** On **bitmacro-server** `docker-compose`, set both to the same URL, recreate **signer-web** and **signer-daemon**, then **unlock** and issue a **new** `bunker://` / session (old QR still points at the previous relay):
+
+  ```bash
+  SIGNER_DAEMON_RELAY_URL=wss://relay.bitmacro.cloud
+  ```
+
+  Compose already sets **`BUNKER_RELAY_URL=${SIGNER_DAEMON_RELAY_URL:-…}`** on signer-web so the bunker URI matches.
 
 ## Development
 
