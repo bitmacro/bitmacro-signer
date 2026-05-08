@@ -19,7 +19,7 @@ import {
   listSessions,
 } from "@/lib/session/app-keys";
 import { parseNostrConnectUri } from "@/lib/session/nostr-connect-uri";
-import { getRelayUrlServer } from "@/lib/relay/env";
+import { getBunkerRelayUrlServer } from "@/lib/relay/env";
 import { buildBunkerUri } from "@/lib/session/ttl";
 import type { Session } from "@/lib/session/ttl";
 import { createServiceRoleClient } from "@/lib/supabase/server";
@@ -183,10 +183,10 @@ async function handlePost(request: Request) {
 
   let relayUrl: string;
   try {
-    relayUrl = getRelayUrlServer();
+    relayUrl = getBunkerRelayUrlServer();
   } catch {
     return jsonError(
-      "Server misconfigured: RELAY_URL or NEXT_PUBLIC_RELAY_URL is not set",
+      "Server misconfigured: BUNKER_RELAY_URL, RELAY_URL, or NEXT_PUBLIC_RELAY_URL is not set",
       503,
     );
   }

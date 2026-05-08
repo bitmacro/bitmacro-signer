@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-05-08
+
+### Fixed
+
+- **`bunker://` QR relay mismatch:** `POST /api/sessions` now builds **`bunker_uri`** with **`getBunkerRelayUrlServer()`**, which prefers **`BUNKER_RELAY_URL`** then **`RELAY_URL`** / **`NEXT_PUBLIC_*`**. When signer-web defaulted to **`relay.bitmacro.cloud`** while **`signer-daemon`** listened only on **`nip46.bitmacro.io`**, clients timed out (**unreachable-bunker**). **BitMacro compose:** **`signer-web`** receives **`BUNKER_RELAY_URL=${SIGNER_DAEMON_RELAY_URL:-wss://nip46.bitmacro.io}`**.
+
 ## [0.6.1] - 2026-05-08
 
 ### Added
@@ -309,6 +315,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.6.2]: https://github.com/bitmacro/bitmacro-signer/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/bitmacro/bitmacro-signer/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.8...v0.6.0
 [0.5.8]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.7...v0.5.8
