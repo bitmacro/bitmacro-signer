@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-05-08
+
+### Added
+
+- **Observability (unlock + NIP-46):** verbose **info**/error structured logs for Grafana/Loki — **`POST /api/auth/unlock`** (`auth_unlock_*` events on `subsystem=signer-web-api`), **daemon** `internal_http` (`internal_unlock_*`, **`source=internal-http`**), **daemon boot** `daemon_boot_relay_env`, **`nip46-loop`** `Relay.connect attempting` / `Relay.connect established` per URL with timing, full resolved **`relayUrls`** + fingerprint before connect, **`startBunker` failure bundle** (`failures`) when zero relays reach, richer **`restartBunkerSubscriptions` fingerprint** logging, **`sign_event`** inbound at **info** (was debug).
+
 ## [0.6.0] - 2026-05-08
 
 ### Fixed
@@ -303,6 +309,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Prior release; see [git tags](https://github.com/bitmacro/bitmacro-signer/tags) for earlier history.
 
+[0.6.1]: https://github.com/bitmacro/bitmacro-signer/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.8...v0.6.0
 [0.5.8]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.7...v0.5.8
 [0.5.7]: https://github.com/bitmacro/bitmacro-signer/compare/v0.5.6...v0.5.7

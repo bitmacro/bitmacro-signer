@@ -10,7 +10,10 @@ import {
   setRelayConnectLogSink,
 } from "@bitmacro/relay-connect";
 
-import { enqueueDaemonRelayConnectLoki } from "@/daemon/loki-forward";
+import {
+  enqueueDaemonInternalHttpLoki,
+  enqueueDaemonRelayConnectLoki,
+} from "@/daemon/loki-forward";
 import { stopAllBunkers } from "@/lib/bunker";
 import { getRelayUrlServer } from "@/lib/relay/env";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
@@ -105,7 +108,16 @@ function main(): void {
   }
 
   try {
-    getRelayUrlServer();
+    const relayUrl = getRelayUrlServer();
+    log("info", "daemon bunker default RELAY_URL (sessions may add extras)", {
+      relayUrl,
+    });
+    enqueueDaemonInternalHttpLoki(
+      "info",
+      "daemon_boot_relay_env",
+      "daemon cold start — RELAY_URL/NEXT_PUBLIC_RELAY_URL resolved for nip46-loop default relay",
+      { relayUrl, relayConnectLogMinLevel: relayConnectMinLevel() },
+    );
   } catch {
     log(
       "error",

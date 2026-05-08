@@ -6,6 +6,7 @@
 import http from "node:http";
 import { URL } from "node:url";
 
+import { enqueueDaemonInternalHttpLoki } from "@/daemon/loki-forward";
 import {
   isRunning,
   restartBunkerSubscriptions,
@@ -161,6 +162,12 @@ export function startInternalHttpServer(opts: {
           json(res, 400, { error: "nsec invalid" });
           return;
         }
+        enqueueDaemonInternalHttpLoki(
+          "info",
+          "internal_unlock_received",
+          "POST /internal/unlock validated; calling startBunker(nip46-loop)",
+          { identityId, nsecLooksValid: true },
+        );
         let nsecMaterial = nsec;
         try {
           await startBunker(identityId, nsecMaterial);
@@ -177,12 +184,28 @@ export function startInternalHttpServer(opts: {
             identityId,
             err: msg,
           });
+          enqueueDaemonInternalHttpLoki(
+            "error",
+            "internal_unlock_startBunker_failed",
+            msg.slice(0, 500),
+            {
+              identityId,
+              errorPreview: msg.slice(0, 640),
+              looksLikeNoRelayConnected: msg.includes("no relay connected"),
+            },
+          );
           json(res, 502, { error: msg });
           return;
         } finally {
           nsecMaterial = "";
         }
         log("info", "internal unlock — bunker started", { identityId });
+        enqueueDaemonInternalHttpLoki(
+          "info",
+          "internal_unlock_ok",
+          "startBunker finished; bunker should be subscribed on relays",
+          { identityId, running: true },
+        );
         json(res, 200, { ok: true });
         return;
       }

@@ -108,11 +108,29 @@ export async function restartBunkerSubscriptions(
   let nextRelayUrls: string[] | null = null;
   try {
     nextRelayUrls = await getActiveNip46RelayUrlsForIdentity(identityId);
-  } catch {
+  } catch (e) {
+    log("warn", "restartBunkerSubscriptions: could not load next relay URLs from DB — will recycle bunker", {
+      identityId,
+      err: e instanceof Error ? e.message : String(e),
+    });
     /* fall through: cannot compare fingerprints; safest to restart subscriptions */
   }
 
   const currentFp = relaySetFingerprint(rt.relaySubs.map((s) => s.relayUrl));
+  const nextFp =
+    nextRelayUrls !== null ? relaySetFingerprint(nextRelayUrls) : null;
+
+  log("info", "restartBunkerSubscriptions: fingerprint check", {
+    identityId,
+    currentFingerprint: currentFp.slice(0, 200),
+    nextFingerprintPreview:
+      nextFp !== null ? nextFp.slice(0, 200) : "(unavailable)",
+    currentRelayUrls: rt.relaySubs.map((s) => s.relayUrl),
+    nextRelayUrls: nextRelayUrls ?? null,
+    willRecycle:
+      nextRelayUrls === null || relaySetFingerprint(nextRelayUrls) !== currentFp,
+  });
+
   if (
     nextRelayUrls !== null &&
     relaySetFingerprint(nextRelayUrls) === currentFp
@@ -127,6 +145,11 @@ export async function restartBunkerSubscriptions(
     );
     return;
   }
+
+  log("info", "restartBunkerSubscriptions: relay set changed — stopBunker + startBunker", {
+    identityId,
+    previousRelayCount: rt.relaySubs.length,
+  });
 
   const skCopy = new Uint8Array(rt.secretKey);
   let nsec = "";
@@ -208,6 +231,17 @@ export async function startBunker(
 
   const relayUrls = await getActiveNip46RelayUrlsForIdentity(identityId);
 
+  log("info", "startBunker: resolved NIP-46 relay URLs (vault + session union)", {
+    identityId,
+    bunkerPkPrefix: bunkerPubkeyHex.slice(0, 12),
+    relayCount: relayUrls.length,
+    relayUrls,
+    relayFingerprint: relaySetFingerprint(relayUrls),
+    nip46KindFilter: NOSTR_CONNECT_KIND,
+    relayEnvDefaultNote:
+      "first URL is typically RELAY_URL on daemon; extras from signer_sessions.nip46_relay_urls",
+  });
+
   const filters = [
     {
       kinds: [NOSTR_CONNECT_KIND],
@@ -276,7 +310,11 @@ export async function startBunker(
           ...connectExtra,
         };
         if (req.method === "sign_event") {
-          log("debug", "NIP-46 inbound", inboundLog);
+          log(
+            "info",
+            `NIP-46 inbound ${req.method}`,
+            inboundLog,
+          );
         } else {
           log("info", "NIP-46 inbound", inboundLog);
         }
@@ -331,8 +369,21 @@ export async function startBunker(
 
   const relaySubs: RelaySubscription[] = [];
   const connectFailures: { relayUrl: string; detail: string }[] = [];
+  log("info", "startBunker: Relay.connect cascade starting", {
+    identityId,
+    attemptCount: relayUrls.length,
+  });
+  let idx = 0;
   for (const relayUrl of relayUrls) {
+    idx += 1;
+    const t0 = Date.now();
     let relay: Relay;
+    log("info", "Relay.connect attempting", {
+      identityId,
+      relayIndex: idx,
+      relayTotal: relayUrls.length,
+      relayUrl,
+    });
     try {
       relay = await Relay.connect(relayUrl, { enableReconnect: true });
     } catch (e) {
@@ -341,10 +392,18 @@ export async function startBunker(
       log("warn", "NIP-46 relay WebSocket connect failed (trying next URL)", {
         identityId,
         relayUrl,
+        relayIndex: idx,
         err: detail,
+        elapsedMs: Date.now() - t0,
       });
       continue;
     }
+    log("info", "Relay.connect established", {
+      identityId,
+      relayUrl,
+      relayIndex: idx,
+      elapsedMs: Date.now() - t0,
+    });
     const sub = relay.subscribe(filters, {
       onevent: attachOnevent(relay, relayUrl),
       onclose: (reason) => {
@@ -370,6 +429,15 @@ export async function startBunker(
     const summary = connectFailures
       .map((f) => `${f.relayUrl}: ${f.detail}`)
       .join("; ");
+    log("error", "startBunker: no relay reachable — throwing (client apps may report unreachable-bunker)", {
+      identityId,
+      attemptedUrls: relayUrls,
+      bunkerPkPrefix: bunkerPubkeyHex.slice(0, 12),
+      failureCount: connectFailures.length,
+      failures: connectFailures,
+      hint:
+        "Check RELAY_URL / SIGNER_DAEMON_RELAY_URL, Docker DNS, nip46 whitelist (kind 24133), firewall",
+    });
     throw new Error(
       `nip46-loop: no relay connected (tried ${relayUrls.length}): ${summary}`,
     );

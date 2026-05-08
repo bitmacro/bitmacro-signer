@@ -50,3 +50,38 @@ export function enqueueDaemonRelayConnectLoki(entry: RelayConnectLogEntry): void
     /* Loki unreachable — stdout already emitted by sink */
   });
 }
+
+function journeyFromIdentityId(identityId?: string): string {
+  if (typeof identityId === "string" && identityId.length >= 8) {
+    return identityId.slice(0, 8);
+  }
+  return randomUUID().slice(0, 8);
+}
+
+/** Internal HTTP (unlock, refresh) — same Loki stream as daemon, separate `source` label. */
+export function enqueueDaemonInternalHttpLoki(
+  level: "info" | "warn" | "error",
+  event: string,
+  message: string,
+  context?: Record<string, unknown>,
+): void {
+  if (!process.env.LOKI_HOST?.trim()) return;
+  const raw = context ?? {};
+  const safe = sanitizeTelemetryContext(raw) ?? {};
+  const id = typeof raw.identityId === "string" ? raw.identityId : undefined;
+  void pushLokiStructured(
+    level,
+    {
+      service: SERVICE,
+      ...safe,
+      component: "daemon-internal-http",
+      event,
+      journey_id: journeyFromIdentityId(id),
+      request_id: randomUUID(),
+      message,
+    },
+    { streamLabels: { subsystem: "signer-daemon", source: "internal-http" } },
+  ).catch(() => {
+    /* optional Loki */
+  });
+}
