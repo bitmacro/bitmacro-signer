@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **POST `/api/sessions` (classic bunker QR):** call **`refreshBunkerNip46Relays`** after **`authorizeApp`**, matching the nostrconnect path. Previously, changing **`RELAY_URL`** / **`NEXT_PUBLIC_RELAY_URL`** produced a new **`bunker_uri`** while the daemon could stay subscribed to the previous relay until a full unlock; clients then failed pairing on the new relay.
+
 ### Changed
 
 - **NIP-46:** when an RPC response contains **`error`** (e.g. `sign_event` before `connect`), the Loki log includes **`rpcErrorPreview`** (truncated) for Grafana diagnostics.

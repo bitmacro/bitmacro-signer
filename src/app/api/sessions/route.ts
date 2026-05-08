@@ -212,6 +212,9 @@ async function handlePost(request: Request) {
     throw e;
   }
 
+  /** After relay env or session relays change, re-subscribe (same as nostrconnect path). */
+  await refreshBunkerNip46Relays(identity_id);
+
   const bunker_uri = buildBunkerUri(vault.bunker_pubkey, relayUrl, secret);
 
   return NextResponse.json({
