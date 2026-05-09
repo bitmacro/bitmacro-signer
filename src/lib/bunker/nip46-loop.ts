@@ -1,6 +1,6 @@
 /**
  * NIP-46 bunker loop: WebSocket to relay, kind 24133 — inbound tries **NIP-44** then **NIP-04**; outbound
- * responses **match the inbound cipher**. Outbound `sendNostrConnectInitiate` uses **NIP-04** (nostrconnect clients).
+ * responses **match the inbound cipher**. Outbound `sendNostrConnectInitiate` sends NIP-46 **response** JSON + **NIP-04** envelope (nostrconnect clients).
  */
 
 import { randomUUID } from "node:crypto";
@@ -679,8 +679,9 @@ export type SendNostrConnectInitiateParams = {
 };
 
 /**
- * One-shot outbound NIP-46 `connect` request (client-initiated / Nostr Connect “push” completion).
- * Opens each relay URL, publishes kind 24133, closes — independent of long-lived bunker subscriptions.
+ * One-shot outbound NIP-46 **`connect` response** for client-initiated `nostrconnect://` (NIP-46).
+ * Payload MUST be response-shaped `{ id, result: secret, error }`, not an RPC request — clients validate `result === secret`
+ * and learn remote-signer pubkey from **`event.pubkey`** (author).
  */
 export async function sendNostrConnectInitiate(
   params: SendNostrConnectInitiateParams,
@@ -699,12 +700,11 @@ export async function sendNostrConnectInitiate(
     return;
   }
 
-  const bunkerPubkeyHex = getPublicKey(bunkerPrivkeyBytes).toLowerCase();
-  const requestId = randomUUID();
+  const responseId = randomUUID();
   const plaintext = JSON.stringify({
-    id: requestId,
-    method: "connect",
-    params: [bunkerPubkeyHex, secret],
+    id: responseId,
+    result: secret,
+    error: "",
   });
   const skHex = bytesToHex(bunkerPrivkeyBytes);
   const content = nip04.encrypt(skHex, clientPk, plaintext);
@@ -747,7 +747,7 @@ export async function sendNostrConnectInitiate(
         identityId,
         event: "nostrconnect_initiate_ok",
         relayUrl,
-        requestId,
+        responseId,
         eventIdPrefix: ev.id.slice(0, 16),
         elapsedMs: Date.now() - t0,
       });
@@ -757,7 +757,7 @@ export async function sendNostrConnectInitiate(
         identityId,
         event: "nostrconnect_initiate_relay_err",
         relayUrl,
-        requestId,
+        responseId,
         err: detail,
         elapsedMs: Date.now() - t0,
       });

@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.12] - 2026-05-09
+
+### Fixed
+
+- **`sendNostrConnectInitiate` (`nostrconnect://`):** publish kind **24133** content as an NIP-46 **response** `{ id, result: <secret>, error: "" }`, per [NIP-46](https://github.com/nostr-protocol/nips/blob/master/46.md) (*Direct connection initiated by the client*). Previously the bunker wrongly sent an RPC **request** `{ method: "connect", params: [...] }`, so clients never saw `result === secret` and never completed the handshake (idle subscription, **`pending`** sessions).
+
 ## [0.6.11] - 2026-05-09
 
 ### Fixed
