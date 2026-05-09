@@ -260,7 +260,7 @@ describe("runNip46Method", () => {
     expect(dec44.result).toBe("hello-nip44");
   });
 
-  it("switch_relays returns empty JSON array", async () => {
+  it("switch_relays returns empty JSON array without getSwitchRelayUrls", async () => {
     const deps = testDeps();
     const out = await runNip46Method(
       "g".repeat(64),
@@ -268,6 +268,25 @@ describe("runNip46Method", () => {
       deps,
     );
     expect(out.result).toBe("[]");
+  });
+
+  it("switch_relays returns JSON-encoded URLs from getSwitchRelayUrls", async () => {
+    const deps = testDeps({
+      getSwitchRelayUrls: vi.fn().mockResolvedValue([
+        "wss://nip46.bitmacro.io",
+        "wss://nrs.primal.net",
+      ]),
+    });
+    const out = await runNip46Method(
+      "g".repeat(64),
+      { id: "10b", method: "switch_relays", params: [] },
+      deps,
+    );
+    expect(out.error).toBeUndefined();
+    expect(JSON.parse(out.result ?? "null")).toEqual([
+      "wss://nip46.bitmacro.io",
+      "wss://nrs.primal.net",
+    ]);
   });
 
   it("unknown method returns error in result object", async () => {

@@ -199,6 +199,8 @@ function createNip46AttachOnevent(
             completeConnect(identityId, appPubkey, secret, trace),
           assertAppMayUseSigner: (appPubkey) =>
             assertAppMayUseSigner(identityId, appPubkey),
+          getSwitchRelayUrls: () =>
+            getActiveNip46RelayUrlsForIdentity(identityId),
         });
 
         if (req.method === "connect") {
@@ -758,6 +760,24 @@ export async function sendNostrConnectInitiate(
         ),
       ]);
       publishOkCount += 1;
+      if (publishOkCount === 1 && params.completeConnect) {
+        const trace = { rpcId: "nostrconnect-initiate" as const };
+        try {
+          await params.completeConnect(clientPk, secret.trim(), trace);
+          log("info", "nostrconnect initiate: completeConnect (session bound)", {
+            identityId,
+            clientPkPrefix: clientPk.slice(0, 12),
+            publishOkCount: 1,
+          });
+        } catch (e) {
+          log("error", "nostrconnect initiate: completeConnect failed", {
+            identityId,
+            clientPkPrefix: clientPk.slice(0, 12),
+            err: e instanceof Error ? e.message : String(e),
+          });
+          throw e;
+        }
+      }
       log("info", "nostrconnect initiate: published on relay", {
         identityId,
         event: "nostrconnect_initiate_ok",
@@ -781,25 +801,6 @@ export async function sendNostrConnectInitiate(
       } catch {
         /* ignore */
       }
-    }
-  }
-
-  if (publishOkCount > 0 && params.completeConnect) {
-    const trace = { rpcId: "nostrconnect-initiate" as const };
-    try {
-      await params.completeConnect(clientPk, secret.trim(), trace);
-      log("info", "nostrconnect initiate: completeConnect (session bound)", {
-        identityId,
-        clientPkPrefix: clientPk.slice(0, 12),
-        publishOkCount,
-      });
-    } catch (e) {
-      log("error", "nostrconnect initiate: completeConnect failed", {
-        identityId,
-        clientPkPrefix: clientPk.slice(0, 12),
-        err: e instanceof Error ? e.message : String(e),
-      });
-      throw e;
     }
   }
 }

@@ -41,6 +41,8 @@ export type Nip46MethodDeps = {
     trace?: Nip46ConnectTrace,
   ) => Promise<void>;
   assertAppMayUseSigner: (appPubkey: string) => Promise<void>;
+  /** NIP-46 `switch_relays`: bunker’s preferred relay URLs (JSON array string when set). */
+  getSwitchRelayUrls?: () => Promise<string[]>;
 };
 
 export function parseNip46RpcPayload(plaintext: string): Nip46RpcRequest {
@@ -172,7 +174,11 @@ export async function runNip46Method(
       }
       case "switch_relays": {
         await deps.assertAppMayUseSigner(appPubkey);
-        return { id, result: "[]" };
+        if (deps.getSwitchRelayUrls) {
+          const urls = await deps.getSwitchRelayUrls();
+          return { id, result: JSON.stringify(urls) };
+        }
+        return { id, result: JSON.stringify([]) };
       }
       default:
         throw new Error(`unsupported method: ${method}`);
