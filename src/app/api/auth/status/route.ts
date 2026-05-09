@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getSessionCookie } from "@/lib/auth/session-cookie";
+import { getSessionCookie, setSessionCookie } from "@/lib/auth/session-cookie";
 import { apiGET } from "@/lib/observability/api-route-wrapper";
 import {
   getDaemonBunkerRunning,
@@ -37,6 +37,13 @@ async function handleGet(request: Request) {
 
   if (!identityId) {
     return jsonError("Unauthorized", 401);
+  }
+
+  /** Sliding session: new JWT + `Set-Cookie` maxAge while the current token is still valid. */
+  try {
+    await setSessionCookie(identityId);
+  } catch {
+    /* Non-fatal: verified identity above; client keeps prior cookie for this response. */
   }
 
   let running = false;

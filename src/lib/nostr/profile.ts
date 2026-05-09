@@ -4,7 +4,7 @@ import type { Event } from "nostr-tools";
 import { nostrPubkeyInputToHex } from "@/lib/session/ttl";
 
 /** Public relays used only to resolve kind:0 metadata when the app relay has no profile yet. */
-const PROFILE_RELAY_FALLBACKS = ["wss://relay.damus.io", "wss://nos.lol"] as const;
+const PROFILE_RELAY_FALLBACKS = ["wss://nos.lol"] as const;
 
 export type NostrProfileMeta = {
   name?: string;

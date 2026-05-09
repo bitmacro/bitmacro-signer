@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   SESSION_COOKIE_NAME,
+  SESSION_MAX_AGE_SEC,
   signSessionCookieValue,
   verifySessionCookieValue,
 } from "./session-cookie";
@@ -42,5 +43,9 @@ describe("session-cookie JWT", () => {
 
   it("exports stable cookie name", () => {
     expect(SESSION_COOKIE_NAME).toBe("bm_signer_session");
+  });
+
+  it("exports 24h session max-age", () => {
+    expect(SESSION_MAX_AGE_SEC).toBe(86_400);
   });
 });

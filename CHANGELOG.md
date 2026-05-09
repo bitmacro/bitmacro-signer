@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.7] - 2026-05-09
+
+### Added
+
+- **`GET /api/auth/status`:** sliding session — when the JWT cookie is still valid, re-issues **`Set-Cookie`** with a fresh 24 h token so active tabs avoid silent expiry (unlock still required if the cookie is gone/expired or **`AUTH_SESSION_SECRET`** rotated).
+- **`SESSION_MAX_AGE_SEC`:** exported alongside session-cookie module documentation (TTL, `SameSite=Lax`, redeploy note).
+
+### Changed
+
+- **Nostr profile metadata (kind 0):** removed **`wss://relay.damus.io`** from browser fallback relays (only **`wss://nos.lol`** + **`NEXT_PUBLIC_RELAY_URL`** when set), reducing WebSocket noise when Damus relay is unreachable.
+
 ## [0.6.6] - 2026-05-09
 
 ### Added
