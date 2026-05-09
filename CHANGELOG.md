@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.10] - 2026-05-09
+
+### Fixed
+
+- **NIP-46 kind 24133 inbound:** try **NIP-44** first, then **NIP-04** if the ciphertext is not a valid NIP-44 payload. Some web clients (e.g. Primal) may send **NIP-04** envelopes; previously the bunker only attempted NIP-44 and dropped the event, leaving **`nostrconnect`** sessions stuck **`pending`** (`used: false`).
+
 ## [0.6.9] - 2026-05-06
 
 ### Fixed

@@ -1,5 +1,5 @@
 /**
- * NIP-46 bunker loop: WebSocket to relay, kind 24133 — responses & inbound RPC use NIP-44.
+ * NIP-46 bunker loop: WebSocket to relay, kind 24133 — inbound RPC tries **NIP-44** then **NIP-04**; responses use NIP-44.
  * Outbound `sendNostrConnectInitiate` uses NIP-04 for the envelope (mainstream nostrconnect clients).
  */
 
@@ -25,6 +25,7 @@ import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import {
   NOSTR_CONNECT_KIND,
   parseNip46RpcPayload,
+  decryptNip46InboundEventContent,
   runNip46Method,
   type Nip46RpcResult,
 } from "./nip46-methods";
@@ -298,7 +299,7 @@ export async function startBunker(
       clearIdleInboundWarnTimer(identityId);
       {
         const pTag = event.tags.find((t) => t[0] === "p")?.[1];
-        log("info", "NIP-46 kind 24133 envelope received (before NIP-44 decrypt)", {
+        log("info", "NIP-46 kind 24133 envelope received (before payload decrypt)", {
           identityId,
           relayUrl,
           eventIdPrefix: event.id.slice(0, 16),
@@ -310,18 +311,18 @@ export async function startBunker(
         });
       }
       try {
-        const convKey = nip44.getConversationKey(secretKey, event.pubkey);
-        let plaintext: string;
-        try {
-          plaintext = nip44.decrypt(event.content, convKey);
-        } catch (e) {
-          log("warn", "NIP-44 decrypt failed (ignored)", {
+        const { plaintext, envelope } = decryptNip46InboundEventContent(
+          secretKey,
+          event.pubkey,
+          event.content,
+        );
+        if (envelope === "nip04") {
+          log("info", "NIP-46 inbound envelope: NIP-04 (NIP-44 did not parse)", {
             identityId,
             relayUrl,
             from: event.pubkey.slice(0, 12),
-            err: e instanceof Error ? e.message : String(e),
+            eventIdPrefix: event.id.slice(0, 16),
           });
-          return;
         }
 
         const req = parseNip46RpcPayload(plaintext);

@@ -1,6 +1,7 @@
 /**
  * Pure NIP-46 RPC handling (nostr-tools wire format: kind 24133 + NIP-44 envelope).
- * Interop with `nostr-tools` BunkerSigner — see `nostr-tools/nip46` client implementation.
+ * Inbound kind 24133 may use **NIP-44** (modern) or **NIP-04** (legacy / some web clients); see `decryptNip46InboundEventContent`.
+ * Outbound `sendNostrConnectInitiate` (nip46-loop) uses **NIP-04** to match mainstream `nostrconnect://` clients.
  */
 
 import type { Event, EventTemplate } from "nostr-tools";
@@ -61,6 +62,34 @@ export function parseNip46RpcPayload(plaintext: string): Nip46RpcRequest {
 
 export function formatNip46RpcResponse(r: Nip46RpcResult): string {
   return JSON.stringify(r);
+}
+
+export type DecryptNip46InboundResult = {
+  plaintext: string;
+  envelope: "nip44" | "nip04";
+};
+
+/**
+ * Decrypt NIP-46 kind 24133 `content`: try **NIP-44** first, then **NIP-04** (e.g. Primal / older clients).
+ * Throws if neither works.
+ */
+export function decryptNip46InboundEventContent(
+  bunkerSecretKey: Uint8Array,
+  clientPubkeyHex: string,
+  content: string,
+): DecryptNip46InboundResult {
+  const convKey = nip44.getConversationKey(bunkerSecretKey, clientPubkeyHex);
+  try {
+    return {
+      plaintext: nip44.decrypt(content, convKey),
+      envelope: "nip44",
+    };
+  } catch {
+    return {
+      plaintext: nip04.decrypt(bunkerSecretKey, clientPubkeyHex, content),
+      envelope: "nip04",
+    };
+  }
 }
 
 /**

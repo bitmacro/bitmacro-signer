@@ -1,9 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
+import { bytesToHex } from "@noble/hashes/utils.js";
 import { generateSecretKey, getPublicKey, verifyEvent } from "nostr-tools";
+import * as nip04 from "nostr-tools/nip04";
 import * as nip19 from "nostr-tools/nip19";
 import * as nip44 from "nostr-tools/nip44";
 
 import {
+  decryptNip46InboundEventContent,
   parseNip46RpcPayload,
   runNip46Method,
   type Nip46MethodDeps,
@@ -20,6 +23,32 @@ function testDeps(overrides: Partial<Nip46MethodDeps> = {}): Nip46MethodDeps {
     ...overrides,
   };
 }
+
+describe("decryptNip46InboundEventContent", () => {
+  it("decrypts NIP-44 payloads", () => {
+    const bunkerSk = generateSecretKey();
+    const clientSk = generateSecretKey();
+    const clientPk = getPublicKey(clientSk);
+    const plaintext = JSON.stringify({ id: "1", method: "ping", params: [] });
+    const ck = nip44.getConversationKey(bunkerSk, clientPk);
+    const enc = nip44.encrypt(plaintext, ck);
+    const out = decryptNip46InboundEventContent(bunkerSk, clientPk, enc);
+    expect(out.envelope).toBe("nip44");
+    expect(out.plaintext).toBe(plaintext);
+  });
+
+  it("falls back to NIP-04 when ciphertext is not NIP-44", () => {
+    const bunkerSk = generateSecretKey();
+    const clientSk = generateSecretKey();
+    const bunkerPk = getPublicKey(bunkerSk);
+    const clientPk = getPublicKey(clientSk);
+    const plaintext = JSON.stringify({ id: "1", method: "ping", params: [] });
+    const enc = nip04.encrypt(bytesToHex(clientSk), bunkerPk, plaintext);
+    const out = decryptNip46InboundEventContent(bunkerSk, clientPk, enc);
+    expect(out.envelope).toBe("nip04");
+    expect(out.plaintext).toBe(plaintext);
+  });
+});
 
 describe("parseNip46RpcPayload", () => {
   it("parses a valid request", () => {
