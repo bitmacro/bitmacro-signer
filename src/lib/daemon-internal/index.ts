@@ -3,5 +3,6 @@ export {
   notifyDaemonUnlock,
   notifyDaemonLock,
   notifyDaemonRefreshNip46Relays,
+  notifyDaemonNostrConnectInitiate,
   getDaemonBunkerRunning,
 } from "./client";

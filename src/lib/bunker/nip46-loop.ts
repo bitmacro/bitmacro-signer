@@ -2,6 +2,8 @@
  * NIP-46 bunker loop: WebSocket to relay, kind 24133 in/out with NIP-44 payload (matches `nostr-tools` BunkerSigner).
  */
 
+import { randomUUID } from "node:crypto";
+
 import { relayConnectLog } from "@bitmacro/relay-connect";
 import type { Event } from "nostr-tools";
 import { finalizeEvent, getPublicKey } from "nostr-tools";
@@ -97,6 +99,16 @@ const active = new Map<string, BunkerRuntime>();
 
 export function isRunning(identityId: string): boolean {
   return active.has(identityId);
+}
+
+/**
+ * Copy of the running bunker secret key for one-shot outbound Nostr Connect initiator only.
+ * Caller must `fill(0)` when done if holding a copy.
+ */
+export function copyRunningBunkerSecretKey(identityId: string): Uint8Array | null {
+  const rt = active.get(identityId);
+  if (!rt) return null;
+  return new Uint8Array(rt.secretKey);
 }
 
 /** Process shutdown: stop all active bunkers. */
@@ -514,6 +526,108 @@ export async function startBunker(
     attemptedRelayCount: relayUrls.length,
     bunkerPk: bunkerPubkeyHex.slice(0, 12),
   });
+}
+
+const NOSTRCONNECT_INIT_RELAY_MS = 8000;
+
+export type SendNostrConnectInitiateParams = {
+  bunkerPrivkeyBytes: Uint8Array;
+  clientPubkeyHex: string;
+  relayUrls: string[];
+  secret: string;
+  identityId?: string;
+};
+
+/**
+ * One-shot outbound NIP-46 `connect` request (client-initiated / Nostr Connect “push” completion).
+ * Opens each relay URL, publishes kind 24133, closes — independent of long-lived bunker subscriptions.
+ */
+export async function sendNostrConnectInitiate(
+  params: SendNostrConnectInitiateParams,
+): Promise<void> {
+  const { bunkerPrivkeyBytes, secret, identityId } = params;
+  const clientPk = params.clientPubkeyHex.trim().toLowerCase();
+  const relayUrls = [
+    ...new Set(params.relayUrls.map((u) => u.trim()).filter(Boolean)),
+  ];
+
+  if (relayUrls.length === 0) {
+    log("warn", "nostrconnect initiate: no relay URLs", {
+      identityId,
+      clientPkPrefix: clientPk.slice(0, 12),
+    });
+    return;
+  }
+
+  const bunkerPubkeyHex = getPublicKey(bunkerPrivkeyBytes).toLowerCase();
+  const requestId = randomUUID();
+  const plaintext = JSON.stringify({
+    id: requestId,
+    method: "connect",
+    params: [bunkerPubkeyHex, secret],
+  });
+  const convKey = nip44.getConversationKey(bunkerPrivkeyBytes, clientPk);
+  const content = nip44.encrypt(plaintext, convKey);
+  const ev = finalizeEvent(
+    {
+      kind: NOSTR_CONNECT_KIND,
+      tags: [["p", clientPk]],
+      content,
+      created_at: Math.floor(Date.now() / 1000),
+    },
+    bunkerPrivkeyBytes,
+  );
+
+  for (const relayUrl of relayUrls) {
+    const t0 = Date.now();
+    let relay: Relay | undefined;
+    try {
+      await Promise.race([
+        (async () => {
+          relay = await Relay.connect(relayUrl, { enableReconnect: false });
+          try {
+            await relay.publish(ev);
+          } finally {
+            try {
+              relay.close();
+            } catch {
+              /* ignore */
+            }
+            relay = undefined;
+          }
+        })(),
+        new Promise<never>((_, rej) =>
+          setTimeout(
+            () => rej(new Error(`timeout after ${NOSTRCONNECT_INIT_RELAY_MS}ms`)),
+            NOSTRCONNECT_INIT_RELAY_MS,
+          ),
+        ),
+      ]);
+      log("info", "nostrconnect initiate: published on relay", {
+        identityId,
+        event: "nostrconnect_initiate_ok",
+        relayUrl,
+        requestId,
+        eventIdPrefix: ev.id.slice(0, 16),
+        elapsedMs: Date.now() - t0,
+      });
+    } catch (e) {
+      const detail = thrownReason(e);
+      log("warn", "nostrconnect initiate: relay failed", {
+        identityId,
+        event: "nostrconnect_initiate_relay_err",
+        relayUrl,
+        requestId,
+        err: detail,
+        elapsedMs: Date.now() - t0,
+      });
+      try {
+        relay?.close();
+      } catch {
+        /* ignore */
+      }
+    }
+  }
 }
 
 async function publishResponse(

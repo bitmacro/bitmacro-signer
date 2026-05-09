@@ -4,6 +4,9 @@
 
 export {
   isRunning,
+  copyRunningBunkerSecretKey,
+  sendNostrConnectInitiate,
+  type SendNostrConnectInitiateParams,
   restartBunkerSubscriptions,
   startBunker,
   stopAllBunkers,

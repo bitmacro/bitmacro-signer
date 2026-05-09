@@ -8,8 +8,10 @@ import { URL } from "node:url";
 
 import { enqueueDaemonInternalHttpLoki } from "@/daemon/loki-forward";
 import {
+  copyRunningBunkerSecretKey,
   isRunning,
   restartBunkerSubscriptions,
+  sendNostrConnectInitiate,
   startBunker,
   stopBunker,
 } from "@/lib/bunker";
@@ -53,6 +55,10 @@ function isUuid(s: string): boolean {
 function looksLikeNsec(s: string): boolean {
   const t = s.trim();
   return t.startsWith("nsec1") && t.length >= 58;
+}
+
+function looksLikeHexPubkey64(s: string): boolean {
+  return /^[0-9a-f]{64}$/i.test(s.trim());
 }
 
 export function startInternalHttpServer(opts: {
@@ -140,6 +146,72 @@ export function startInternalHttpServer(opts: {
         }
         log("info", "internal refresh-nip46-relays", { identityId });
         json(res, 200, { ok: true, restarted: true });
+        return;
+      }
+
+      if (req.method === "POST" && url.pathname === "/internal/nostrconnect-initiate") {
+        const raw = await readBody(req);
+        let body: {
+          identity_id?: string;
+          client_pubkey_hex?: string;
+          relay_urls?: unknown;
+          secret?: string;
+        };
+        try {
+          body = JSON.parse(raw) as typeof body;
+        } catch {
+          json(res, 400, { error: "Invalid JSON" });
+          return;
+        }
+        const identityId = body.identity_id?.trim() ?? "";
+        const clientPub = body.client_pubkey_hex?.trim() ?? "";
+        const secret = typeof body.secret === "string" ? body.secret : "";
+        if (!identityId || !isUuid(identityId)) {
+          json(res, 400, { error: "identity_id required (uuid)" });
+          return;
+        }
+        if (!clientPub || !looksLikeHexPubkey64(clientPub)) {
+          json(res, 400, { error: "client_pubkey_hex required (64 hex chars)" });
+          return;
+        }
+        if (!Array.isArray(body.relay_urls)) {
+          json(res, 400, { error: "relay_urls must be an array" });
+          return;
+        }
+        const relayUrls = body.relay_urls.filter(
+          (u): u is string => typeof u === "string" && u.trim().length > 0,
+        );
+        if (relayUrls.length === 0) {
+          json(res, 400, { error: "relay_urls must be non-empty" });
+          return;
+        }
+        if (!secret.trim()) {
+          json(res, 400, { error: "secret required" });
+          return;
+        }
+        const sk = copyRunningBunkerSecretKey(identityId);
+        if (!sk) {
+          json(res, 409, { error: "bunker_not_running" });
+          return;
+        }
+        try {
+          await sendNostrConnectInitiate({
+            bunkerPrivkeyBytes: sk,
+            clientPubkeyHex: clientPub,
+            relayUrls,
+            secret: secret.trim(),
+            identityId,
+          });
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          log("error", "internal nostrconnect-initiate", { identityId, err: msg });
+          json(res, 500, { error: msg });
+          return;
+        } finally {
+          sk.fill(0);
+        }
+        log("info", "internal nostrconnect-initiate ok", { identityId });
+        json(res, 200, { ok: true });
         return;
       }
 

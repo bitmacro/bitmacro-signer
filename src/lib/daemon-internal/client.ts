@@ -98,6 +98,35 @@ export async function notifyDaemonLock(
   return { ok: false, status: res.status, message };
 }
 
+/** After `nostrconnect://` DB row exists: optionally push outbound `connect` if bunker is unlocked. */
+export async function notifyDaemonNostrConnectInitiate(
+  cfg: DaemonInternalConfig,
+  body: {
+    identity_id: string;
+    client_pubkey_hex: string;
+    relay_urls: string[];
+    secret: string;
+  },
+): Promise<{ ok: true } | { ok: false; status: number; message: string }> {
+  const res = await fetchWithAuth(cfg, "/internal/nostrconnect-initiate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (res.ok) {
+    return { ok: true };
+  }
+  let message = res.statusText;
+  try {
+    const j = (await res.json()) as { error?: string };
+    if (j.error) message = j.error;
+  } catch {
+    const t = await res.text();
+    if (t) message = t.slice(0, 200);
+  }
+  return { ok: false, status: res.status, message };
+}
+
 export async function getDaemonBunkerRunning(
   cfg: DaemonInternalConfig,
   identityId: string,

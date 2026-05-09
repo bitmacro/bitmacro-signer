@@ -4,14 +4,17 @@ import { randomUUID } from "node:crypto";
 import { getSessionCookie } from "@/lib/auth/session-cookie";
 import {
   getDaemonInternalConfig,
+  notifyDaemonNostrConnectInitiate,
   notifyDaemonRefreshNip46Relays,
 } from "@/lib/daemon-internal";
 import { apiGET, apiPOST } from "@/lib/observability/api-route-wrapper";
 import { pushLokiStructured } from "@/lib/observability/loki-http-push";
 import { sessionCreateBodySchema, sessionIdentityIdQuerySchema } from "@/lib/schemas/session";
 import {
+  copyRunningBunkerSecretKey,
   isRunning,
   restartBunkerSubscriptions,
+  sendNostrConnectInitiate,
 } from "@/lib/bunker";
 import {
   authorizeApp,
@@ -147,6 +150,37 @@ async function handlePost(request: Request) {
         app_name,
         ttl_hours,
       );
+      const daemonCfgNc = getDaemonInternalConfig();
+      if (daemonCfgNc) {
+        const initOut = await notifyDaemonNostrConnectInitiate(daemonCfgNc, {
+          identity_id,
+          client_pubkey_hex: parsedNc.clientPubkeyHex,
+          relay_urls: parsedNc.relayUrls,
+          secret: parsedNc.secret,
+        });
+        if (!initOut.ok) {
+          console.warn(
+            "[POST /api/sessions] nostrconnect-initiate:",
+            initOut.status,
+            initOut.message,
+          );
+        }
+      } else if (isRunning(identity_id)) {
+        const sk = copyRunningBunkerSecretKey(identity_id);
+        if (sk) {
+          try {
+            await sendNostrConnectInitiate({
+              bunkerPrivkeyBytes: sk,
+              clientPubkeyHex: parsedNc.clientPubkeyHex,
+              relayUrls: parsedNc.relayUrls,
+              secret: parsedNc.secret,
+              identityId: identity_id,
+            });
+          } finally {
+            sk.fill(0);
+          }
+        }
+      }
       await refreshBunkerNip46Relays(identity_id);
       void pushLokiStructured(
         "info",
