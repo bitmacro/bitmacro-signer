@@ -15,6 +15,7 @@ import {
   startBunker,
   stopBunker,
 } from "@/lib/bunker";
+import { completeConnect } from "@/lib/session/app-keys";
 
 function json(
   res: http.ServerResponse,
@@ -201,6 +202,8 @@ export function startInternalHttpServer(opts: {
             relayUrls,
             secret: secret.trim(),
             identityId,
+            completeConnect: (appPubkeyHex, sec, trace) =>
+              completeConnect(identityId, appPubkeyHex, sec, trace),
           });
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);

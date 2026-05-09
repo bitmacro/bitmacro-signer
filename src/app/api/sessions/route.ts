@@ -28,6 +28,7 @@ import {
 import {
   authorizeApp,
   authorizeAppFromNostrConnect,
+  completeConnect,
   listSessions,
   revokeAllListableSessionsForIdentity,
   revokeSessionsForIdentity,
@@ -189,6 +190,8 @@ async function handlePost(request: Request) {
               relayUrls: parsedNc.relayUrls,
               secret: parsedNc.secret,
               identityId: identity_id,
+              completeConnect: (appPubkeyHex, sec, trace) =>
+                completeConnect(identity_id, appPubkeyHex, sec, trace),
             });
           } finally {
             sk.fill(0);

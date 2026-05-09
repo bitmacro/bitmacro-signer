@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.14] - 2026-05-09
+
+### Fixed
+
+- **`nostrconnect://` after outbound initiate:** call **`completeConnect`** once **`sendNostrConnectInitiate`** publishes to **≥1 relay**. Clients such as Primal send **`switch_relays`** / **`get_public_key`** without an inbound **`connect`** RPC; **`assertAppMayUseSigner`** therefore rejected them while the DB row stayed **`used: false`**. Optional **`completeConnect`** hook wired from **`POST /internal/nostrconnect-initiate`** and from **`POST /api/sessions`** (in-process bunker).
+
 ## [0.6.13] - 2026-05-09
 
 ### Fixed

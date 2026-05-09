@@ -671,12 +671,24 @@ export async function startBunker(
 
 const NOSTRCONNECT_INIT_RELAY_MS = 8000;
 
+/** Marks nostrconnect session used after outbound handshake — bound by caller with `identity_id`. */
+export type NostrConnectPostPublishHook = (
+  appPubkeyHex: string,
+  secret: string,
+  trace?: { rpcId?: string },
+) => Promise<void>;
+
 export type SendNostrConnectInitiateParams = {
   bunkerPrivkeyBytes: Uint8Array;
   clientPubkeyHex: string;
   relayUrls: string[];
   secret: string;
   identityId?: string;
+  /**
+   * Some clients (e.g. Primal) proceed with `switch_relays` / `get_public_key` without an inbound `connect` RPC.
+   * After at least one successful publish, invoke DB **`completeConnect`** so **`assertAppMayUseSigner`** succeeds for follow-up RPCs.
+   */
+  completeConnect?: NostrConnectPostPublishHook;
 };
 
 /**
@@ -719,6 +731,7 @@ export async function sendNostrConnectInitiate(
     bunkerPrivkeyBytes,
   );
 
+  let publishOkCount = 0;
   for (const relayUrl of relayUrls) {
     const t0 = Date.now();
     let relay: Relay | undefined;
@@ -744,6 +757,7 @@ export async function sendNostrConnectInitiate(
           ),
         ),
       ]);
+      publishOkCount += 1;
       log("info", "nostrconnect initiate: published on relay", {
         identityId,
         event: "nostrconnect_initiate_ok",
@@ -767,6 +781,25 @@ export async function sendNostrConnectInitiate(
       } catch {
         /* ignore */
       }
+    }
+  }
+
+  if (publishOkCount > 0 && params.completeConnect) {
+    const trace = { rpcId: "nostrconnect-initiate" as const };
+    try {
+      await params.completeConnect(clientPk, secret.trim(), trace);
+      log("info", "nostrconnect initiate: completeConnect (session bound)", {
+        identityId,
+        clientPkPrefix: clientPk.slice(0, 12),
+        publishOkCount,
+      });
+    } catch (e) {
+      log("error", "nostrconnect initiate: completeConnect failed", {
+        identityId,
+        clientPkPrefix: clientPk.slice(0, 12),
+        err: e instanceof Error ? e.message : String(e),
+      });
+      throw e;
     }
   }
 }
