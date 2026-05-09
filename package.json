@@ -1,6 +1,6 @@
 {
   "name": "@bitmacro/bitmacro-signer",
-  "version": "0.6.7",
+  "version": "0.6.8",
   "description": "Managed NIP-46 bunker for the BitMacro ecosystem: secure remote signing without exposing nsec",
   "private": false,
   "license": "MIT",
@@ -40,8 +40,8 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@noble/hashes": "^2.0.1",
     "@bitmacro/relay-connect": "^0.1.1",
+    "@noble/hashes": "^2.0.1",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.76.1",
     "clsx": "^2.1.0",
@@ -57,6 +57,7 @@
     "qrcode.react": "^4.2.0",
     "react": "^19",
     "react-dom": "^19",
+    "react-zxing": "^2.1.0",
     "tailwind-merge": "^2.5.0",
     "zod": "^3.24.0"
   },

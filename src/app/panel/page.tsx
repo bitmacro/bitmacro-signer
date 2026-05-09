@@ -18,6 +18,7 @@ import {
 import { getPublicKey } from "nostr-tools";
 import * as nip19 from "nostr-tools/nip19";
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import { hasGetUserMedia, QrScanner } from "@/components/qr-scanner";
 import { SignerBuildStamp } from "@/components/signer-build-stamp";
 import { SignerSessionUserMenu } from "@/components/signer-session-user-menu";
 import { VaultBackupGate } from "@/components/vault-backup-gate";
@@ -98,6 +99,10 @@ export default function PanelPage() {
   const [nostrConnectRelayAck, setNostrConnectRelayAck] = useState<
     string[] | null
   >(null);
+
+  const [qrScannerOpen, setQrScannerOpen] = useState(false);
+  const [canUseCamera, setCanUseCamera] = useState(false);
+  const nostrRegisterRef = useRef<HTMLButtonElement>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -192,6 +197,10 @@ export default function PanelPage() {
   useEffect(() => {
     void refreshStatus();
   }, [refreshStatus]);
+
+  useEffect(() => {
+    setCanUseCamera(hasGetUserMedia());
+  }, []);
 
   const displayNpub = useMemo(
     () => sessionNpub.trim() || npubInput.trim() || npubDisplay.trim(),
@@ -1066,12 +1075,26 @@ export default function PanelPage() {
                       {t("step3.connectOrderReminder")}
                     </p>
                     <div>
-                      <label
-                        htmlFor="nostrconnect_paste"
-                        className="bm-label text-zinc-300"
-                      >
-                        {t("step3.nostrConnectLabel")}
-                      </label>
+                      <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
+                        <label
+                          htmlFor="nostrconnect_paste"
+                          className="bm-label mb-0 text-zinc-300"
+                        >
+                          {t("step3.nostrConnectLabel")}
+                        </label>
+                        {canUseCamera ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setError(null);
+                              setQrScannerOpen(true);
+                            }}
+                            className="inline-flex min-h-10 shrink-0 items-center rounded-lg border border-zinc-600 bg-zinc-900 px-3 py-2 text-sm font-semibold text-zinc-100 hover:bg-zinc-800"
+                          >
+                            {t("step3.scanQr")}
+                          </button>
+                        ) : null}
+                      </div>
                       <textarea
                         id="nostrconnect_paste"
                         value={nostrConnectPaste}
@@ -1090,6 +1113,8 @@ export default function PanelPage() {
                       </p>
                     </div>
                     <button
+                      ref={nostrRegisterRef}
+                      id="nostrconnect-register"
                       type="button"
                       disabled={loading || !identityId.trim()}
                       onClick={() => {
@@ -1225,6 +1250,17 @@ export default function PanelPage() {
           </p>
         </div>
       </div>
+
+      {qrScannerOpen ? (
+        <QrScanner
+          onScan={(uri) => {
+            setNostrConnectRelayAck(null);
+            setNostrConnectPaste(uri);
+            queueMicrotask(() => nostrRegisterRef.current?.focus());
+          }}
+          onClose={() => setQrScannerOpen(false)}
+        />
+      ) : null}
     </div>
   );
 }
