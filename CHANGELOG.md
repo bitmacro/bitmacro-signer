@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.16] - 2026-05-09
+
+### Changed
+
+- **Panel nostrconnect tab:** when the bunker is **not** active (`is_running` false), **Register link** is disabled with tooltip **“Activate the bunker first”**, and an **nostrconnect-only** alert explains ending the session and unlocking again (the **bunker QR** tab is unchanged). EN / pt-BR / ES (`nostrConnectBunkerInactive*`).
+
 ## [0.6.15] - 2026-05-09
 
 ### Fixed
@@ -169,7 +175,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Panel (`/panel`):** first tab **nostrconnect://**, second **Bunker QR / link** (default first); optional **label** field removed from nostrconnect flow (`app_name` still from URI only). Visible warning (**`step3.bunkerNotListening`**) when **`is_running` is false**, explaining **pending** after daemon restart (unlock again). EN / pt-BR / ES.
+- **Panel (`/panel`):** first tab **nostrconnect://**, second **Bunker QR / link** (default first); optional **label** field removed from nostrconnect flow (`app_name` still from URI only). Visible amber hint when **`is_running` is false**, urging unlock again so relays subscribe (later superseded by nostrconnect-scoped copy + disabled Register in **0.6.16**). EN / pt-BR / ES.
 
 ## [0.5.3] - 2026-05-03
 
