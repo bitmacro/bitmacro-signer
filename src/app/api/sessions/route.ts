@@ -7,9 +7,18 @@ import {
   notifyDaemonNostrConnectInitiate,
   notifyDaemonRefreshNip46Relays,
 } from "@/lib/daemon-internal";
-import { apiGET, apiPOST } from "@/lib/observability/api-route-wrapper";
+import {
+  apiDELETE,
+  apiGET,
+  apiPOST,
+  type ParamsBag,
+} from "@/lib/observability/api-route-wrapper";
 import { pushLokiStructured } from "@/lib/observability/loki-http-push";
-import { sessionCreateBodySchema, sessionIdentityIdQuerySchema } from "@/lib/schemas/session";
+import {
+  bulkDeleteSessionsBodySchema,
+  sessionCreateBodySchema,
+  sessionIdentityIdQuerySchema,
+} from "@/lib/schemas/session";
 import {
   copyRunningBunkerSecretKey,
   isRunning,
@@ -20,6 +29,8 @@ import {
   authorizeApp,
   authorizeAppFromNostrConnect,
   listSessions,
+  revokeAllListableSessionsForIdentity,
+  revokeSessionsForIdentity,
 } from "@/lib/session/app-keys";
 import { parseNostrConnectUri } from "@/lib/session/nostr-connect-uri";
 import { getBunkerRelayUrlServer } from "@/lib/relay/env";
@@ -331,5 +342,78 @@ async function handleGet(request: Request) {
   return NextResponse.json(rows.map(toPublicSession));
 }
 
+/**
+ * DELETE /api/sessions — bulk revoke (`{ ids: uuid[] }` or `{ all: true }`).
+ * Optional query: `?all=true` / repeated `ids=`; merged with JSON body when both present.
+ */
+async function handleBulkDelete(request: Request, _context: ParamsBag) {
+  void _context;
+  let cookieIdentityId: string | null;
+  try {
+    cookieIdentityId = await getSessionCookie();
+  } catch {
+    return jsonError("Server misconfigured: session support unavailable", 503);
+  }
+  if (!cookieIdentityId) {
+    return jsonError("Unauthorized", 401);
+  }
+
+  try {
+    createServiceRoleClient();
+  } catch {
+    return jsonError("Server misconfigured: Supabase service role unavailable", 503);
+  }
+
+  const url = new URL(request.url);
+  const allFromQuery = url.searchParams.get("all") === "true";
+  const idsFromQuery = url.searchParams.getAll("ids").filter(Boolean);
+
+  let bodyJson: unknown;
+  const ct = request.headers.get("content-type") ?? "";
+  if (ct.includes("application/json")) {
+    try {
+      bodyJson = await request.json();
+    } catch {
+      return jsonError("Invalid JSON body", 400);
+    }
+  }
+
+  const parsedRaw =
+    bodyJson !== undefined && typeof bodyJson === "object" && bodyJson !== null
+      ? { ...(bodyJson as Record<string, unknown>) }
+      : {};
+  if (idsFromQuery.length > 0) {
+    const existing = parsedRaw.ids;
+    parsedRaw.ids =
+      Array.isArray(existing) && existing.every((x) => typeof x === "string")
+        ? [...(existing as string[]), ...idsFromQuery]
+        : idsFromQuery;
+  }
+  if (allFromQuery) {
+    parsedRaw.all = true;
+  }
+
+  const parsed = bulkDeleteSessionsBodySchema.safeParse(parsedRaw);
+  if (!parsed.success) {
+    return jsonError("Validation failed", 400, parsed.error.flatten());
+  }
+
+  try {
+    if (parsed.data.all === true) {
+      const out = await revokeAllListableSessionsForIdentity(cookieIdentityId);
+      return NextResponse.json(out);
+    }
+    const ids = parsed.data.ids ?? [];
+    const out = await revokeSessionsForIdentity(cookieIdentityId, ids);
+    return NextResponse.json(out);
+  } catch (e: unknown) {
+    if (e instanceof Error && e.message.includes("no vault for identity_id")) {
+      return jsonError("Vault not found for this identity", 404);
+    }
+    throw e;
+  }
+}
+
 export const POST = apiPOST("POST /api/sessions", handlePost);
 export const GET = apiGET("GET /api/sessions", handleGet);
+export const DELETE = apiDELETE("DELETE /api/sessions", handleBulkDelete);

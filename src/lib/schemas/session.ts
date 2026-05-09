@@ -44,3 +44,19 @@ export type SessionCreateBody = z.infer<typeof sessionCreateBodySchema>;
 /** For GET query validation (same `identity_id` as POST body). */
 export const sessionIdentityIdQuerySchema = sessionCreateFieldsSchema.shape
   .identity_id;
+
+/** DELETE /api/sessions — remove multiple sessions or all listable sessions. */
+export const bulkDeleteSessionsBodySchema = z
+  .object({
+    ids: z.array(z.string().uuid()).max(500).optional(),
+    all: z.boolean().optional(),
+  })
+  .strict()
+  .superRefine((data, ctx) => {
+    if (data.all === true) return;
+    if (data.ids && data.ids.length > 0) return;
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Provide all: true or a non-empty ids array",
+    });
+  });

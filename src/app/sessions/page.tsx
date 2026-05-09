@@ -2,148 +2,26 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
-import { Check, Copy, Loader2, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Loader2, Smartphone } from "lucide-react";
 
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import { RemoveAllConfirmDialog } from "@/components/sessions/remove-all-confirm-dialog";
+import { SessionCard } from "@/components/sessions/session-card";
+import { SessionsFilterBar } from "@/components/sessions/sessions-filter-bar";
+import { SessionsSelectionToolbar } from "@/components/sessions/sessions-selection-toolbar";
+import {
+  filterSessionsByStatus,
+  sortSessions,
+  type SessionRow,
+  type SortMode,
+  type StatusFilter,
+} from "@/components/sessions/session-utils";
 import { SignerBuildStamp } from "@/components/signer-build-stamp";
 import { SignerSessionUserMenu } from "@/components/signer-session-user-menu";
-import { nostrHexPubkeyToNpub } from "@/lib/session/ttl";
 
 const ACCENT = "#0066FF";
 const BG = "#080808";
-
-function truncateHexMiddle(hex: string, head = 14, tail = 12): string {
-  const t = hex.trim();
-  if (t.length <= head + tail + 1) return t;
-  return `${t.slice(0, head)}…${t.slice(-tail)}`;
-}
-
-type SessionRow = {
-  id: string;
-  vault_id: string;
-  app_pubkey: string;
-  app_name: string | null;
-  used: boolean;
-  expires_at: string;
-  created_at: string;
-};
-
-function SessionCard({
-  row,
-  copiedKey,
-  onCopied,
-  onRemove,
-  removing,
-}: {
-  row: SessionRow;
-  copiedKey: string | null;
-  onCopied: (key: string) => void;
-  onRemove: (id: string) => void;
-  removing: boolean;
-}) {
-  const t = useTranslations("sessions");
-  let clientNpub: string | null = null;
-  try {
-    clientNpub = nostrHexPubkeyToNpub(row.app_pubkey);
-  } catch {
-    clientNpub = null;
-  }
-
-  const kHex = `${row.id}:hex`;
-  const kNpub = `${row.id}:npub`;
-
-  const copyHex = async () => {
-    await navigator.clipboard.writeText(row.app_pubkey);
-    onCopied(kHex);
-  };
-
-  const copyNpub = async () => {
-    if (!clientNpub) return;
-    await navigator.clipboard.writeText(clientNpub);
-    onCopied(kNpub);
-  };
-
-  return (
-    <li className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-5 text-base">
-      {row.app_name ? (
-        <p className="text-lg font-semibold leading-snug text-white">{row.app_name}</p>
-      ) : (
-        <p className="text-base leading-[1.5] text-zinc-400">{t("noLabel")}</p>
-      )}
-      <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-zinc-400">
-        {t("clientKey")}
-      </p>
-      {clientNpub ? (
-        <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-stretch sm:justify-between">
-          <code
-            className="flex min-h-12 flex-1 items-center break-all rounded-lg border border-zinc-800 bg-zinc-950/80 px-3 py-2 font-mono text-sm leading-normal text-zinc-200"
-            title={clientNpub}
-          >
-            {truncateHexMiddle(clientNpub, 18, 16)}
-          </code>
-          <button
-            type="button"
-            onClick={() => void copyNpub()}
-            className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-lg border border-zinc-600 px-4 text-sm font-semibold text-zinc-100 hover:bg-zinc-800"
-          >
-            {copiedKey === kNpub ? (
-              <Check className="size-4 text-emerald-400" aria-hidden />
-            ) : (
-              <Copy className="size-4" aria-hidden />
-            )}
-            {copiedKey === kNpub ? t("copied") : t("copyNpub")}
-          </button>
-        </div>
-      ) : null}
-      <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-zinc-400">
-        {t("hexTechnical")}
-      </p>
-      <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-stretch sm:justify-between">
-        <code
-          className="flex min-h-12 flex-1 items-center break-all rounded-lg border border-zinc-800 bg-zinc-950/80 px-3 py-2 font-mono text-sm leading-normal text-zinc-300"
-          title={row.app_pubkey}
-        >
-          {truncateHexMiddle(row.app_pubkey)}
-        </code>
-        <button
-          type="button"
-          onClick={() => void copyHex()}
-          className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-lg border border-zinc-600 px-4 text-sm font-semibold text-zinc-200 hover:bg-zinc-800"
-        >
-          {copiedKey === kHex ? (
-            <Check className="size-4 text-emerald-400" aria-hidden />
-          ) : (
-            <Copy className="size-4" aria-hidden />
-          )}
-          {copiedKey === kHex ? t("copied") : t("copyHex")}
-        </button>
-      </div>
-      <p className="mt-3 font-mono text-xs text-zinc-500" title={row.id}>
-        {t("sessionIdLabel")}: {row.id}
-      </p>
-      <div className="mt-4 flex flex-wrap items-center gap-3 text-sm leading-[1.5] text-zinc-400">
-        <span>
-          {t("expires")} {new Date(row.expires_at).toLocaleString()}{" "}
-          {row.used ? `· ${t("used")}` : `· ${t("pending")}`}
-        </span>
-        <button
-          type="button"
-          disabled={removing}
-          onClick={() => onRemove(row.id)}
-          className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-red-900/60 bg-red-950/30 px-3 text-sm font-semibold text-red-200 hover:bg-red-950/50 disabled:opacity-50"
-        >
-          {removing ? (
-            <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
-          ) : (
-            <Trash2 className="size-4 shrink-0" aria-hidden />
-          )}
-          {removing ? t("removing") : t("remove")}
-        </button>
-      </div>
-    </li>
-  );
-}
 
 export default function SessionsPage() {
   const t = useTranslations("sessions");
@@ -153,7 +31,14 @@ export default function SessionsPage() {
   const [loading, setLoading] = useState(true);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [bulkRemoving, setBulkRemoving] = useState(false);
   const [removeError, setRemoveError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<StatusFilter>("all");
+  const [sort, setSort] = useState<SortMode>("expires");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [removeAllOpen, setRemoveAllOpen] = useState(false);
+  const [removeAllLoading, setRemoveAllLoading] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -191,6 +76,37 @@ export default function SessionsPage() {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (!toast) return;
+    const id = window.setTimeout(() => setToast(null), 4000);
+    return () => window.clearTimeout(id);
+  }, [toast]);
+
+  const visibleRows = useMemo(() => {
+    if (!rows?.length) return [];
+    const filtered = filterSessionsByStatus(rows, filter);
+    return sortSessions(filtered, sort);
+  }, [rows, filter, sort]);
+
+  const sessionCount = rows?.length ?? 0;
+
+  const toggleSelect = useCallback((id: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      if (checked) return prev.includes(id) ? prev : [...prev, id];
+      return prev.filter((x) => x !== id);
+    });
+  }, []);
+
+  const selectAllVisible = useCallback(() => {
+    setSelectedIds(visibleRows.map((r) => r.id));
+  }, [visibleRows]);
+
+  const showToastRemoved = useCallback((n: number) => {
+    if (n <= 0) return;
+    if (n === 1) setToast(t("toastRemoved"));
+    else setToast(t("toastRemovedMany", { count: n }));
+  }, [t]);
+
   const handleRemove = useCallback(
     async (sessionId: string) => {
       if (!window.confirm(t("removeConfirm"))) {
@@ -207,6 +123,8 @@ export default function SessionsPage() {
         if (!res.ok) {
           throw new Error(j.error ?? t("removeError"));
         }
+        setSelectedIds((p) => p.filter((id) => id !== sessionId));
+        showToastRemoved(1);
         await load();
       } catch (e) {
         setRemoveError(e instanceof Error ? e.message : t("removeError"));
@@ -214,31 +132,134 @@ export default function SessionsPage() {
         setRemovingId(null);
       }
     },
-    [load, t],
+    [load, showToastRemoved, t],
   );
+
+  const handleRemoveSelected = useCallback(async () => {
+    if (selectedIds.length === 0) return;
+    const n = selectedIds.length;
+    if (!window.confirm(t("bulkRemoveConfirm", { count: n }))) {
+      return;
+    }
+    setRemoveError(null);
+    setBulkRemoving(true);
+    try {
+      const res = await fetch("/api/sessions", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ ids: selectedIds }),
+      });
+      const j = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        removed?: number;
+      };
+      if (!res.ok) {
+        throw new Error(j.error ?? t("bulkRemoveError"));
+      }
+      const removed = j.removed ?? n;
+      setSelectedIds([]);
+      showToastRemoved(removed);
+      await load();
+    } catch (e) {
+      setRemoveError(e instanceof Error ? e.message : t("bulkRemoveError"));
+    } finally {
+      setBulkRemoving(false);
+    }
+  }, [load, selectedIds, showToastRemoved, t]);
+
+  const handleRemoveAll = useCallback(async () => {
+    setRemoveError(null);
+    setRemoveAllLoading(true);
+    try {
+      const res = await fetch("/api/sessions", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ all: true }),
+      });
+      const j = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        removed?: number;
+      };
+      if (!res.ok) {
+        throw new Error(j.error ?? t("removeAllError"));
+      }
+      setSelectedIds([]);
+      setToast(t("toastRemovedAll"));
+      setRemoveAllOpen(false);
+      await load();
+    } catch (e) {
+      setRemoveError(e instanceof Error ? e.message : t("removeAllError"));
+    } finally {
+      setRemoveAllLoading(false);
+    }
+  }, [load, t]);
 
   return (
     <div
       className="min-h-screen text-zinc-200 antialiased"
       style={{ backgroundColor: BG }}
     >
-      <div className="mx-auto max-w-3xl px-5 py-10 sm:py-14">
-        <header className="mb-10 border-b border-zinc-800 pb-8">
+      {toast ? (
+        <div
+          className="fixed top-6 left-1/2 z-[60] max-w-md -translate-x-1/2 rounded-xl border border-emerald-900/50 bg-emerald-950/90 px-4 py-3 text-center text-sm font-medium text-emerald-50 shadow-lg"
+          role="status"
+        >
+          {toast}
+        </div>
+      ) : null}
+
+      <RemoveAllConfirmDialog
+        open={removeAllOpen}
+        onClose={() => setRemoveAllOpen(false)}
+        onConfirm={() => void handleRemoveAll()}
+        loading={removeAllLoading}
+      />
+
+      <div className="mx-auto max-w-3xl px-4 py-10 sm:px-5 sm:py-14">
+        <header className="mb-8 border-b border-zinc-800 pb-8">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <p className="font-mono text-xs uppercase tracking-wider text-zinc-400">{t("brand")}</p>
+            <p className="font-mono text-xs uppercase tracking-wider text-zinc-400">
+              {t("brand")}
+            </p>
             <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center sm:gap-3">
               <SignerBuildStamp variant="compact" />
               {!identityId ? <LocaleSwitcher /> : null}
               <SignerSessionUserMenu watchKey={identityId ?? ""} />
             </div>
           </div>
-          <h1 className="mt-2 text-[clamp(1.5rem,3vw+0.85rem,1.875rem)] font-bold leading-tight text-white">
-            {t("title")}
-          </h1>
-          {identityId ? (
-            <p className="mt-3 break-all font-mono text-sm text-zinc-400">{identityId}</p>
-          ) : null}
-          <p className="mt-4 max-w-2xl text-base leading-[1.5] text-zinc-300">{t("body")}</p>
+
+          <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <h1 className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[clamp(1.5rem,3vw+0.85rem,1.875rem)] font-bold leading-tight text-white">
+                {t("title")}
+                {!loading && rows !== null ? (
+                  <span className="text-lg font-normal text-zinc-500">
+                    {t("sessionCount", { count: sessionCount })}
+                  </span>
+                ) : null}
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-400 sm:text-base">
+                {t("subtitle")}
+              </p>
+              {identityId ? (
+                <p className="mt-2 break-all font-mono text-xs text-zinc-500">
+                  {identityId}
+                </p>
+              ) : null}
+            </div>
+
+            {!loading && sessionCount > 0 ? (
+              <button
+                type="button"
+                onClick={() => setRemoveAllOpen(true)}
+                className="shrink-0 rounded-lg border border-red-900/50 bg-red-950/30 px-3 py-2 text-sm font-semibold text-red-200 hover:bg-red-950/50"
+              >
+                {t("removeAllSessions")}
+              </button>
+            ) : null}
+          </div>
         </header>
 
         {loading ? (
@@ -249,13 +270,13 @@ export default function SessionsPage() {
         ) : null}
 
         {removeError ? (
-          <div className="mb-6 rounded-lg border border-red-900/50 bg-red-950/30 px-4 py-3 text-base leading-[1.5] text-red-100">
+          <div className="mb-6 rounded-lg border border-red-900/50 bg-red-950/30 px-4 py-3 text-base leading-relaxed text-red-100">
             {removeError}
           </div>
         ) : null}
 
         {error ? (
-          <div className="mb-6 rounded-lg border border-amber-900/50 bg-amber-950/30 px-4 py-3 text-base leading-[1.5] text-amber-100">
+          <div className="mb-6 rounded-lg border border-amber-900/50 bg-amber-950/30 px-4 py-3 text-base leading-relaxed text-amber-100">
             {error}{" "}
             <Link
               href="/panel"
@@ -267,29 +288,77 @@ export default function SessionsPage() {
           </div>
         ) : null}
 
-        {rows && rows.length === 0 ? (
-          <p className="text-base leading-[1.5] text-zinc-400">{t("empty")}</p>
-        ) : null}
-
-        {rows && rows.length > 0 ? (
-          <ul className="space-y-4">
-            {rows.map((r) => (
-              <SessionCard
-                key={r.id}
-                row={r}
-                copiedKey={copiedKey}
-                onCopied={(key) => {
-                  setCopiedKey(key);
-                  window.setTimeout(() => setCopiedKey(null), 2000);
-                }}
-                onRemove={handleRemove}
-                removing={removingId === r.id}
+        {!loading && rows !== null && identityId ? (
+          rows.length === 0 ? (
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/30 px-6 py-16 text-center">
+              <Smartphone
+                className="size-14 text-zinc-600"
+                strokeWidth={1.25}
+                aria-hidden
               />
-            ))}
-          </ul>
+              <p className="mt-4 max-w-sm text-base text-zinc-400">
+                {t("empty")}
+              </p>
+              <Link
+                href="/panel"
+                className="mt-6 inline-flex min-h-11 items-center text-sm font-semibold underline-offset-2 hover:underline"
+                style={{ color: ACCENT }}
+              >
+                {t("back")}
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <SessionsFilterBar
+                filter={filter}
+                sort={sort}
+                onFilter={setFilter}
+                onSort={setSort}
+              />
+              <SessionsSelectionToolbar
+                selectedCount={selectedIds.length}
+                visibleCount={visibleRows.length}
+                onRemoveSelected={() => void handleRemoveSelected()}
+                onSelectAllVisible={selectAllVisible}
+                removing={bulkRemoving}
+              />
+              {visibleRows.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-900/20 px-6 py-12 text-center">
+                  <p className="max-w-sm text-base text-zinc-400">
+                    {t("emptyFilter")}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setFilter("all")}
+                    className="mt-4 text-sm font-semibold text-[#0066FF] hover:underline"
+                  >
+                    {t("filterAll")}
+                  </button>
+                </div>
+              ) : (
+                <ul className="flex flex-col gap-4">
+                  {visibleRows.map((r) => (
+                    <SessionCard
+                      key={r.id}
+                      row={r}
+                      selected={selectedIds.includes(r.id)}
+                      onToggleSelect={toggleSelect}
+                      onRemove={handleRemove}
+                      removing={removingId === r.id}
+                      copiedKey={copiedKey}
+                      onCopied={(key) => {
+                        setCopiedKey(key);
+                        window.setTimeout(() => setCopiedKey(null), 2000);
+                      }}
+                    />
+                  ))}
+                </ul>
+              )}
+            </div>
+          )
         ) : null}
 
-        <p className="mt-12 text-base leading-[1.5]">
+        <p className="mt-12 text-base leading-relaxed">
           <Link
             href="/panel"
             className="inline-flex min-h-11 items-center font-semibold underline-offset-2 hover:underline"

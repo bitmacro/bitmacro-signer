@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { sessionCreateBodySchema } from "./session";
+import {
+  bulkDeleteSessionsBodySchema,
+  sessionCreateBodySchema,
+} from "./session";
 
 const ID = "550e8400-e29b-41d4-a716-446655440000";
 
@@ -39,5 +42,24 @@ describe("sessionCreateBodySchema", () => {
     });
     expect(r.success).toBe(true);
     if (r.success) expect(r.data.nostrconnect_uri).toBeUndefined();
+  });
+});
+
+describe("bulkDeleteSessionsBodySchema", () => {
+  const id = "550e8400-e29b-41d4-a716-446655440000";
+
+  it("accepts all: true", () => {
+    const r = bulkDeleteSessionsBodySchema.safeParse({ all: true });
+    expect(r.success).toBe(true);
+  });
+
+  it("accepts non-empty ids", () => {
+    const r = bulkDeleteSessionsBodySchema.safeParse({ ids: [id] });
+    expect(r.success).toBe(true);
+  });
+
+  it("rejects empty payload", () => {
+    const r = bulkDeleteSessionsBodySchema.safeParse({});
+    expect(r.success).toBe(false);
   });
 });

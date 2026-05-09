@@ -5,6 +5,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.6] - 2026-05-09
+
+### Added
+
+- **`DELETE /api/sessions`:** bulk revoke by **`{ ids }`** or **`{ all: true }`** (cookie auth), for the client sessions UI.
+- **Client sessions (`/sessions`):** layout with status badges, filters, sort, multi-select, bulk remove, remove-all confirmation, empty states, and i18n (en / pt-BR / es).
+
+### Fixed
+
+- **`sendNostrConnectInitiate`:** encrypted payload for kind **24133** outbound `connect` uses **NIP-04** (not NIP-44), matching mainstream **nostrconnect://** clients (e.g. Primal). Inbound bunker loop and RPC **responses** remain **NIP-44**.
+
+### Changed
+
+- **`@noble/hashes`:** direct dependency (hex encoding for NIP-04 initiate).
+
 ## [0.6.5] - 2026-05-09
 
 ### Added

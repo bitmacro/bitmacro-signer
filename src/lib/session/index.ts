@@ -17,5 +17,7 @@ export {
   hashSecretFromPlaintext,
   hashSessionSecretForLookup,
   listSessions,
+  revokeAllListableSessionsForIdentity,
   revokeSessionForIdentity,
+  revokeSessionsForIdentity,
 } from "./app-keys";

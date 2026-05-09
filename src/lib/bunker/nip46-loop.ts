@@ -1,12 +1,15 @@
 /**
- * NIP-46 bunker loop: WebSocket to relay, kind 24133 in/out with NIP-44 payload (matches `nostr-tools` BunkerSigner).
+ * NIP-46 bunker loop: WebSocket to relay, kind 24133 — responses & inbound RPC use NIP-44.
+ * Outbound `sendNostrConnectInitiate` uses NIP-04 for the envelope (mainstream nostrconnect clients).
  */
 
 import { randomUUID } from "node:crypto";
 
+import { bytesToHex } from "@noble/hashes/utils.js";
 import { relayConnectLog } from "@bitmacro/relay-connect";
 import type { Event } from "nostr-tools";
 import { finalizeEvent, getPublicKey } from "nostr-tools";
+import * as nip04 from "nostr-tools/nip04";
 import * as nip19 from "nostr-tools/nip19";
 import * as nip44 from "nostr-tools/nip44";
 import { Relay } from "nostr-tools/relay";
@@ -566,8 +569,8 @@ export async function sendNostrConnectInitiate(
     method: "connect",
     params: [bunkerPubkeyHex, secret],
   });
-  const convKey = nip44.getConversationKey(bunkerPrivkeyBytes, clientPk);
-  const content = nip44.encrypt(plaintext, convKey);
+  const skHex = bytesToHex(bunkerPrivkeyBytes);
+  const content = nip04.encrypt(skHex, clientPk, plaintext);
   const ev = finalizeEvent(
     {
       kind: NOSTR_CONNECT_KIND,

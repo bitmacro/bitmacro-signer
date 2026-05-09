@@ -468,27 +468,52 @@ export async function assertAppMayUseSigner(
 }
 
 /**
- * Deletes a client session row if it belongs to this Identity’s vault.
- * Used by the Signer UI after cookie auth (do not expose unscoped delete by id).
+ * Deletes up to N client session rows scoped to this Identity’s vault.
+ * Unknown ids are ignored (removed count may be lower than `sessionIds.length`).
  */
-export async function revokeSessionForIdentity(
+export async function revokeSessionsForIdentity(
   identityId: string,
-  sessionId: string,
-): Promise<boolean> {
+  sessionIds: string[],
+): Promise<{ removed: number }> {
+  if (sessionIds.length === 0) {
+    return { removed: 0 };
+  }
   const supabase = createServiceRoleClient();
   const vaultId = await getVaultIdForIdentity(supabase, identityId);
   const { data, error } = await supabase
     .from("signer_sessions")
     .delete()
-    .eq("id", sessionId)
     .eq("vault_id", vaultId)
-    .select("id")
-    .maybeSingle();
+    .in("id", sessionIds)
+    .select("id");
 
   if (error) {
-    throw new Error(`revokeSessionForIdentity: ${error.message}`);
+    throw new Error(`revokeSessionsForIdentity: ${error.message}`);
   }
-  return data != null;
+  return { removed: data?.length ?? 0 };
+}
+
+/** Deletes one client session row; used by the Signer UI (`DELETE /api/sessions/:id`). */
+export async function revokeSessionForIdentity(
+  identityId: string,
+  sessionId: string,
+): Promise<boolean> {
+  const { removed } = await revokeSessionsForIdentity(identityId, [sessionId]);
+  return removed > 0;
+}
+
+/** Deletes every session row that `listSessions` would return for this identity. */
+export async function revokeAllListableSessionsForIdentity(
+  identityId: string,
+): Promise<{ removed: number }> {
+  const rows = await listSessions(identityId);
+  if (rows.length === 0) {
+    return { removed: 0 };
+  }
+  return revokeSessionsForIdentity(
+    identityId,
+    rows.map((r) => r.id),
+  );
 }
 
 /**
