@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.13] - 2026-05-09
+
+### Fixed
+
+- **`sendNostrConnectInitiate`:** encrypt the outbound kind **24133** payload with **NIP-44** (per [NIP-46](https://github.com/nostr-protocol/nips/blob/master/46.md)), not **NIP-04**. Clients such as Primal that only decrypt NIP-44 never saw the `connect` **response** `{ result: secret }`, so the handshake never advanced and the bunker logged **`nip46_idle_no_inbound`** (no follow-up client→bunker RPC).
+
 ## [0.6.12] - 2026-05-09
 
 ### Fixed

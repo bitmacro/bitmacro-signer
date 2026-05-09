@@ -1,11 +1,10 @@
 /**
  * NIP-46 bunker loop: WebSocket to relay, kind 24133 — inbound tries **NIP-44** then **NIP-04**; outbound
- * responses **match the inbound cipher**. Outbound `sendNostrConnectInitiate` sends NIP-46 **response** JSON + **NIP-04** envelope (nostrconnect clients).
+ * responses **match the inbound cipher**. Outbound `sendNostrConnectInitiate` sends NIP-46 **response** JSON with **NIP-44** (spec).
  */
 
 import { randomUUID } from "node:crypto";
 
-import { bytesToHex } from "@noble/hashes/utils.js";
 import { relayConnectLog } from "@bitmacro/relay-connect";
 import type { Event } from "nostr-tools";
 import { finalizeEvent, getPublicKey } from "nostr-tools";
@@ -708,8 +707,8 @@ export async function sendNostrConnectInitiate(
     result: secret,
     error: "",
   });
-  const skHex = bytesToHex(bunkerPrivkeyBytes);
-  const content = nip04.encrypt(skHex, clientPk, plaintext);
+  const convKey = nip44.getConversationKey(bunkerPrivkeyBytes, clientPk);
+  const content = nip44.encrypt(plaintext, convKey);
   const ev = finalizeEvent(
     {
       kind: NOSTR_CONNECT_KIND,

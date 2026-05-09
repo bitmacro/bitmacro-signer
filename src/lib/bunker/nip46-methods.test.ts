@@ -50,6 +50,29 @@ describe("decryptNip46InboundEventContent", () => {
   });
 });
 
+describe("nostrconnect initiate response (NIP-46 client-initiated)", () => {
+  it("client decrypts bunker NIP-44 envelope and reads result === secret", () => {
+    const bunkerSk = generateSecretKey();
+    const clientSk = generateSecretKey();
+    const bunkerPk = getPublicKey(bunkerSk);
+    const clientPk = getPublicKey(clientSk);
+    const secret = "0s8j2djs";
+    const plaintext = JSON.stringify({
+      id: "resp-correlation",
+      result: secret,
+      error: "",
+    });
+    const enc = nip44.encrypt(
+      plaintext,
+      nip44.getConversationKey(bunkerSk, clientPk),
+    );
+    const dec = nip44.decrypt(enc, nip44.getConversationKey(clientSk, bunkerPk));
+    expect(dec).toBe(plaintext);
+    const j = JSON.parse(dec) as { result: string };
+    expect(j.result).toBe(secret);
+  });
+});
+
 describe("parseNip46RpcPayload", () => {
   it("parses a valid request", () => {
     expect(
