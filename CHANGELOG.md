@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **`sendNostrConnectInitiate` (`nostrconnect://`):** publish kind **24133** content as an NIP-46 **response** `{ id, result: <secret>, error: "" }`, per [NIP-46](https://github.com/nostr-protocol/nips/blob/master/46.md) (*Direct connection initiated by the client*). Previously the bunker wrongly sent an RPC **request** `{ method: "connect", params: [...] }`, so clients never saw `result === secret` and never completed the handshake (idle subscription, **`pending`** sessions).
+- **`nip46-loop`:** restore missing `}` / `export function isRunning` after `extendBunkerRelaySubscriptions` (merge typo broke daemon **esbuild** / GHCR Docker builds for **0.6.12**).
 
 ## [0.6.11] - 2026-05-09
 

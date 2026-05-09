@@ -319,7 +319,9 @@ async function extendBunkerRelaySubscriptions(
     addAttemptedCount: urlsToAdd.length,
     totalRelaySubs: rt.relaySubs.length,
   });
-identityId: string): boolean {
+}
+
+export function isRunning(identityId: string): boolean {
   return active.has(identityId);
 }
 
