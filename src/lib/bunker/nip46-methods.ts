@@ -1,7 +1,7 @@
 /**
- * Pure NIP-46 RPC handling (nostr-tools wire format: kind 24133 + NIP-44 envelope).
- * Inbound kind 24133 may use **NIP-44** (modern) or **NIP-04** (legacy / some web clients); see `decryptNip46InboundEventContent`.
- * Outbound `sendNostrConnectInitiate` (nip46-loop) uses **NIP-04** to match mainstream `nostrconnect://` clients.
+ * Pure NIP-46 RPC handling (nostr-tools wire format: kind 24133 — inbound envelope may be NIP-44 or NIP-04).
+ * The nip46-loop publishes responses with the **same cipher** as used to decrypt the inbound event.
+ * Outbound `sendNostrConnectInitiate` uses **NIP-04** to match mainstream `nostrconnect://` clients.
  */
 
 import type { Event, EventTemplate } from "nostr-tools";

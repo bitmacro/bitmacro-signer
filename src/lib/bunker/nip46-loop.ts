@@ -1,6 +1,6 @@
 /**
- * NIP-46 bunker loop: WebSocket to relay, kind 24133 — inbound RPC tries **NIP-44** then **NIP-04**; responses use NIP-44.
- * Outbound `sendNostrConnectInitiate` uses NIP-04 for the envelope (mainstream nostrconnect clients).
+ * NIP-46 bunker loop: WebSocket to relay, kind 24133 — inbound tries **NIP-44** then **NIP-04**; outbound
+ * responses **match the inbound cipher**. Outbound `sendNostrConnectInitiate` uses **NIP-04** (nostrconnect clients).
  */
 
 import { randomUUID } from "node:crypto";
@@ -27,6 +27,7 @@ import {
   parseNip46RpcPayload,
   decryptNip46InboundEventContent,
   runNip46Method,
+  type DecryptNip46InboundResult,
   type Nip46RpcResult,
 } from "./nip46-methods";
 
@@ -45,6 +46,13 @@ function thrownReason(e: unknown): string {
   return String(e);
 }
 
+/** Trim + strip trailing slash (must match fingerprint logic). */
+function normalizeRelayWsUrl(url: string): string {
+  const t = url.trim();
+  if (!t.length) return "";
+  return t.endsWith("/") ? t.slice(0, -1) : t;
+}
+
 /** Dedup + sort URLs for comparing subscription sets across refresh-nip46-relays. */
 function relaySetFingerprint(urls: string[]): string {
   const norm = urls
@@ -53,6 +61,28 @@ function relaySetFingerprint(urls: string[]): string {
     .map((u) => (u.endsWith("/") ? u.slice(0, -1) : u));
   return [...new Set(norm)].sort().join("|");
 }
+
+function normalizedRelayUrlSet(urls: string[]): Set<string> {
+  return new Set(urls.map(normalizeRelayWsUrl).filter(Boolean));
+}
+
+type RelaySubscription = {
+  relay: Relay;
+  sub: { close: (reason?: string) => void };
+  relayUrl: string;
+};
+
+type BunkerRuntime = {
+  secretKey: Uint8Array;
+  bunkerPubkeyHex: string;
+  relaySubs: RelaySubscription[];
+  ttlTimer: ReturnType<typeof setTimeout>;
+  idleInboundWarnTimer?: ReturnType<typeof setTimeout>;
+  /** Shared across initial subs + additive relay joins (idle warn / inbound seen). */
+  inboundSeenRef: { v: boolean };
+};
+
+const active = new Map<string, BunkerRuntime>();
 
 function defaultRamTtlMs(): number {
   const raw = process.env.BUNKER_SESSION_RAM_TTL_MS;
@@ -85,23 +115,211 @@ function decodeNsec(nsec: string): Uint8Array {
   return new Uint8Array(d.data);
 }
 
-type RelaySubscription = {
-  relay: Relay;
-  sub: { close: (reason?: string) => void };
-  relayUrl: string;
-};
+function createNip46AttachOnevent(
+  identityId: string,
+  secretKey: Uint8Array,
+  bunkerPubkeyHex: string,
+  inboundSeenRef: { v: boolean },
+): (relay: Relay, relayUrl: string) => (event: Event) => Promise<void> {
+  return (relay: Relay, relayUrl: string) =>
+    async function onevent(event: Event): Promise<void> {
+      if (event.kind !== NostrConnect) {
+        log("warn", "ignored event (not Nostr Connect / kind 24133)", {
+          identityId,
+          relayUrl,
+          kind: event.kind,
+          from: event.pubkey.slice(0, 12),
+        });
+        return;
+      }
+      inboundSeenRef.v = true;
+      clearIdleInboundWarnTimer(identityId);
+      {
+        const pTag = event.tags.find((t) => t[0] === "p")?.[1];
+        log(
+          "info",
+          "NIP-46 kind 24133 envelope received (before payload decrypt)",
+          {
+            identityId,
+            relayUrl,
+            eventIdPrefix: event.id.slice(0, 16),
+            authorPrefix: event.pubkey.slice(0, 12),
+            contentCharLen: event.content.length,
+            eventCreatedAt: event.created_at,
+            pRecipientPrefix:
+              typeof pTag === "string" ? pTag.slice(0, 12) : null,
+          },
+        );
+      }
+      try {
+        const { plaintext, envelope } = decryptNip46InboundEventContent(
+          secretKey,
+          event.pubkey,
+          event.content,
+        );
+        if (envelope === "nip04") {
+          log("info", "NIP-46 inbound envelope: NIP-04 (NIP-44 did not parse)", {
+            identityId,
+            relayUrl,
+            from: event.pubkey.slice(0, 12),
+            eventIdPrefix: event.id.slice(0, 16),
+          });
+        }
 
-type BunkerRuntime = {
-  secretKey: Uint8Array;
-  bunkerPubkeyHex: string;
-  relaySubs: RelaySubscription[];
-  ttlTimer: ReturnType<typeof setTimeout>;
-  idleInboundWarnTimer?: ReturnType<typeof setTimeout>;
-};
+        const req = parseNip46RpcPayload(plaintext);
+        const clientPk = event.pubkey.slice(0, 12);
+        const connectExtra =
+          req.method === "connect"
+            ? {
+                connectParamsCount: req.params.length,
+                bunkerClaimLen: (req.params[0] ?? "").length,
+                secretParamLen: (req.params[1] ?? "").length,
+                permsParamLen: (req.params[2] ?? "").length,
+              }
+            : {};
 
-const active = new Map<string, BunkerRuntime>();
+        const inboundLog = {
+          identityId,
+          relayUrl,
+          method: req.method,
+          rpcId: req.id,
+          clientPk,
+          eventCreatedAt: event.created_at,
+          ...connectExtra,
+        };
+        if (req.method === "sign_event") {
+          log("info", `NIP-46 inbound ${req.method}`, inboundLog);
+        } else {
+          log("info", "NIP-46 inbound", inboundLog);
+        }
 
-export function isRunning(identityId: string): boolean {
+        const res = await runNip46Method(event.pubkey, req, {
+          bunkerSecretKey: secretKey,
+          bunkerPubkeyHex,
+          completeConnect: (appPubkey, secret, trace) =>
+            completeConnect(identityId, appPubkey, secret, trace),
+          assertAppMayUseSigner: (appPubkey) =>
+            assertAppMayUseSigner(identityId, appPubkey),
+        });
+
+        if (req.method === "connect") {
+          if (res.error) {
+            log("warn", "NIP-46 connect RPC error response", {
+              identityId,
+              relayUrl,
+              rpcId: res.id,
+              clientPk,
+              errorPreview: res.error.slice(0, 160),
+            });
+          } else {
+            log("info", "NIP-46 connect RPC ok", {
+              identityId,
+              relayUrl,
+              rpcId: res.id,
+              clientPk,
+              resultPreview: (res.result ?? "").slice(0, 24),
+            });
+          }
+        }
+
+        await publishResponse(
+          relay,
+          relayUrl,
+          secretKey,
+          event.pubkey,
+          res,
+          identityId,
+          req.id,
+          req.method,
+          envelope,
+        );
+      } catch (e) {
+        log("error", "onevent handler failed", {
+          identityId,
+          relayUrl,
+          err: e instanceof Error ? e.message : String(e),
+        });
+      }
+    };
+}
+
+/**
+ * Opens additional relays without stopBunker (preserves inbound subs while union grows).
+ */
+async function extendBunkerRelaySubscriptions(
+  identityId: string,
+  rt: BunkerRuntime,
+  urlsToAdd: string[],
+): Promise<void> {
+  const filters = [
+    {
+      kinds: [NOSTR_CONNECT_KIND],
+      "#p": [rt.bunkerPubkeyHex],
+    },
+  ];
+  const attach = createNip46AttachOnevent(
+    identityId,
+    rt.secretKey,
+    rt.bunkerPubkeyHex,
+    rt.inboundSeenRef,
+  );
+
+  let idx = 0;
+  for (const relayUrl of urlsToAdd) {
+    idx += 1;
+    const t0 = Date.now();
+    log("info", "Relay.extend additive attempting", {
+      identityId,
+      relayIndex: idx,
+      relayTotal: urlsToAdd.length,
+      relayUrl,
+    });
+    let relay: Relay;
+    try {
+      relay = await Relay.connect(relayUrl, { enableReconnect: true });
+    } catch (e) {
+      log("warn", "NIP-46 additive relay WebSocket connect failed", {
+        identityId,
+        relayUrl,
+        err: thrownReason(e),
+        elapsedMs: Date.now() - t0,
+      });
+      continue;
+    }
+    log("info", "Relay.extend additive established", {
+      identityId,
+      relayUrl,
+      elapsedMs: Date.now() - t0,
+    });
+    const sub = relay.subscribe(filters, {
+      onevent: attach(relay, relayUrl),
+      onclose: (reason) => {
+        log("info", "NIP-46 relay subscription closed", {
+          identityId,
+          relayUrl,
+          closeReasonLen: typeof reason === "string" ? reason.length : 0,
+          closeReasonSnippet:
+            typeof reason === "string" ? reason.slice(0, 80) : String(reason),
+        });
+      },
+    });
+    rt.relaySubs.push({ relay, sub, relayUrl });
+    log("info", "NIP-46 relay WebSocket subscribed (REQ filter snapshot)", {
+      identityId,
+      relayUrl,
+      bunkerPkPrefix: rt.bunkerPubkeyHex.slice(0, 12),
+      bunkerPFilterHex: rt.bunkerPubkeyHex,
+      kindFilter: NOSTR_CONNECT_KIND,
+      subscriptionFiltersJson: JSON.stringify(filters),
+    });
+  }
+
+  log("info", "bunker extended relay subscriptions (additive)", {
+    identityId,
+    addAttemptedCount: urlsToAdd.length,
+    totalRelaySubs: rt.relaySubs.length,
+  });
+identityId: string): boolean {
   return active.has(identityId);
 }
 
@@ -176,6 +394,37 @@ export async function restartBunkerSubscriptions(
       },
     );
     return;
+  }
+
+  /** Strict superset: only new relays → extend subs without tearing down listeners. */
+  if (nextRelayUrls !== null && nextRelayUrls.length > 0) {
+    const currentNorm = normalizedRelayUrlSet(rt.relaySubs.map((s) => s.relayUrl));
+    const nextNormSet = normalizedRelayUrlSet(nextRelayUrls);
+    let everyCurrentStillInNext = true;
+    for (const c of currentNorm) {
+      if (!nextNormSet.has(c)) {
+        everyCurrentStillInNext = false;
+        break;
+      }
+    }
+    if (everyCurrentStillInNext) {
+      const toAddRaw: string[] = [];
+      const addedNorm = new Set<string>();
+      for (const u of nextRelayUrls) {
+        const n = normalizeRelayWsUrl(u);
+        if (!n || currentNorm.has(n) || addedNorm.has(n)) continue;
+        toAddRaw.push(u.trim());
+        addedNorm.add(n);
+      }
+      if (toAddRaw.length > 0) {
+        log("info", "restartBunkerSubscriptions: additive relay join (keeping existing subs)", {
+          identityId,
+          addRelayUrls: toAddRaw,
+        });
+        await extendBunkerRelaySubscriptions(identityId, rt, toAddRaw);
+        return;
+      }
+    }
   }
 
   log("info", "restartBunkerSubscriptions: relay set changed — stopBunker + startBunker", {
@@ -283,126 +532,12 @@ export async function startBunker(
   ];
 
   const inboundSeenRef = { v: false };
-
-  const attachOnevent = (relay: Relay, relayUrl: string) =>
-    async function onevent(event: Event) {
-      if (event.kind !== NostrConnect) {
-        log("warn", "ignored event (not Nostr Connect / kind 24133)", {
-          identityId,
-          relayUrl,
-          kind: event.kind,
-          from: event.pubkey.slice(0, 12),
-        });
-        return;
-      }
-      inboundSeenRef.v = true;
-      clearIdleInboundWarnTimer(identityId);
-      {
-        const pTag = event.tags.find((t) => t[0] === "p")?.[1];
-        log("info", "NIP-46 kind 24133 envelope received (before payload decrypt)", {
-          identityId,
-          relayUrl,
-          eventIdPrefix: event.id.slice(0, 16),
-          authorPrefix: event.pubkey.slice(0, 12),
-          contentCharLen: event.content.length,
-          eventCreatedAt: event.created_at,
-          pRecipientPrefix:
-            typeof pTag === "string" ? pTag.slice(0, 12) : null,
-        });
-      }
-      try {
-        const { plaintext, envelope } = decryptNip46InboundEventContent(
-          secretKey,
-          event.pubkey,
-          event.content,
-        );
-        if (envelope === "nip04") {
-          log("info", "NIP-46 inbound envelope: NIP-04 (NIP-44 did not parse)", {
-            identityId,
-            relayUrl,
-            from: event.pubkey.slice(0, 12),
-            eventIdPrefix: event.id.slice(0, 16),
-          });
-        }
-
-        const req = parseNip46RpcPayload(plaintext);
-        const clientPk = event.pubkey.slice(0, 12);
-        const connectExtra =
-          req.method === "connect"
-            ? {
-                connectParamsCount: req.params.length,
-                bunkerClaimLen: (req.params[0] ?? "").length,
-                secretParamLen: (req.params[1] ?? "").length,
-                permsParamLen: (req.params[2] ?? "").length,
-              }
-            : {};
-
-        const inboundLog = {
-          identityId,
-          relayUrl,
-          method: req.method,
-          rpcId: req.id,
-          clientPk,
-          eventCreatedAt: event.created_at,
-          ...connectExtra,
-        };
-        if (req.method === "sign_event") {
-          log(
-            "info",
-            `NIP-46 inbound ${req.method}`,
-            inboundLog,
-          );
-        } else {
-          log("info", "NIP-46 inbound", inboundLog);
-        }
-
-        const res = await runNip46Method(event.pubkey, req, {
-          bunkerSecretKey: secretKey,
-          bunkerPubkeyHex,
-          completeConnect: (appPubkey, secret, trace) =>
-            completeConnect(identityId, appPubkey, secret, trace),
-          assertAppMayUseSigner: (appPubkey) =>
-            assertAppMayUseSigner(identityId, appPubkey),
-        });
-
-        if (req.method === "connect") {
-          if (res.error) {
-            log("warn", "NIP-46 connect RPC error response", {
-              identityId,
-              relayUrl,
-              rpcId: res.id,
-              clientPk,
-              errorPreview: res.error.slice(0, 160),
-            });
-          } else {
-            log("info", "NIP-46 connect RPC ok", {
-              identityId,
-              relayUrl,
-              rpcId: res.id,
-              clientPk,
-              resultPreview: (res.result ?? "").slice(0, 24),
-            });
-          }
-        }
-
-        await publishResponse(
-          relay,
-          relayUrl,
-          secretKey,
-          event.pubkey,
-          res,
-          identityId,
-          req.id,
-          req.method,
-        );
-      } catch (e) {
-        log("error", "onevent handler failed", {
-          identityId,
-          relayUrl,
-          err: e instanceof Error ? e.message : String(e),
-        });
-      }
-    };
+  const attachOnevent = createNip46AttachOnevent(
+    identityId,
+    secretKey,
+    bunkerPubkeyHex,
+    inboundSeenRef,
+  );
 
   const relaySubs: RelaySubscription[] = [];
   const connectFailures: { relayUrl: string; detail: string }[] = [];
@@ -522,6 +657,7 @@ export async function startBunker(
     relaySubs,
     ttlTimer,
     idleInboundWarnTimer,
+    inboundSeenRef,
   });
 
   log("info", "bunker started", {
@@ -643,9 +779,17 @@ async function publishResponse(
   identityId: string,
   rpcId: string,
   method: string,
+  /** Match inbound envelope so NIP-04 clients (e.g. Primal Web) can decrypt ACKs. */
+  responseCipher: DecryptNip46InboundResult["envelope"],
 ): Promise<void> {
-  const convKey = nip44.getConversationKey(bunkerSecretKey, appPubkey);
-  const content = nip44.encrypt(JSON.stringify(res), convKey);
+  const payload = JSON.stringify(res);
+  const content =
+    responseCipher === "nip04"
+      ? nip04.encrypt(bunkerSecretKey, appPubkey, payload)
+      : nip44.encrypt(
+          payload,
+          nip44.getConversationKey(bunkerSecretKey, appPubkey),
+        );
   const ev = finalizeEvent(
     {
       kind: NOSTR_CONNECT_KIND,
@@ -663,6 +807,7 @@ async function publishResponse(
       method,
       rpcId,
       responseTo: appPubkey.slice(0, 12),
+      responseCipher,
       responseEventIdPrefix: ev.id.slice(0, 16),
       relay: relayUrl,
       ok: !res.error,

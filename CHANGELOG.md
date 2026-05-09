@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.11] - 2026-05-09
+
+### Fixed
+
+- **NIP-46 kind 24133 responses:** encrypt the RPC result with **NIP-04** when the inbound request was decrypted with NIP-04 (previously always NIP-44), so web clients that use NIP-04 for the envelope can read the `connect` acknowledgement and complete pairing.
+- **`restartBunkerSubscriptions`:** when the new relay set is a **strict superset** of the current one, **open only the new relays** (additive join) instead of `stopBunker` + `startBunker`, so existing subscriptions (e.g. `wss://nrs.primal.net`) stay up while another `nostrconnect://` session adds `relay.nsec.app` — avoids dropping kind 24133 during the relay-union race.
+
 ## [0.6.10] - 2026-05-09
 
 ### Fixed
