@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.17] - 2026-05-09
+
+### Fixed
+
+- **`sendNostrConnectInitiate`:** call **`completeConnect` once before any relay publish**, not after the first successful publish. Very fast clients (e.g. Nostrudel) could otherwise emit **`get_public_key`** before the DB session was authorized and get **`NIP-46: app not authorized or session expired`**.
+
 ## [0.6.16] - 2026-05-09
 
 ### Changed
@@ -15,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **`nostrconnect-initiate` + DB race:** call **`completeConnect` immediately after the first successful relay publish** (not after every relay). The client can send **`switch_relays`** / **`get_public_key`** as soon as the event hits the relay; completing the session **before** that narrowed window fixes flaky **`assertAppMayUseSigner`** failures.
+- **`nostrconnect-initiate` + DB race:** call **`completeConnect` immediately after the first successful relay publish** (not after every relay). Superseded by **0.6.17**, which moves **`completeConnect` before publish** for faster clients.
 - **`switch_relays` (NIP-46):** return **`JSON.stringify`** of **`getActiveNip46RelayUrlsForIdentity`** instead of **`[]`** — clients expect the bunker’s relay list to reconnect after handshake ([NIP-46 §switch_relays](https://github.com/nostr-protocol/nips/blob/master/46.md)).
 
 ## [0.6.14] - 2026-05-09

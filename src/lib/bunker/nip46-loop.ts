@@ -687,8 +687,8 @@ export type SendNostrConnectInitiateParams = {
   secret: string;
   identityId?: string;
   /**
-   * Some clients (e.g. Primal) proceed with `switch_relays` / `get_public_key` without an inbound `connect` RPC.
-   * After at least one successful publish, invoke DB **`completeConnect`** so **`assertAppMayUseSigner`** succeeds for follow-up RPCs.
+   * Fast clients may hit the relay with `switch_relays` / `get_public_key` as soon as the outbound connect response arrives.
+   * Invoke DB **`completeConnect` once before any relay publish** so **`assertAppMayUseSigner`** succeeds (avoids races vs clients like Nostrudel).
    */
   completeConnect?: NostrConnectPostPublishHook;
 };
@@ -733,6 +733,24 @@ export async function sendNostrConnectInitiate(
     bunkerPrivkeyBytes,
   );
 
+  if (params.completeConnect) {
+    const trace = { rpcId: "nostrconnect-initiate" as const };
+    try {
+      await params.completeConnect(clientPk, secret.trim(), trace);
+      log("info", "nostrconnect initiate: completeConnect (session bound)", {
+        identityId,
+        clientPkPrefix: clientPk.slice(0, 12),
+      });
+    } catch (e) {
+      log("error", "nostrconnect initiate: completeConnect failed", {
+        identityId,
+        clientPkPrefix: clientPk.slice(0, 12),
+        err: e instanceof Error ? e.message : String(e),
+      });
+      throw e;
+    }
+  }
+
   let publishOkCount = 0;
   for (const relayUrl of relayUrls) {
     const t0 = Date.now();
@@ -760,24 +778,6 @@ export async function sendNostrConnectInitiate(
         ),
       ]);
       publishOkCount += 1;
-      if (publishOkCount === 1 && params.completeConnect) {
-        const trace = { rpcId: "nostrconnect-initiate" as const };
-        try {
-          await params.completeConnect(clientPk, secret.trim(), trace);
-          log("info", "nostrconnect initiate: completeConnect (session bound)", {
-            identityId,
-            clientPkPrefix: clientPk.slice(0, 12),
-            publishOkCount: 1,
-          });
-        } catch (e) {
-          log("error", "nostrconnect initiate: completeConnect failed", {
-            identityId,
-            clientPkPrefix: clientPk.slice(0, 12),
-            err: e instanceof Error ? e.message : String(e),
-          });
-          throw e;
-        }
-      }
       log("info", "nostrconnect initiate: published on relay", {
         identityId,
         event: "nostrconnect_initiate_ok",
