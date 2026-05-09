@@ -4,7 +4,7 @@
  * - **TTL:** `SESSION_MAX_AGE_SEC` (IssuedAt + exp + `Set-Cookie` maxAge).
  * - **Attributes:** `SameSite=Lax`, `Secure` in production — correct for first-party
  *   `signer.bitmacro.io` → `/api/*` (no `SameSite=None` unless embedding cross-site).
- * - **Redeploy:** rotating `AUTH_SESSION_SECRET` invalidates all existing JWTs → 401 until unlock.
+ * - **Redeploy:** rotating `AUTH_SESSION_SECRET` invalidates all existing JWTs until unlock (no `identity_id` on `/api/auth/status`).
  * - **Sliding:** `GET /api/auth/status` re-issues the cookie when the JWT is still valid so active
  *   tabs keep a full window without reposting passphrase.
  */

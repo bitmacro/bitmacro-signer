@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.9] - 2026-05-06
+
+### Fixed
+
+- **`GET /api/auth/status`:** responds **`200`** with **`identity_id: null`** when there is no session cookie (instead of **`401`**) so DevTools no longer floods with “Unauthorized” while logged out; **`503`** remains for server misconfiguration.
+- **Nostr Connect register (`POST /api/sessions` + `nostrconnect_uri`):** runs **`refreshBunkerNip46Relays`** **before** `nostrconnect-initiate` so the bunker subscribes on the client relay list **before** outbound connect — avoids **`restartBunkerSubscriptions`** racing Primal’s inbound kind **24133** (stuck **`pending`**).
+
 ## [0.6.8] - 2026-05-09
 
 ### Added

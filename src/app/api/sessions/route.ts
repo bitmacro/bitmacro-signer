@@ -161,6 +161,9 @@ async function handlePost(request: Request) {
         app_name,
         ttl_hours,
       );
+      /** Before outbound initiate: align subscriptions with session relays (avoids stop/start racing the client’s kind 24133). */
+      await refreshBunkerNip46Relays(identity_id);
+
       const daemonCfgNc = getDaemonInternalConfig();
       if (daemonCfgNc) {
         const initOut = await notifyDaemonNostrConnectInitiate(daemonCfgNc, {
@@ -192,7 +195,6 @@ async function handlePost(request: Request) {
           }
         }
       }
-      await refreshBunkerNip46Relays(identity_id);
       void pushLokiStructured(
         "info",
         {

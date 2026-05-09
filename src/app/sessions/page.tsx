@@ -51,7 +51,14 @@ export default function SessionsPage() {
         setError(t("sessionRequired"));
         return;
       }
-      const { identity_id } = (await st.json()) as { identity_id: string };
+      const body = (await st.json()) as { identity_id?: string | null };
+      if (!body.identity_id?.trim()) {
+        setIdentityId(null);
+        setRows(null);
+        setError(t("sessionRequired"));
+        return;
+      }
+      const identity_id = body.identity_id.trim();
       setIdentityId(identity_id);
 
       const res = await fetch(

@@ -29,7 +29,9 @@ function truncateMiddle(s: string, keep = 12): string {
 async function fetchAuthStatus(): Promise<AuthStatusOk | null> {
   const res = await fetch("/api/auth/status", { credentials: "include" });
   if (!res.ok) return null;
-  return (await res.json()) as AuthStatusOk;
+  const j = (await res.json()) as Partial<AuthStatusOk>;
+  if (!j.identity_id?.trim()) return null;
+  return j as AuthStatusOk;
 }
 
 export type SignerSessionUserMenuProps = {

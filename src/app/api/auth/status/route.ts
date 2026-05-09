@@ -15,6 +15,7 @@ function jsonError(message: string, status: number) {
 
 /**
  * GET /api/auth/status — current session identity, bunker running flag, and vault row presence.
+ * No valid cookie → 200 with `identity_id: null` (avoids noisy 401 in DevTools for logged-out polls).
  */
 async function handleGet(request: Request) {
   void request;
@@ -36,7 +37,12 @@ async function handleGet(request: Request) {
   }
 
   if (!identityId) {
-    return jsonError("Unauthorized", 401);
+    return NextResponse.json({
+      identity_id: null,
+      is_running: false,
+      vault_exists: false,
+      npub: null,
+    });
   }
 
   /** Sliding session: new JWT + `Set-Cookie` maxAge while the current token is still valid. */

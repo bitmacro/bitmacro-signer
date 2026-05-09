@@ -157,11 +157,19 @@ export default function PanelPage() {
         return;
       }
       const j = (await res.json()) as {
-        identity_id: string;
+        identity_id: string | null;
         is_running: boolean;
         vault_exists?: boolean;
         npub?: string | null;
       };
+      if (!j.identity_id?.trim()) {
+        setStatusIdentity(null);
+        setStatusRunning(null);
+        setSessionNpub("");
+        setPhase(1);
+        setSessionRows(null);
+        return;
+      }
       setStatusIdentity(j.identity_id);
       setStatusRunning(j.is_running);
       setIdentityId(j.identity_id);

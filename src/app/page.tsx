@@ -95,7 +95,13 @@ function Header() {
       try {
         const res = await fetch("/api/auth/status", { credentials: "include" });
         if (!cancelled) {
-          setHasSession(res.ok);
+          if (!res.ok) {
+            setHasSession(false);
+            setChecked(true);
+            return;
+          }
+          const j = (await res.json()) as { identity_id?: string | null };
+          setHasSession(Boolean(j.identity_id?.trim()));
           setChecked(true);
         }
       } catch {
