@@ -21,7 +21,8 @@
   },
   "recover": {
     "title": "Recuperar nsec (local)",
-    "subtitle": "Zero-knowledge: nada é enviado aos servidores BitMacro. A desencriptação corre só no teu browser.",
+    "subtitle": "Precisas do JSON/QR do PDF e da passphrase com que encriptaste o cofre. O PDF sozinho não chega. Nada é enviado aos servidores BitMacro.",
+    "needPassphrase": "A passphrase do cofre é obrigatória. Se a esqueceste, a BitMacro não consegue repor a chave. O código de 6 letras do PDF não é a passphrase.",
     "jsonLabel": "JSON do backup (formato bitmacro-signer-offline-vault v1)",
     "jsonPlaceholder": "{ … }",
     "passphraseLabel": "Passphrase do cofre",
@@ -188,7 +189,7 @@
   },
   "onboarding": {
     "errors": {
-      "incorrectPassphrase": "Passphrase incorrecta",
+      "incorrectPassphrase": "Passphrase incorrecta. O PDF de backup usa a mesma passphrase — sem ela não dá para recuperar.",
       "npubNotRegistered": "Npub não registado nesta Identity",
       "unlockFailed": "Erro ao desbloquear",
       "invalidClientPubkey": "Pubkey do cliente inválido",
@@ -209,7 +210,7 @@
     "header": {
       "brand": "BitMacro Signer",
       "title": "Painel do bunker",
-      "subtitle": "Desbloqueia o cofre com o teu npub e a passphrase, gera o QR NIP-46 e liga as tuas apps. Para mudar de conta, termina a sessão na secção Identidade.",
+      "subtitle": "O bunker assina pelas tuas apps (NIP-46). Desbloquear usa só o npub e a passphrase do cofre — a chave privada (nsec) não entra neste ecrã, excepto na primeira criação do cofre.",
       "bunkerLabel": "Bunker:",
       "active": "Activo",
       "sessionManaged": "Sessão activa (bunker em modo managed, servidor)",
@@ -229,20 +230,27 @@
     },
     "step1": {
       "title": "Identidade",
+      "guideTitle": "Três caminhos",
+      "guideUnlock": "Já tens cofre: npub (público) + passphrase. Não colas a nsec para desbloquear.",
+      "guideFirst": "Primeira vez: gera um par neste browser, ou usa um npub que já exista. Se o cofre ainda não existir, o painel pede a nsec correspondente uma vez.",
+      "guideRecover": "Tens o PDF mas esqueceste a passphrase? O PDF está encriptado com a mesma passphrase. Sem ela não há recuperação nem reset na BitMacro.",
+      "recoverLink": "Abrir recuperação com o PDF",
+      "recentLabel": "npubs usados neste browser",
+      "removeRecent": "Esquecer",
       "npubLabel": "Chave pública Nostr (npub)",
       "passphraseLabel": "Passphrase do cofre",
       "unlock": "Desbloquear",
       "freshNpubLink": "Ainda não tens npub? Gera um par no browser",
       "backToUnlock": "← Voltar ao unlock com npub existente",
-      "warnSaveNpub": "Guarda este npub: é a tua identidade Nostr no bunker. Depois do cofre, podes associá-la à BitMacro Identity se quiseres.",
+      "warnSaveNpub": "Isto cria um npub novo — não recupera uma identidade que já tinhas. Guarda-o: depois do cofre, podes associá-lo à BitMacro Identity se quiseres.",
       "npubReadonly": "npub gerado (readonly)",
       "createVault": "Criar cofre e activar bunker"
     },
     "step2": {
-      "title": "Cofre encriptado",
-      "body": "Ainda não há cofre encriptado para este npub. Cola a nsec que corresponde ao teu npub e define uma passphrase para encriptar o cofre.",
-      "nsecLabel": "nsec (bech32)",
-      "encryptPassLabel": "Passphrase para encriptar o cofre",
+      "title": "Criar o cofre (só esta vez)",
+      "body": "Este npub ainda não tem cofre no Signer. Cola a nsec que corresponde a este npub (a chave privada, nsec1…) e escolhe uma passphrase. Da próxima vez só precisas do npub e da passphrase.",
+      "nsecLabel": "nsec (chave privada, bech32)",
+      "encryptPassLabel": "Passphrase nova para encriptar o cofre",
       "saveContinue": "Guardar cofre e continuar"
     },
     "sessionsPreview": {

@@ -21,7 +21,8 @@
   },
   "recover": {
     "title": "Recover nsec (local)",
-    "subtitle": "Zero-knowledge: nothing is sent to BitMacro servers. Decryption runs only in your browser.",
+    "subtitle": "You need the PDF JSON/QR and the passphrase you used to encrypt the vault. The PDF alone is not enough. Nothing is sent to BitMacro servers.",
+    "needPassphrase": "The vault passphrase is required. If you forgot it, BitMacro cannot restore the key. The 6-letter code in the PDF is not the passphrase.",
     "jsonLabel": "Backup JSON (bitmacro-signer-offline-vault v1)",
     "jsonPlaceholder": "{ … }",
     "passphraseLabel": "Vault passphrase",
@@ -188,7 +189,7 @@
   },
   "onboarding": {
     "errors": {
-      "incorrectPassphrase": "Incorrect passphrase",
+      "incorrectPassphrase": "Incorrect passphrase. The backup PDF uses the same passphrase — without it you cannot recover.",
       "npubNotRegistered": "Npub not registered for this Identity",
       "unlockFailed": "Failed to unlock",
       "invalidClientPubkey": "Invalid client pubkey",
@@ -209,7 +210,7 @@
     "header": {
       "brand": "BitMacro Signer",
       "title": "Bunker panel",
-      "subtitle": "Unlock the vault with your npub and passphrase, generate the NIP-46 QR, and manage app links. To switch accounts, end the session in Identity.",
+      "subtitle": "The bunker signs for your apps (NIP-46). Unlock uses only your npub and vault passphrase — the private key (nsec) is not entered here, except the first time you create the vault.",
       "bunkerLabel": "Bunker:",
       "active": "Active",
       "sessionManaged": "Session active (bunker in managed server mode)",
@@ -229,20 +230,27 @@
     },
     "step1": {
       "title": "Identity",
+      "guideTitle": "Three paths",
+      "guideUnlock": "Vault already created: npub (public) + passphrase. You do not paste nsec to unlock.",
+      "guideFirst": "First time: generate a pair in this browser, or use an existing npub. If there is no vault yet, the panel asks for the matching nsec once.",
+      "guideRecover": "You have the PDF but forgot the passphrase? The PDF is encrypted with that same passphrase. Without it there is no recovery and BitMacro cannot reset it.",
+      "recoverLink": "Open PDF recovery",
+      "recentLabel": "npubs used in this browser",
+      "removeRecent": "Forget",
       "npubLabel": "Nostr public key (npub)",
       "passphraseLabel": "Vault passphrase",
       "unlock": "Unlock",
-      "freshNpubLink": "Don’t have an npub yet? Generate a keypair in the browser",
-      "backToUnlock": "← Back to unlock with existing npub",
-      "warnSaveNpub": "Save this npub: it is your Nostr identity for the bunker. After the vault is set up, you can link it to BitMacro Identity if you want.",
-      "npubReadonly": "Generated npub (read-only)",
+      "freshNpubLink": "Don't have an npub yet? Generate a pair in the browser",
+      "backToUnlock": "← Back to unlock with an existing npub",
+      "warnSaveNpub": "This creates a new npub — it does not restore an identity you already had. Save it: after the vault, you can link it to BitMacro Identity if you want.",
+      "npubReadonly": "generated npub (readonly)",
       "createVault": "Create vault and activate bunker"
     },
     "step2": {
-      "title": "Back up your vault",
-      "body": "There is no encrypted vault for this npub yet. Paste the nsec that matches your npub and choose a passphrase to encrypt the vault.",
-      "nsecLabel": "nsec (bech32)",
-      "encryptPassLabel": "Passphrase to encrypt the vault",
+      "title": "Create the vault (this time only)",
+      "body": "This npub has no Signer vault yet. Paste the nsec that matches this npub (the private key, nsec1…) and choose a passphrase. Next time you only need the npub and passphrase.",
+      "nsecLabel": "nsec (private key, bech32)",
+      "encryptPassLabel": "New passphrase to encrypt the vault",
       "saveContinue": "Save vault and continue"
     },
     "sessionsPreview": {

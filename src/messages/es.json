@@ -21,7 +21,8 @@
   },
   "recover": {
     "title": "Recuperar nsec (local)",
-    "subtitle": "Cero conocimiento: no se envía nada a los servidores BitMacro. El descifrado ocurre solo en tu navegador.",
+    "subtitle": "Necesitas el JSON/QR del PDF y la frase con la que cifraste la bóveda. El PDF solo no basta. Nada se envía a los servidores BitMacro.",
+    "needPassphrase": "La frase de la bóveda es obligatoria. Si la olvidaste, BitMacro no puede restaurar la clave. El código de 6 letras del PDF no es la frase.",
     "jsonLabel": "JSON de copia (bitmacro-signer-offline-vault v1)",
     "jsonPlaceholder": "{ … }",
     "passphraseLabel": "Frase de paso del cofre",
@@ -188,7 +189,7 @@
   },
   "onboarding": {
     "errors": {
-      "incorrectPassphrase": "Frase de paso incorrecta",
+      "incorrectPassphrase": "Frase de paso incorrecta. El PDF de copia usa la misma frase — sin ella no hay recuperación.",
       "npubNotRegistered": "Npub no registrada para esta Identity",
       "unlockFailed": "Error al desbloquear",
       "invalidClientPubkey": "Pubkey de cliente inválida",
@@ -209,7 +210,7 @@
     "header": {
       "brand": "BitMacro Signer",
       "title": "Panel del bunker",
-      "subtitle": "Desbloquea la bóveda con tu npub y frase, genera el QR NIP-46 y gestiona enlaces a apps. Para cambiar de cuenta, termina la sesión en Identidad.",
+      "subtitle": "El bunker firma por tus apps (NIP-46). Desbloquear usa solo el npub y la frase de la bóveda — la clave privada (nsec) no se pega aquí, excepto la primera vez que creas la bóveda.",
       "bunkerLabel": "Bunker:",
       "active": "Activo",
       "sessionManaged": "Sesión activa (bunker en modo gestionado, servidor)",
@@ -229,20 +230,27 @@
     },
     "step1": {
       "title": "Identidad",
+      "guideTitle": "Tres caminos",
+      "guideUnlock": "Ya tienes bóveda: npub (público) + frase. No pegas la nsec para desbloquear.",
+      "guideFirst": "Primera vez: genera un par en este navegador, o usa un npub que ya exista. Si aún no hay bóveda, el panel pide la nsec correspondiente una vez.",
+      "guideRecover": "¿Tienes el PDF pero olvidaste la frase? El PDF está cifrado con esa misma frase. Sin ella no hay recuperación y BitMacro no puede restablecerla.",
+      "recoverLink": "Abrir recuperación con el PDF",
+      "recentLabel": "npubs usados en este navegador",
+      "removeRecent": "Olvidar",
       "npubLabel": "Clave pública Nostr (npub)",
       "passphraseLabel": "Frase de paso de la bóveda",
       "unlock": "Desbloquear",
       "freshNpubLink": "¿Aún no tienes npub? Genera un par en el navegador",
       "backToUnlock": "← Volver al desbloqueo con npub existente",
-      "warnSaveNpub": "Guarda este npub: es tu identidad Nostr en el bunker. Tras la bóveda, puedes vincularla a BitMacro Identity si quieres.",
+      "warnSaveNpub": "Esto crea un npub nuevo — no restaura una identidad que ya tenías. Guárdalo: tras la bóveda, puedes vincularlo a BitMacro Identity si quieres.",
       "npubReadonly": "npub generado (solo lectura)",
       "createVault": "Crear bóveda y activar bunker"
     },
     "step2": {
-      "title": "Respaldo del cofre",
-      "body": "Aún no hay bóveda cifrada para este npub. Pega la nsec que coincide con tu npub y elige una frase para cifrar la bóveda.",
-      "nsecLabel": "nsec (bech32)",
-      "encryptPassLabel": "Frase para cifrar la bóveda",
+      "title": "Crear la bóveda (solo esta vez)",
+      "body": "Este npub aún no tiene bóveda en Signer. Pega la nsec que coincide con este npub (la clave privada, nsec1…) y elige una frase. La próxima vez solo necesitas el npub y la frase.",
+      "nsecLabel": "nsec (clave privada, bech32)",
+      "encryptPassLabel": "Frase nueva para cifrar la bóveda",
       "saveContinue": "Guardar bóveda y continuar"
     },
     "sessionsPreview": {

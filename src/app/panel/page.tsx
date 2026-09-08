@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import {
   Check,
+  CircleHelp,
   Copy,
   KeyRound,
   Loader2,
@@ -14,6 +15,7 @@ import {
   Radio,
   Shield,
   UserRound,
+  X,
 } from "lucide-react";
 import { getPublicKey } from "nostr-tools";
 import * as nip19 from "nostr-tools/nip19";
@@ -25,6 +27,11 @@ import { VaultBackupGate } from "@/components/vault-backup-gate";
 import { useNostrProfile } from "@/hooks/use-nostr-profile";
 import { nostrPubkeyInputToHex } from "@/lib/session/ttl";
 import type { VaultPayload } from "@/lib/vault";
+import {
+  forgetNpub,
+  listRecentNpubs,
+  rememberNpub,
+} from "@/app/panel/recent-npubs";
 import { generateKeypair, encryptNsec } from "@/lib/vault";
 
 const BG = "#080808";
@@ -78,6 +85,7 @@ export default function PanelPage() {
   const [step1Path, setStep1Path] = useState<Step1Path>("have_npub");
 
   const [npubInput, setNpubInput] = useState("");
+  const [recentNpubs, setRecentNpubs] = useState<string[]>([]);
   const [passphraseStep1, setPassphraseStep1] = useState("");
 
   const [identityId, setIdentityId] = useState("");
@@ -208,6 +216,12 @@ export default function PanelPage() {
 
   useEffect(() => {
     setCanUseCamera(hasGetUserMedia());
+  }, []);
+
+  useEffect(() => {
+    const list = listRecentNpubs();
+    setRecentNpubs(list);
+    setNpubInput((prev) => prev || list[0] || "");
   }, []);
 
   const displayNpub = useMemo(
@@ -365,6 +379,7 @@ export default function PanelPage() {
 
       const data = (await res.json()) as UnlockOk;
       setIdentityId(data.identity_id);
+      setRecentNpubs(rememberNpub(npubInput.trim()));
 
       await refreshStatus();
 
@@ -456,6 +471,7 @@ export default function PanelPage() {
       sessionStorage.setItem("bm_signer_backup_pending", id);
       setBackupVaultPayload(payload);
       setNeedsVaultBackup(true);
+      setRecentNpubs(rememberNpub(npub));
       await refreshStatus();
       setBunkerUri(null);
     } catch (err) {
@@ -540,6 +556,7 @@ export default function PanelPage() {
       sessionStorage.setItem("bm_signer_backup_pending", id);
       setBackupVaultPayload(payload);
       setNeedsVaultBackup(true);
+      setRecentNpubs(rememberNpub(npubInput.trim()));
       await refreshStatus();
       setBunkerUri(null);
     } catch (err) {
@@ -571,7 +588,7 @@ export default function PanelPage() {
       setPhase(1);
       vaultNsecRef.current = null;
       setPassphraseStep1("");
-      setNpubInput("");
+      setNpubInput(listRecentNpubs()[0] ?? "");
       setIdentityId("");
       setStep1Path("have_npub");
       setNsecImport("");
@@ -758,7 +775,73 @@ export default function PanelPage() {
               <>
                 {step1Path === "have_npub" ? (
                   <>
+                    <div className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
+                      <div className="mb-3 flex items-center gap-2">
+                        <CircleHelp
+                          className="size-4 shrink-0"
+                          style={{ color: ACCENT }}
+                          aria-hidden
+                        />
+                        <p className="text-sm font-semibold text-zinc-200">
+                          {t("step1.guideTitle")}
+                        </p>
+                      </div>
+                      <ol className="list-decimal space-y-2 pl-5 text-sm leading-[1.55] text-zinc-400">
+                        <li>{t("step1.guideUnlock")}</li>
+                        <li>{t("step1.guideFirst")}</li>
+                        <li>{t("step1.guideRecover")}</li>
+                      </ol>
+                      <p className="mt-3">
+                        <Link
+                          href="/recover"
+                          className="text-sm font-medium underline-offset-2 hover:underline"
+                          style={{ color: ACCENT }}
+                        >
+                          {t("step1.recoverLink")}
+                        </Link>
+                      </p>
+                    </div>
                     <form onSubmit={(e) => void handleUnlock(e)} className="space-y-5">
+                      {recentNpubs.length > 0 ? (
+                        <div>
+                          <p className="bm-label text-zinc-400">{t("step1.recentLabel")}</p>
+                          <ul className="mt-2 flex flex-wrap gap-2">
+                            {recentNpubs.map((npub) => (
+                              <li key={npub} className="flex min-w-0 items-center">
+                                <button
+                                  type="button"
+                                  onClick={() => setNpubInput(npub)}
+                                  className={`max-w-[min(100%,20rem)] truncate rounded-l-lg border px-3 py-2 font-mono text-xs transition-colors ${
+                                    npubInput.trim().toLowerCase() === npub
+                                      ? "border-[#0066FF] bg-[#0066FF]/15 text-white"
+                                      : "border-zinc-700 bg-zinc-900/80 text-zinc-300 hover:border-zinc-500"
+                                  }`}
+                                  title={npub}
+                                >
+                                  {truncateMiddle(npub, 10)}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const next = forgetNpub(npub);
+                                    setRecentNpubs(next);
+                                    setNpubInput((cur) =>
+                                      cur.trim().toLowerCase() === npub
+                                        ? (next[0] ?? "")
+                                        : cur,
+                                    );
+                                  }}
+                                  className="rounded-r-lg border border-l-0 border-zinc-700 bg-zinc-900/80 px-2 py-2 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
+                                  aria-label={t("step1.removeRecent")}
+                                  title={t("step1.removeRecent")}
+                                >
+                                  <X className="size-3.5" aria-hidden />
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
                       <div>
                         <label htmlFor="npub" className="bm-label text-zinc-300">
                           {t("step1.npubLabel")}
