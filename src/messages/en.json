@@ -190,8 +190,9 @@
   "onboarding": {
     "errors": {
       "incorrectPassphrase": "Incorrect passphrase. The backup PDF uses the same passphrase — without it you cannot recover.",
-      "npubNotRegistered": "Npub not registered for this Identity",
+      "npubNotRegistered": "This npub has no vault on this Signer yet. Use “paste nsec” below to create it.",
       "unlockFailed": "Failed to unlock",
+      "daemonUnreachable": "The passphrase was accepted, but this page could not reach the bunker process. The Signer is up; try again in a moment. If it persists, the web and daemon containers are not on the same Docker network.",
       "invalidClientPubkey": "Invalid client pubkey",
       "couldNotCreateSession": "Could not create session",
       "missingBunkerUri": "Response missing bunker_uri",
@@ -210,13 +211,14 @@
     "header": {
       "brand": "BitMacro Signer",
       "title": "Bunker panel",
-      "subtitle": "The bunker signs for your apps (NIP-46). Unlock uses only your npub and vault passphrase — the private key (nsec) is not entered here, except the first time you create the vault.",
+      "subtitle": "The bunker signs for your apps (NIP-46). Unlock with npub and vault passphrase. First time here: paste the matching nsec once, or generate a new pair.",
       "bunkerLabel": "Bunker:",
       "active": "Active",
       "sessionManaged": "Session active (bunker in managed server mode)",
-      "inactive": "Inactive",
+      "inactive": "On standby — waiting for unlock",
+      "inactiveHint": "The Signer is online. The bunker only connects to your apps after you unlock the vault below.",
       "lockBunker": "Lock bunker",
-      "serverNote": "The bunker runs on the server and does not depend on this tab staying open."
+      "serverNote": "Once unlocked, the bunker runs on the server and does not depend on this tab staying open."
     },
     "loadingAuth": "Checking session…",
     "identity": {
@@ -230,11 +232,11 @@
     },
     "step1": {
       "title": "Identity",
-      "guideTitle": "Three paths",
-      "guideUnlock": "Vault already created: npub (public) + passphrase. You do not paste nsec to unlock.",
-      "guideFirst": "First time: generate a pair in this browser, or use an existing npub. If there is no vault yet, the panel asks for the matching nsec once.",
-      "guideRecover": "You have the PDF but forgot the passphrase? The PDF is encrypted with that same passphrase. Without it there is no recovery and BitMacro cannot reset it.",
-      "recoverLink": "Open PDF recovery",
+      "guideTitle": "How to sign in",
+      "guideUnlock": "Vault already created: npub + passphrase. You do not paste nsec to unlock.",
+      "guideFirst": "First time on this Signer: paste nsec once (link below) or generate a new pair.",
+      "importNsecLink": "First time: paste nsec and create the vault",
+      "importNsecBody": "Paste the nsec that matches this npub and choose the vault passphrase. You only need this once on this Signer.",
       "recentLabel": "Accounts in this browser",
       "recentHint": "Saved only here. Name and photo come from the Nostr profile (kind 0) after you unlock or when the relays answer.",
       "removeRecent": "Forget",

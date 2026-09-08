@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Bunker panel:** unlock copy now states the three paths (existing vault = npub + passphrase only; first vault = nsec once; PDF recovery still needs the same passphrase). Recent identities are stored in this browser (`localStorage`, never the passphrase): npub plus cached name/photo/NIP-05 from kind 0. Recover page warns that the PDF alone is not enough. Helper lives under `src/app/panel/` so a `main` deploy does not rebuild the daemon image.
+- **Bunker panel:** locked state copy no longer looks like an outage. Unlock 502/`fetch failed` is mapped to a daemon-reachability message (passphrase is not the issue). First-time nsec import is a visible path; PDF recovery copy stays on the PDF/`/recover`, not in the unlock guide.
 
 ## [0.6.17] - 2026-05-09
 
