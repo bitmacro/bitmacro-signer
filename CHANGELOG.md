@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Bunker panel:** unlock copy now states the three paths (existing vault = npub + passphrase only; first vault = nsec once; PDF recovery still needs the same passphrase). Recent identities are stored in this browser (`localStorage`, never the passphrase): npub plus cached name/photo/NIP-05 from kind 0. Recover page warns that the PDF alone is not enough. Helper lives under `src/app/panel/` so a `main` deploy does not rebuild the daemon image.
+- **Bunker panel:** locked state is “on standby / waiting for unlock”, not “inactive”. Unlock 502/`fetch failed` maps to a daemon-reachability message. First-time nsec import is a visible path; npub is stored in `localStorage` when Unlock is clicked (valid format), not only after a successful bunker start. PDF recovery copy stays on the PDF/`/recover`. README points to the EQ14 `signer-web` cookbook.
 
 ## [0.6.17] - 2026-05-09
 

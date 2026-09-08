@@ -80,6 +80,8 @@ Compose defines **`web`** (Next on port **3000**, health check `GET /api/health`
 
 Runs on `push` to `main` when listed paths change (incl. `src/**`). Edits confined to `src/daemon/` still match `src/**`, so the web image workflow may run in parallel with the daemon workflow — redundant but harmless. GitHub Actions does not allow `paths` and `paths-ignore` on the same trigger.
 
+**Production (EQ14, not Vercel):** after merge to `main` and **Web Docker (GHCR)** is green, pull **only** `signer-web` on the Beelink. Confirm `commitShort` at `https://signer.bitmacro.io/api/build-info` (`version` often stays the same). Do **not** run `signer-update` for a UI-only merge (that recreates the daemon and clears bunker RAM). Cookbook: [bitmacro-server `SIGNER_WEB_UPDATE_EQ14.md`](https://github.com/bitmacro/bitmacro-server/blob/main/infra/docs/SIGNER_WEB_UPDATE_EQ14.md).
+
 ### Daemon image on GHCR (self-host)
 
 On every push to `main` that touches `src/daemon/**`, `src/lib/**`, `Dockerfile.daemon`, or `package.json`, [`.github/workflows/daemon.yml`](.github/workflows/daemon.yml) builds **`linux/amd64`** and pushes to:

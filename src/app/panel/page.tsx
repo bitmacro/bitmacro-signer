@@ -48,7 +48,7 @@ type UnlockOk = {
 };
 
 type Phase = 1 | 2 | 3;
-type Step1Path = "have_npub" | "fresh_npub";
+type Step1Path = "have_npub" | "fresh_npub" | "import_nsec";
 
 type SessionPreviewRow = {
   id: string;
@@ -72,9 +72,18 @@ export default function PanelPage() {
     async (res: Response): Promise<string> => {
       if (res.status === 401) return t("errors.incorrectPassphrase");
       if (res.status === 404) return t("errors.npubNotRegistered");
+      if (res.status === 502) return t("errors.daemonUnreachable");
       try {
         const j = (await res.json()) as { error?: string };
-        if (j.error) return j.error;
+        const raw = j.error?.trim() ?? "";
+        if (
+          /fetch failed|signer-daemon unreachable|signer-daemon timeout/i.test(
+            raw,
+          )
+        ) {
+          return t("errors.daemonUnreachable");
+        }
+        if (raw) return raw;
       } catch {
         /* ignore */
       }
@@ -412,6 +421,7 @@ export default function PanelPage() {
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setRecentIdentities(rememberNpub(npubInput.trim()));
     setLoading(true);
     try {
       const res = await fetch("/api/auth/unlock", {
@@ -430,7 +440,6 @@ export default function PanelPage() {
 
       const data = (await res.json()) as UnlockOk;
       setIdentityId(data.identity_id);
-      setRecentIdentities(rememberNpub(npubInput.trim()));
 
       await refreshStatus();
 
@@ -443,6 +452,106 @@ export default function PanelPage() {
 
       setBunkerUri(null);
       setPhase(3);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("errors.generic"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImportNsec = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    const npub = npubInput.trim();
+    const raw = nsecImport.trim();
+    if (!raw) {
+      setError(t("errors.pasteNsec"));
+      return;
+    }
+    let derived: string;
+    try {
+      const dec = nip19.decode(raw);
+      if (dec.type !== "nsec") {
+        setError(t("errors.invalidNsec"));
+        return;
+      }
+      const sk = new Uint8Array(dec.data as Uint8Array);
+      derived = nip19.npubEncode(getPublicKey(sk));
+      sk.fill(0);
+    } catch {
+      setError(t("errors.invalidNsec"));
+      return;
+    }
+    if (derived !== npub) {
+      setError(t("errors.nsecMismatch"));
+      return;
+    }
+    if (!encryptPassword) {
+      setError(t("errors.enterPassphrase"));
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const bootRes = await fetch("/api/identities/bootstrap", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ npub }),
+      });
+      const bootJson = (await bootRes.json().catch(() => ({}))) as {
+        identity_id?: string;
+        error?: string;
+      };
+      if (!bootRes.ok) {
+        throw new Error(bootJson.error ?? t("errors.couldNotCreateIdentity"));
+      }
+      const id = bootJson.identity_id?.trim();
+      if (!id) {
+        throw new Error(t("errors.missingIdentityId"));
+      }
+      setIdentityId(id);
+
+      const payload = await encryptNsec(raw, encryptPassword);
+      setNsecImport("");
+
+      const vaultRes = await fetch("/api/vault", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          identity_id: id,
+          blob: payload.blob,
+          salt: payload.salt,
+          iv: payload.iv,
+          bunker_pubkey: npub,
+        }),
+      });
+      const vJson = (await vaultRes.json().catch(() => ({}))) as {
+        error?: string;
+      };
+      if (!vaultRes.ok) {
+        throw new Error(vJson.error ?? t("errors.saveVaultFailed"));
+      }
+
+      const unlockRes = await fetch("/api/auth/unlock", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          npub,
+          passphrase: encryptPassword,
+        }),
+      });
+      if (!unlockRes.ok) {
+        throw new Error(await parseUnlockError(unlockRes));
+      }
+      sessionStorage.setItem("bm_signer_backup_pending", id);
+      setBackupVaultPayload(payload);
+      setNeedsVaultBackup(true);
+      setRecentIdentities(rememberNpub(npub));
+      await refreshStatus();
+      setBunkerUri(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("errors.generic"));
     } finally {
@@ -700,10 +809,16 @@ export default function PanelPage() {
                   </span>
                 )
               ) : (
-                <span className="text-zinc-400">{t("header.inactive")}</span>
+                <span className="font-medium text-zinc-200">
+                  {t("header.inactive")}
+                </span>
               )}
             </div>
-            <p className="text-sm leading-[1.5] text-zinc-400">{t("header.serverNote")}</p>
+            <p className="text-sm leading-[1.5] text-zinc-400">
+              {statusIdentity
+                ? t("header.serverNote")
+                : t("header.inactiveHint")}
+            </p>
           </div>
         </header>
 
@@ -824,34 +939,24 @@ export default function PanelPage() {
               </div>
             ) : !statusIdentity ? (
               <>
+                <div className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
+                  <div className="mb-3 flex items-center gap-2">
+                    <CircleHelp
+                      className="size-4 shrink-0"
+                      style={{ color: ACCENT }}
+                      aria-hidden
+                    />
+                    <p className="text-sm font-semibold text-zinc-200">
+                      {t("step1.guideTitle")}
+                    </p>
+                  </div>
+                  <ul className="space-y-2 text-sm leading-[1.55] text-zinc-400">
+                    <li>{t("step1.guideUnlock")}</li>
+                    <li>{t("step1.guideFirst")}</li>
+                  </ul>
+                </div>
                 {step1Path === "have_npub" ? (
                   <>
-                    <div className="mb-6 rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
-                      <div className="mb-3 flex items-center gap-2">
-                        <CircleHelp
-                          className="size-4 shrink-0"
-                          style={{ color: ACCENT }}
-                          aria-hidden
-                        />
-                        <p className="text-sm font-semibold text-zinc-200">
-                          {t("step1.guideTitle")}
-                        </p>
-                      </div>
-                      <ol className="list-decimal space-y-2 pl-5 text-sm leading-[1.55] text-zinc-400">
-                        <li>{t("step1.guideUnlock")}</li>
-                        <li>{t("step1.guideFirst")}</li>
-                        <li>{t("step1.guideRecover")}</li>
-                      </ol>
-                      <p className="mt-3">
-                        <Link
-                          href="/recover"
-                          className="text-sm font-medium underline-offset-2 hover:underline"
-                          style={{ color: ACCENT }}
-                        >
-                          {t("step1.recoverLink")}
-                        </Link>
-                      </p>
-                    </div>
                     <form onSubmit={(e) => void handleUnlock(e)} className="space-y-5">
                       <RecentIdentityPicker
                         items={recentIdentities}
@@ -912,7 +1017,19 @@ export default function PanelPage() {
                         {t("step1.unlock")}
                       </button>
                     </form>
-                    <p className="mt-6 text-center text-sm text-zinc-500">
+                    <p className="mt-6 space-y-3 text-center text-sm text-zinc-500">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setError(null);
+                          setNsecImport("");
+                          setEncryptPassword("");
+                          setStep1Path("import_nsec");
+                        }}
+                        className="block w-full text-zinc-300 underline-offset-2 transition-colors hover:text-white hover:underline"
+                      >
+                        {t("step1.importNsecLink")}
+                      </button>
                       <button
                         type="button"
                         onClick={() => {
@@ -920,12 +1037,104 @@ export default function PanelPage() {
                           setStep1Path("fresh_npub");
                           ensureFreshKeypair();
                         }}
-                        className="text-zinc-400 underline-offset-2 transition-colors hover:text-zinc-300 hover:underline"
+                        className="block w-full text-zinc-400 underline-offset-2 transition-colors hover:text-zinc-300 hover:underline"
                       >
                         {t("step1.freshNpubLink")}
                       </button>
                     </p>
                   </>
+                ) : step1Path === "import_nsec" ? (
+                  <form onSubmit={(e) => void handleImportNsec(e)} className="space-y-5">
+                    <p className="text-sm text-zinc-500">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setError(null);
+                          setNsecImport("");
+                          setStep1Path("have_npub");
+                        }}
+                        className="text-zinc-400 underline-offset-2 hover:underline"
+                      >
+                        {t("step1.backToUnlock")}
+                      </button>
+                    </p>
+                    <p className="text-sm leading-[1.55] text-zinc-300">
+                      {t("step1.importNsecBody")}
+                    </p>
+                    <RecentIdentityPicker
+                      items={recentIdentities}
+                      selectedNpub={npubInput}
+                      onSelect={setNpubInput}
+                      onForget={(npub) => {
+                        const next = forgetNpub(npub);
+                        setRecentIdentities(next);
+                        setNpubInput((cur) =>
+                          cur.trim().toLowerCase() === npub
+                            ? (next[0]?.npub ?? "")
+                            : cur,
+                        );
+                      }}
+                      label={t("step1.recentLabel")}
+                      removeLabel={t("step1.removeRecent")}
+                      hint={t("step1.recentHint")}
+                    />
+                    <div>
+                      <label htmlFor="npub_import" className="bm-label text-zinc-300">
+                        {t("step1.npubLabel")}
+                      </label>
+                      <input
+                        id="npub_import"
+                        value={npubInput}
+                        onChange={(e) => setNpubInput(e.target.value)}
+                        autoComplete="off"
+                        className="bm-input border-zinc-700 bg-zinc-900/50 font-mono text-white ring-offset-[#080808] placeholder:text-zinc-500 focus:ring-[#0066ff]"
+                        placeholder="npub1…"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="nsec_first" className="bm-label text-zinc-300">
+                        {t("step2.nsecLabel")}
+                      </label>
+                      <textarea
+                        id="nsec_first"
+                        value={nsecImport}
+                        onChange={(e) => setNsecImport(e.target.value)}
+                        rows={3}
+                        className="bm-input min-h-[5.5rem] resize-none border-zinc-700 bg-zinc-950/80 py-3 font-mono text-zinc-200 ring-offset-[#080808] placeholder:text-zinc-500 focus:ring-[#0066ff]"
+                        placeholder="nsec1…"
+                        autoComplete="off"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="enc_import" className="bm-label text-zinc-300">
+                        {t("step2.encryptPassLabel")}
+                      </label>
+                      <input
+                        id="enc_import"
+                        type="password"
+                        value={encryptPassword}
+                        onChange={(e) => setEncryptPassword(e.target.value)}
+                        autoComplete="new-password"
+                        className="bm-input border-zinc-700 bg-zinc-900/50 text-white ring-offset-[#080808] focus:ring-[#0066ff]"
+                        required
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-lg px-4 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                      style={{ backgroundColor: ACCENT }}
+                    >
+                      {loading ? (
+                        <Loader2 className="size-4 animate-spin" aria-hidden />
+                      ) : (
+                        <KeyRound className="size-4" aria-hidden />
+                      )}
+                      {t("step1.createVault")}
+                    </button>
+                  </form>
                 ) : (
                   <form onSubmit={(e) => void handleFreshCreate(e)} className="space-y-5">
                     <p className="text-sm text-zinc-500">
