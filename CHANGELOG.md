@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Bunker panel:** locked state copy no longer looks like an outage. Unlock 502/`fetch failed` is mapped to a daemon-reachability message (passphrase is not the issue). First-time nsec import is a visible path; PDF recovery copy stays on the PDF/`/recover`, not in the unlock guide.
+- **Bunker panel:** locked state is “on standby / waiting for unlock”, not “inactive”. Unlock 502/`fetch failed` maps to a daemon-reachability message. First-time nsec import is a visible path; npub is stored in `localStorage` when Unlock is clicked (valid format), not only after a successful bunker start. PDF recovery copy stays on the PDF/`/recover`. README points to the EQ14 `signer-web` cookbook.
 
 ## [0.6.17] - 2026-05-09
 
