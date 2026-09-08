@@ -85,6 +85,9 @@ export function RecoverForm() {
           {t("title")}
         </h1>
         <p className="mt-3 text-base leading-relaxed text-zinc-400">{t("subtitle")}</p>
+        <p className="mt-4 rounded-lg border border-amber-900/40 bg-amber-950/20 px-4 py-3 text-sm leading-[1.55] text-amber-100">
+          {t("needPassphrase")}
+        </p>
       </div>
 
       {clearedNotice && !nsec ? (
