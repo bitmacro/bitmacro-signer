@@ -270,6 +270,42 @@ export async function completeConnect(
   const supabase = createServiceRoleClient();
   const vaultId = await getVaultIdForIdentity(supabase, identityId);
   const appPkNorm = appPubkey.trim().toLowerCase();
+  // NIP-46: `secret` is optional on `connect`. Clients such as noStrudel reconnect after a page
+  // reload with an empty secret; accept it only for a client key that already completed the
+  // handshake and still has a valid session.
+  if (!secret.trim()) {
+    const { data: active, error: activeErr } = await supabase
+      .from("signer_sessions")
+      .select("id")
+      .eq("vault_id", vaultId)
+      .eq("app_pubkey", appPkNorm)
+      .eq("used", true)
+      .gt("expires_at", new Date().toISOString())
+      .maybeSingle();
+    if (activeErr) {
+      throw new Error(`completeConnect: ${activeErr.message}`);
+    }
+    if (active?.id) {
+      relayConnectLog("info", "completeConnect: reconnect without secret (active session)", {
+        component: "app-keys",
+        identityId,
+        rpcId: trace?.rpcId,
+        failureCode: "CONNECT_RECONNECT_NO_SECRET_OK" as const,
+        sessionId: active.id,
+        eventAppPrefix: appPkNorm.slice(0, 12),
+      });
+      return;
+    }
+    relayConnectLog("warn", "completeConnect: empty secret and no active session", {
+      component: "app-keys",
+      identityId,
+      rpcId: trace?.rpcId,
+      failureCode: "EMPTY_SECRET_NO_ACTIVE_SESSION" as const,
+      eventAppPrefix: appPkNorm.slice(0, 12),
+    });
+    throw new Error("connect: unauthorized or secret already used");
+  }
+
   const diag = connectSecretDiagnostics(secret);
   let secret_hash: string;
   try {

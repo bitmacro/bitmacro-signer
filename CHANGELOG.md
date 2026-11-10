@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **NIP-46 `connect` with empty secret:** clients such as noStrudel reconnect after a page reload with an empty `secret` (optional per NIP-46). `completeConnect` used to throw `connect: invalid secret` and the session died on every reload. It now accepts an empty secret only when the client key already has a `used` session that has not expired; otherwise it rejects as unauthorized. Tests in `app-keys.nostrconnect.test.ts`.
+
 ### Changed
 
 - **Bunker panel:** locked state is “on standby / waiting for unlock”, not “inactive”. Unlock 502/`fetch failed` maps to a daemon-reachability message. First-time nsec import is a visible path; npub is stored in `localStorage` when Unlock is clicked (valid format), not only after a successful bunker start. PDF recovery copy stays on the PDF/`/recover`. README points to the EQ14 `signer-web` cookbook.
