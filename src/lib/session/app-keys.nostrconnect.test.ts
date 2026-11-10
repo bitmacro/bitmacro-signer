@@ -259,3 +259,45 @@ describe("getActiveNip46RelayUrlsForIdentity", () => {
     expect(urls).toEqual([defaultRelay, "wss://extra1"]);
   });
 });
+
+describe("completeConnect with empty secret (reconnect after reload)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  function sessionsMock(row: { id: string } | null) {
+    return {
+      from: vi.fn((table: string) => {
+        if (table === "signer_vaults") return vaultTableMock(VAULT_ID);
+        if (table === "signer_sessions") {
+          return {
+            select: () => ({
+              eq: () => ({
+                eq: () => ({
+                  eq: () => ({
+                    gt: () => ({
+                      maybeSingle: async () => ({ data: row, error: null }),
+                    }),
+                  }),
+                }),
+              }),
+            }),
+          };
+        }
+        throw new Error(table);
+      }),
+    };
+  }
+
+  it("accepts when the client key already has an active used session", async () => {
+    mocks.createServiceRoleClient.mockReturnValue(sessionsMock({ id: SESSION_ID }));
+    await expect(completeConnect(IDENTITY_ID, CLIENT_PK, "")).resolves.toBeUndefined();
+  });
+
+  it("rejects when there is no active session for the client key", async () => {
+    mocks.createServiceRoleClient.mockReturnValue(sessionsMock(null));
+    await expect(completeConnect(IDENTITY_ID, CLIENT_PK, "  ")).rejects.toThrow(
+      "connect: unauthorized or secret already used",
+    );
+  });
+});

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **NIP-46 `connect` with empty secret:** clients such as noStrudel reconnect after a page reload with an empty `secret` (optional per NIP-46). `completeConnect` used to throw `connect: invalid secret` and the session died on every reload. It now accepts an empty secret only when the client key already has a `used` session that has not expired; otherwise it rejects as unauthorized. Tests in `app-keys.nostrconnect.test.ts`.
+
 ### Changed
 
 - **Bunker panel:** unlock copy now states the three paths (existing vault = npub + passphrase only; first vault = nsec once; PDF recovery still needs the same passphrase). Recent identities are stored in this browser (`localStorage`, never the passphrase): npub plus cached name/photo/NIP-05 from kind 0. Recover page warns that the PDF alone is not enough. Helper lives under `src/app/panel/` so a `main` deploy does not rebuild the daemon image.
