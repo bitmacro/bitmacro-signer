@@ -25,6 +25,7 @@ import { SignerSessionUserMenu } from "@/components/signer-session-user-menu";
 import { VaultBackupGate } from "@/components/vault-backup-gate";
 import { useNostrProfile } from "@/hooks/use-nostr-profile";
 import { fetchNostrProfileByNpub } from "@/lib/nostr/profile";
+import { copyTextWithFallback } from "@/app/panel/clipboard";
 import { nostrPubkeyInputToHex } from "@/lib/session/ttl";
 import type { VaultPayload } from "@/lib/vault";
 import { RecentIdentityPicker } from "@/app/panel/recent-identity-picker";
@@ -111,6 +112,8 @@ export default function PanelPage() {
   const [encryptPassword, setEncryptPassword] = useState("");
 
   const [bunkerUri, setBunkerUri] = useState<string | null>(null);
+  /** Full bunker URI shown for manual copy (clipboard blocked or user asked to see it). */
+  const [showFullUri, setShowFullUri] = useState(false);
   /** Human-readable label for this connection (stored as app_name; NIP-46 does not send the app name). */
   const [sessionLabel, setSessionLabel] = useState("");
   /** Paste `nostrconnect://…` from a client (e.g. Primal Remote Signer). */
@@ -764,9 +767,13 @@ export default function PanelPage() {
 
   const copyUri = async () => {
     if (!bunkerUri) return;
-    await navigator.clipboard.writeText(bunkerUri);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    const ok = await copyTextWithFallback(bunkerUri);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      return;
+    }
+    setShowFullUri(true);
   };
 
   return (
@@ -803,6 +810,18 @@ export default function PanelPage() {
               {statusIdentity ? (
                 statusRunning ? (
                   <span className="font-semibold text-emerald-400">{t("header.active")}</span>
+                ) : statusRunning === false ? (
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold text-amber-300">{t("header.bunkerStopped")}</span>
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() => void handleLock()}
+                      className="rounded-md border border-amber-700/70 px-2 py-0.5 text-sm font-medium text-amber-100 hover:bg-amber-950/40 disabled:opacity-60"
+                    >
+                      {t("header.unlockAgain")}
+                    </button>
+                  </span>
                 ) : (
                   <span className="max-w-[min(100%,16rem)] font-medium leading-snug text-sky-200 sm:max-w-none">
                     {t("header.sessionManaged")}
@@ -1518,9 +1537,17 @@ export default function PanelPage() {
                         {t("step3.labelHint")}
                       </p>
                     </div>
+                    {statusRunning === false ? (
+                      <p
+                        className="rounded-lg border border-amber-900/50 bg-amber-950/30 px-4 py-3 text-sm leading-[1.5] text-amber-100"
+                        role="alert"
+                      >
+                        {t("step3.bunkerInactiveGenerate")}
+                      </p>
+                    ) : null}
                     <button
                       type="button"
-                      disabled={loading || !identityId.trim()}
+                      disabled={loading || !identityId.trim() || statusRunning !== true}
                       onClick={() => {
                         void createSessionAndQr(identityId.trim());
                       }}
@@ -1547,9 +1574,24 @@ export default function PanelPage() {
                   <QRCodeSVG value={bunkerUri} size={200} level="M" />
                 </div>
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-stretch">
-                  <code className="flex min-h-12 flex-1 items-center break-all rounded-lg border border-zinc-800 bg-zinc-950/80 px-4 py-3 font-mono text-sm leading-normal text-zinc-300">
-                    {truncateMiddle(bunkerUri, 18)}
-                  </code>
+                  {showFullUri ? (
+                    <textarea
+                      readOnly
+                      value={bunkerUri}
+                      rows={4}
+                      onFocus={(e) => e.currentTarget.select()}
+                      aria-label={t("step3.copyManual")}
+                      className="min-h-12 flex-1 resize-none break-all rounded-lg border border-amber-800/70 bg-zinc-950/80 px-4 py-3 font-mono text-sm leading-normal text-zinc-200"
+                    />
+                  ) : (
+                    <code
+                      onClick={() => setShowFullUri(true)}
+                      title={t("step3.showFull")}
+                      className="flex min-h-12 flex-1 cursor-pointer items-center break-all rounded-lg border border-zinc-800 bg-zinc-950/80 px-4 py-3 font-mono text-sm leading-normal text-zinc-300"
+                    >
+                      {truncateMiddle(bunkerUri, 18)}
+                    </code>
+                  )}
                   <button
                     type="button"
                     onClick={() => void copyUri()}
@@ -1563,12 +1605,18 @@ export default function PanelPage() {
                     {copied ? t("step3.copied") : t("step3.copy")}
                   </button>
                 </div>
+                {showFullUri ? (
+                  <p className="mb-4 text-sm leading-[1.5] text-amber-200/90">
+                    {t("step3.copyManual")}
+                  </p>
+                ) : null}
                 <p className="text-center text-sm text-zinc-500">
                   <button
                     type="button"
                     disabled={loading || !identityId.trim()}
                     onClick={() => {
                       setBunkerUri(null);
+                      setShowFullUri(false);
                     }}
                     className="text-zinc-400 underline-offset-2 transition-colors hover:text-zinc-300 hover:underline disabled:opacity-50"
                   >

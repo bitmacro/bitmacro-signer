@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Panel copy (embedded browsers):** Copy falls back to `execCommand("copy")`; if that fails too, the full `bunker://` link is shown in a selectable box with a hint to copy it by hand. Clicking the truncated link also reveals it.
+- **Panel after daemon restart:** with a valid web cookie but `is_running=false`, the header now says the bunker is stopped (amber) with an **Unlock again** button, instead of "Session active (managed)".
+- **Bunker link while stopped:** "Generate QR" is disabled until the bunker runs, with an explanation (a link created then has nobody answering and clients hang).
+- **Sessions list:** pending `bunker://` rows (placeholder `pending:` key, `connect` not completed) are listed as Pending with "the app has not completed the connection yet"; Remove all clears them too.
+
 - **NIP-46 `connect` with empty secret:** clients such as noStrudel reconnect after a page reload with an empty `secret` (optional per NIP-46). `completeConnect` used to throw `connect: invalid secret` and the session died on every reload. It now accepts an empty secret only when the client key already has a `used` session that has not expired; otherwise it rejects as unauthorized. Tests in `app-keys.nostrconnect.test.ts`.
 
 ### Changed

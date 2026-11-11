@@ -218,7 +218,9 @@
       "inactive": "On standby — waiting for unlock",
       "inactiveHint": "The Signer is online. The bunker only connects to your apps after you unlock the vault below.",
       "lockBunker": "Lock bunker",
-      "serverNote": "Once unlocked, the bunker runs on the server and does not depend on this tab staying open."
+      "serverNote": "Once unlocked, the bunker runs on the server and does not depend on this tab staying open.",
+      "bunkerStopped": "Bunker stopped (the server restarted). Apps get no answer.",
+      "unlockAgain": "Unlock again"
     },
     "loadingAuth": "Checking session…",
     "identity": {
@@ -294,7 +296,10 @@
       "qrHelp2": "Another device or app needs a new link. Remove stale bunker connections in the client if it cached an old URI.",
       "copy": "Copy",
       "copied": "Copied",
-      "newLinkInline": "Need a new link for another app?"
+      "newLinkInline": "Need a new link for another app?",
+      "copyManual": "Copy didn't work in this browser. Select the link above and copy it by hand.",
+      "showFull": "Show the full link",
+      "bunkerInactiveGenerate": "The bunker is stopped: a link generated now would get no answer and the app would hang. Unlock again at the top of the page."
     },
     "backup": {
       "sectionTitle": "Offline recovery backup (required)",
@@ -361,7 +366,7 @@
     "statusUsed": "Used",
     "statusExpired": "Expired",
     "expiryLineUsed": "Session used — signing handshake complete.",
-    "expiryLinePending": "Expires {time}",
+    "expiryLinePending": "The app has not completed the connection yet · expires {time}",
     "expiryLineExpired": "{time}",
     "detailsToggle": "Technical details",
     "loading": "Loading…",

@@ -218,7 +218,9 @@
       "inactive": "Em espera — aguardando desbloqueio",
       "inactiveHint": "O Signer está online. O bunker só liga às apps depois de desbloqueares o cofre em baixo.",
       "lockBunker": "Bloquear bunker",
-      "serverNote": "Depois de desbloqueado, o bunker corre no servidor e não depende desta janela estar aberta."
+      "serverNote": "Depois de desbloqueado, o bunker corre no servidor e não depende desta janela estar aberta.",
+      "bunkerStopped": "Bunker parado (o servidor reiniciou). As apps não recebem resposta.",
+      "unlockAgain": "Desbloquear outra vez"
     },
     "loadingAuth": "A verificar sessão…",
     "identity": {
@@ -294,7 +296,10 @@
       "qrHelp2": "Outro dispositivo ou app precisa de um link novo. Remove ligações antigas ao bunker no cliente se ainda estiver em cache.",
       "copy": "Copiar",
       "copied": "Copiado",
-      "newLinkInline": "Precisas de um link novo para outra app?"
+      "newLinkInline": "Precisas de um link novo para outra app?",
+      "copyManual": "Copiar não funcionou neste navegador. Seleciona o link acima e copia à mão.",
+      "showFull": "Mostrar o link completo",
+      "bunkerInactiveGenerate": "O bunker está parado: um link gerado agora não teria quem respondesse, e a app ficava à espera. Desbloqueia outra vez no topo da página."
     },
     "backup": {
       "sectionTitle": "Cópia de recuperação offline (obrigatória)",
@@ -361,7 +366,7 @@
     "statusUsed": "Usada",
     "statusExpired": "Expirada",
     "expiryLineUsed": "Sessão usada — handshake de assinatura completo.",
-    "expiryLinePending": "Expira {time}",
+    "expiryLinePending": "A app ainda não completou a ligação · expira {time}",
     "expiryLineExpired": "{time}",
     "detailsToggle": "Detalhes técnicos",
     "loading": "A carregar…",

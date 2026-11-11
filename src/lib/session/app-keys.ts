@@ -553,7 +553,8 @@ export async function revokeAllListableSessionsForIdentity(
 }
 
 /**
- * Lists sessions for the vault belonging to this Identity.
+ * Lists sessions for the vault belonging to this Identity, including pending
+ * bunker:// placeholders (`pending:<uuid>`) until the client completes `connect`.
  */
 export async function listSessions(identityId: string): Promise<Session[]> {
   const supabase = createServiceRoleClient();
@@ -570,8 +571,7 @@ export async function listSessions(identityId: string): Promise<Session[]> {
     throw new Error(`listSessions: ${error.message}`);
   }
 
-  const rows = (data ?? []) as Session[];
-  return rows.filter(
-    (s) => !s.app_pubkey.startsWith(PENDING_APP_PUBKEY_PREFIX),
-  );
+  // Includes bunker:// rows still waiting for the client's `connect` (placeholder app_pubkey),
+  // so the user can see a link that was generated but never completed.
+  return (data ?? []) as Session[];
 }
