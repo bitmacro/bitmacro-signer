@@ -29,6 +29,7 @@ import {
   type DecryptNip46InboundResult,
   type Nip46RpcResult,
 } from "./nip46-methods";
+import { createKeyedSerializer } from "./serialize-per-key";
 
 function log(
   level: "debug" | "info" | "warn" | "error",
@@ -114,6 +115,13 @@ function decodeNsec(nsec: string): Uint8Array {
   return new Uint8Array(d.data);
 }
 
+/**
+ * One queue per (identity, client app pubkey): `connect` must finish binding the session
+ * before the same client's next RPC runs, otherwise `get_public_key` races it and gets
+ * "app not authorized" on the first login attempt. Shared across relays of the bunker.
+ */
+const serializeNip46ByClient = createKeyedSerializer();
+
 function createNip46AttachOnevent(
   identityId: string,
   secretKey: Uint8Array,
@@ -150,97 +158,99 @@ function createNip46AttachOnevent(
           },
         );
       }
-      try {
-        const { plaintext, envelope } = decryptNip46InboundEventContent(
-          secretKey,
-          event.pubkey,
-          event.content,
-        );
-        if (envelope === "nip04") {
-          log("info", "NIP-46 inbound envelope: NIP-04 (NIP-44 did not parse)", {
-            identityId,
-            relayUrl,
-            from: event.pubkey.slice(0, 12),
-            eventIdPrefix: event.id.slice(0, 16),
-          });
-        }
-
-        const req = parseNip46RpcPayload(plaintext);
-        const clientPk = event.pubkey.slice(0, 12);
-        const connectExtra =
-          req.method === "connect"
-            ? {
-                connectParamsCount: req.params.length,
-                bunkerClaimLen: (req.params[0] ?? "").length,
-                secretParamLen: (req.params[1] ?? "").length,
-                permsParamLen: (req.params[2] ?? "").length,
-              }
-            : {};
-
-        const inboundLog = {
-          identityId,
-          relayUrl,
-          method: req.method,
-          rpcId: req.id,
-          clientPk,
-          eventCreatedAt: event.created_at,
-          ...connectExtra,
-        };
-        if (req.method === "sign_event") {
-          log("info", `NIP-46 inbound ${req.method}`, inboundLog);
-        } else {
-          log("info", "NIP-46 inbound", inboundLog);
-        }
-
-        const res = await runNip46Method(event.pubkey, req, {
-          bunkerSecretKey: secretKey,
-          bunkerPubkeyHex,
-          completeConnect: (appPubkey, secret, trace) =>
-            completeConnect(identityId, appPubkey, secret, trace),
-          assertAppMayUseSigner: (appPubkey) =>
-            assertAppMayUseSigner(identityId, appPubkey),
-          getSwitchRelayUrls: () =>
-            getActiveNip46RelayUrlsForIdentity(identityId),
-        });
-
-        if (req.method === "connect") {
-          if (res.error) {
-            log("warn", "NIP-46 connect RPC error response", {
+      await serializeNip46ByClient(`${identityId}:${event.pubkey}`, async () => {
+        try {
+          const { plaintext, envelope } = decryptNip46InboundEventContent(
+            secretKey,
+            event.pubkey,
+            event.content,
+          );
+          if (envelope === "nip04") {
+            log("info", "NIP-46 inbound envelope: NIP-04 (NIP-44 did not parse)", {
               identityId,
               relayUrl,
-              rpcId: res.id,
-              clientPk,
-              errorPreview: res.error.slice(0, 160),
-            });
-          } else {
-            log("info", "NIP-46 connect RPC ok", {
-              identityId,
-              relayUrl,
-              rpcId: res.id,
-              clientPk,
-              resultPreview: (res.result ?? "").slice(0, 24),
+              from: event.pubkey.slice(0, 12),
+              eventIdPrefix: event.id.slice(0, 16),
             });
           }
-        }
 
-        await publishResponse(
-          relay,
-          relayUrl,
-          secretKey,
-          event.pubkey,
-          res,
-          identityId,
-          req.id,
-          req.method,
-          envelope,
-        );
-      } catch (e) {
-        log("error", "onevent handler failed", {
-          identityId,
-          relayUrl,
-          err: e instanceof Error ? e.message : String(e),
-        });
-      }
+          const req = parseNip46RpcPayload(plaintext);
+          const clientPk = event.pubkey.slice(0, 12);
+          const connectExtra =
+            req.method === "connect"
+              ? {
+                  connectParamsCount: req.params.length,
+                  bunkerClaimLen: (req.params[0] ?? "").length,
+                  secretParamLen: (req.params[1] ?? "").length,
+                  permsParamLen: (req.params[2] ?? "").length,
+                }
+              : {};
+
+          const inboundLog = {
+            identityId,
+            relayUrl,
+            method: req.method,
+            rpcId: req.id,
+            clientPk,
+            eventCreatedAt: event.created_at,
+            ...connectExtra,
+          };
+          if (req.method === "sign_event") {
+            log("info", `NIP-46 inbound ${req.method}`, inboundLog);
+          } else {
+            log("info", "NIP-46 inbound", inboundLog);
+          }
+
+          const res = await runNip46Method(event.pubkey, req, {
+            bunkerSecretKey: secretKey,
+            bunkerPubkeyHex,
+            completeConnect: (appPubkey, secret, trace) =>
+              completeConnect(identityId, appPubkey, secret, trace),
+            assertAppMayUseSigner: (appPubkey) =>
+              assertAppMayUseSigner(identityId, appPubkey),
+            getSwitchRelayUrls: () =>
+              getActiveNip46RelayUrlsForIdentity(identityId),
+          });
+
+          if (req.method === "connect") {
+            if (res.error) {
+              log("warn", "NIP-46 connect RPC error response", {
+                identityId,
+                relayUrl,
+                rpcId: res.id,
+                clientPk,
+                errorPreview: res.error.slice(0, 160),
+              });
+            } else {
+              log("info", "NIP-46 connect RPC ok", {
+                identityId,
+                relayUrl,
+                rpcId: res.id,
+                clientPk,
+                resultPreview: (res.result ?? "").slice(0, 24),
+              });
+            }
+          }
+
+          await publishResponse(
+            relay,
+            relayUrl,
+            secretKey,
+            event.pubkey,
+            res,
+            identityId,
+            req.id,
+            req.method,
+            envelope,
+          );
+        } catch (e) {
+          log("error", "onevent handler failed", {
+            identityId,
+            relayUrl,
+            err: e instanceof Error ? e.message : String(e),
+          });
+        }
+      });
     };
 }
 
