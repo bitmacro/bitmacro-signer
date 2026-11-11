@@ -366,7 +366,7 @@
     "statusUsed": "Usada",
     "statusExpired": "Caducada",
     "expiryLineUsed": "Sesión usada — handshake de firma completo.",
-    "expiryLinePending": "Caduca {time}",
+    "expiryLinePending": "La app aún no completó la conexión · expira {time}",
     "expiryLineExpired": "{time}",
     "detailsToggle": "Detalles técnicos",
     "loading": "Cargando…",

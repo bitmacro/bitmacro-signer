@@ -366,7 +366,7 @@
     "statusUsed": "Usada",
     "statusExpired": "Expirada",
     "expiryLineUsed": "Sessão usada — handshake de assinatura completo.",
-    "expiryLinePending": "Expira {time}",
+    "expiryLinePending": "A app ainda não completou a ligação · expira {time}",
     "expiryLineExpired": "{time}",
     "detailsToggle": "Detalhes técnicos",
     "loading": "A carregar…",
