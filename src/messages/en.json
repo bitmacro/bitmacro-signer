@@ -298,7 +298,8 @@
       "copied": "Copied",
       "newLinkInline": "Need a new link for another app?",
       "copyManual": "Copy didn't work in this browser. Select the link above and copy it by hand.",
-      "showFull": "Show the full link"
+      "showFull": "Show the full link",
+      "bunkerInactiveGenerate": "The bunker is stopped: a link generated now would get no answer and the app would hang. Unlock again at the top of the page."
     },
     "backup": {
       "sectionTitle": "Offline recovery backup (required)",

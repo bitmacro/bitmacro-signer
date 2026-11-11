@@ -1537,9 +1537,17 @@ export default function PanelPage() {
                         {t("step3.labelHint")}
                       </p>
                     </div>
+                    {statusRunning === false ? (
+                      <p
+                        className="rounded-lg border border-amber-900/50 bg-amber-950/30 px-4 py-3 text-sm leading-[1.5] text-amber-100"
+                        role="alert"
+                      >
+                        {t("step3.bunkerInactiveGenerate")}
+                      </p>
+                    ) : null}
                     <button
                       type="button"
-                      disabled={loading || !identityId.trim()}
+                      disabled={loading || !identityId.trim() || statusRunning !== true}
                       onClick={() => {
                         void createSessionAndQr(identityId.trim());
                       }}

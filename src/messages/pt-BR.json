@@ -298,7 +298,8 @@
       "copied": "Copiado",
       "newLinkInline": "Precisas de um link novo para outra app?",
       "copyManual": "Copiar não funcionou neste navegador. Seleciona o link acima e copia à mão.",
-      "showFull": "Mostrar o link completo"
+      "showFull": "Mostrar o link completo",
+      "bunkerInactiveGenerate": "O bunker está parado: um link gerado agora não teria quem respondesse, e a app ficava à espera. Desbloqueia outra vez no topo da página."
     },
     "backup": {
       "sectionTitle": "Cópia de recuperação offline (obrigatória)",
