@@ -218,7 +218,9 @@
       "inactive": "On standby — waiting for unlock",
       "inactiveHint": "The Signer is online. The bunker only connects to your apps after you unlock the vault below.",
       "lockBunker": "Lock bunker",
-      "serverNote": "Once unlocked, the bunker runs on the server and does not depend on this tab staying open."
+      "serverNote": "Once unlocked, the bunker runs on the server and does not depend on this tab staying open.",
+      "bunkerStopped": "Bunker stopped (the server restarted). Apps get no answer.",
+      "unlockAgain": "Unlock again"
     },
     "loadingAuth": "Checking session…",
     "identity": {

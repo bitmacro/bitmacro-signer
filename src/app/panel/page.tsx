@@ -810,6 +810,18 @@ export default function PanelPage() {
               {statusIdentity ? (
                 statusRunning ? (
                   <span className="font-semibold text-emerald-400">{t("header.active")}</span>
+                ) : statusRunning === false ? (
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold text-amber-300">{t("header.bunkerStopped")}</span>
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() => void handleLock()}
+                      className="rounded-md border border-amber-700/70 px-2 py-0.5 text-sm font-medium text-amber-100 hover:bg-amber-950/40 disabled:opacity-60"
+                    >
+                      {t("header.unlockAgain")}
+                    </button>
+                  </span>
                 ) : (
                   <span className="max-w-[min(100%,16rem)] font-medium leading-snug text-sky-200 sm:max-w-none">
                     {t("header.sessionManaged")}

@@ -218,7 +218,9 @@
       "inactive": "En espera — aguardando desbloqueo",
       "inactiveHint": "El Signer está en línea. El bunker solo conecta con tus apps después de desbloquear la bóveda abajo.",
       "lockBunker": "Bloquear bunker",
-      "serverNote": "Una vez desbloqueado, el bunker corre en el servidor y no depende de que esta pestaña siga abierta."
+      "serverNote": "Una vez desbloqueado, el bunker corre en el servidor y no depende de que esta pestaña siga abierta.",
+      "bunkerStopped": "Bunker detenido (el servidor se reinició). Las apps no reciben respuesta.",
+      "unlockAgain": "Desbloquear de nuevo"
     },
     "loadingAuth": "Comprobando sesión…",
     "identity": {

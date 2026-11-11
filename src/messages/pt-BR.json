@@ -218,7 +218,9 @@
       "inactive": "Em espera — aguardando desbloqueio",
       "inactiveHint": "O Signer está online. O bunker só liga às apps depois de desbloqueares o cofre em baixo.",
       "lockBunker": "Bloquear bunker",
-      "serverNote": "Depois de desbloqueado, o bunker corre no servidor e não depende desta janela estar aberta."
+      "serverNote": "Depois de desbloqueado, o bunker corre no servidor e não depende desta janela estar aberta.",
+      "bunkerStopped": "Bunker parado (o servidor reiniciou). As apps não recebem resposta.",
+      "unlockAgain": "Desbloquear outra vez"
     },
     "loadingAuth": "A verificar sessão…",
     "identity": {
