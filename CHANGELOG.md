@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **NIP-46 first login race:** the bunker loop handled each inbound RPC concurrently, so a client that sends `connect` and then `get_public_key` right away got "app not authorized" for `get_public_key` before `completeConnect` had bound the session; the login failed and only a second try with the same link worked. RPCs are now processed in order per (identity, client pubkey), shared across relays; different clients still run in parallel. Helper `createKeyedSerializer` in `src/lib/bunker/serialize-per-key.ts`, with tests.
 - **Panel copy (embedded browsers):** Copy falls back to `execCommand("copy")`; if that fails too, the full `bunker://` link is shown in a selectable box with a hint to copy it by hand. Clicking the truncated link also reveals it.
 - **Panel after daemon restart:** with a valid web cookie but `is_running=false`, the header now says the bunker is stopped (amber) with an **Unlock again** button, instead of "Session active (managed)".
 - **Bunker link while stopped:** "Generate QR" is disabled until the bunker runs, with an explanation (a link created then has nobody answering and clients hang).
