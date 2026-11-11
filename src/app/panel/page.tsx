@@ -25,6 +25,7 @@ import { SignerSessionUserMenu } from "@/components/signer-session-user-menu";
 import { VaultBackupGate } from "@/components/vault-backup-gate";
 import { useNostrProfile } from "@/hooks/use-nostr-profile";
 import { fetchNostrProfileByNpub } from "@/lib/nostr/profile";
+import { copyTextWithFallback } from "@/app/panel/clipboard";
 import { nostrPubkeyInputToHex } from "@/lib/session/ttl";
 import type { VaultPayload } from "@/lib/vault";
 import { RecentIdentityPicker } from "@/app/panel/recent-identity-picker";
@@ -111,6 +112,8 @@ export default function PanelPage() {
   const [encryptPassword, setEncryptPassword] = useState("");
 
   const [bunkerUri, setBunkerUri] = useState<string | null>(null);
+  /** Full bunker URI shown for manual copy (clipboard blocked or user asked to see it). */
+  const [showFullUri, setShowFullUri] = useState(false);
   /** Human-readable label for this connection (stored as app_name; NIP-46 does not send the app name). */
   const [sessionLabel, setSessionLabel] = useState("");
   /** Paste `nostrconnect://…` from a client (e.g. Primal Remote Signer). */
@@ -764,9 +767,13 @@ export default function PanelPage() {
 
   const copyUri = async () => {
     if (!bunkerUri) return;
-    await navigator.clipboard.writeText(bunkerUri);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    const ok = await copyTextWithFallback(bunkerUri);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      return;
+    }
+    setShowFullUri(true);
   };
 
   return (
@@ -1547,9 +1554,24 @@ export default function PanelPage() {
                   <QRCodeSVG value={bunkerUri} size={200} level="M" />
                 </div>
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-stretch">
-                  <code className="flex min-h-12 flex-1 items-center break-all rounded-lg border border-zinc-800 bg-zinc-950/80 px-4 py-3 font-mono text-sm leading-normal text-zinc-300">
-                    {truncateMiddle(bunkerUri, 18)}
-                  </code>
+                  {showFullUri ? (
+                    <textarea
+                      readOnly
+                      value={bunkerUri}
+                      rows={4}
+                      onFocus={(e) => e.currentTarget.select()}
+                      aria-label={t("step3.copyManual")}
+                      className="min-h-12 flex-1 resize-none break-all rounded-lg border border-amber-800/70 bg-zinc-950/80 px-4 py-3 font-mono text-sm leading-normal text-zinc-200"
+                    />
+                  ) : (
+                    <code
+                      onClick={() => setShowFullUri(true)}
+                      title={t("step3.showFull")}
+                      className="flex min-h-12 flex-1 cursor-pointer items-center break-all rounded-lg border border-zinc-800 bg-zinc-950/80 px-4 py-3 font-mono text-sm leading-normal text-zinc-300"
+                    >
+                      {truncateMiddle(bunkerUri, 18)}
+                    </code>
+                  )}
                   <button
                     type="button"
                     onClick={() => void copyUri()}
@@ -1563,12 +1585,18 @@ export default function PanelPage() {
                     {copied ? t("step3.copied") : t("step3.copy")}
                   </button>
                 </div>
+                {showFullUri ? (
+                  <p className="mb-4 text-sm leading-[1.5] text-amber-200/90">
+                    {t("step3.copyManual")}
+                  </p>
+                ) : null}
                 <p className="text-center text-sm text-zinc-500">
                   <button
                     type="button"
                     disabled={loading || !identityId.trim()}
                     onClick={() => {
                       setBunkerUri(null);
+                      setShowFullUri(false);
                     }}
                     className="text-zinc-400 underline-offset-2 transition-colors hover:text-zinc-300 hover:underline disabled:opacity-50"
                   >

@@ -294,7 +294,9 @@
       "qrHelp2": "Outro dispositivo ou app precisa de um link novo. Remove ligações antigas ao bunker no cliente se ainda estiver em cache.",
       "copy": "Copiar",
       "copied": "Copiado",
-      "newLinkInline": "Precisas de um link novo para outra app?"
+      "newLinkInline": "Precisas de um link novo para outra app?",
+      "copyManual": "Copiar não funcionou neste navegador. Seleciona o link acima e copia à mão.",
+      "showFull": "Mostrar o link completo"
     },
     "backup": {
       "sectionTitle": "Cópia de recuperação offline (obrigatória)",
