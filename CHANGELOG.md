@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.19] - 2026-11-13
+
+### Fixed
+
+- **Expired sessions shown as "Used":** `getSessionStatus` checked `used` before `expires_at`, so a connected session past its expiry (which the daemon already rejects) kept the green "Used" badge. Expiry now wins and the row shows the grey **Expired** badge with "Expired {time}". Tests in `session-utils.test.ts`.
+- **Panel sessions preview:** colours were inverted (pending green, connected amber) and expired rows were not distinguished. It now uses the same status as `/sessions` (active green, pending amber, expired grey) and lists active first, then pending, then expired.
+
+### Changed
+
+- **"Used" renamed to "Active"** in the sessions list, filter and preview; the line under an active session shows when it expires ("App connected · expires in 3 days").
+- **Session validity in the panel:** both connection tabs (`bunker://` and `nostrconnect://`) offer 24 hours (default), 7 days or 30 days, sent as `ttl_hours` to `POST /api/sessions` (the API already accepted up to 8760 h; the panel always used the 24 h default).
+
 ## [0.6.18] - 2026-11-11
 
 ### Fixed
