@@ -100,7 +100,7 @@ export function SessionCard({
 
   let summaryLine: string;
   if (status === "used") {
-    summaryLine = t("expiryLineUsed");
+    summaryLine = t("expiryLineUsed", { time: relative });
   } else if (status === "expired") {
     summaryLine = t("expiryLineExpired", { time: relative });
   } else {

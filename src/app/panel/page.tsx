@@ -27,6 +27,7 @@ import { useNostrProfile } from "@/hooks/use-nostr-profile";
 import { fetchNostrProfileByNpub } from "@/lib/nostr/profile";
 import { copyTextWithFallback } from "@/app/panel/clipboard";
 import { nostrPubkeyInputToHex } from "@/lib/session/ttl";
+import { getSessionStatus } from "@/components/sessions/session-utils";
 import type { VaultPayload } from "@/lib/vault";
 import { RecentIdentityPicker } from "@/app/panel/recent-identity-picker";
 import {
@@ -59,6 +60,61 @@ type SessionPreviewRow = {
 };
 
 type ConnectFlowTab = "nostrconnect" | "bunker";
+
+/** Session validity offered in the panel (hours). The API accepts up to 8760. */
+const SESSION_TTL_OPTIONS = [24, 168, 720] as const;
+type SessionTtlHours = (typeof SESSION_TTL_OPTIONS)[number];
+
+/** Preview order: active → pending → expired; within each, expiring soonest first. */
+function sortPreviewRows(rows: SessionPreviewRow[]): SessionPreviewRow[] {
+  const now = Date.now();
+  const tier = { used: 0, pending: 1, expired: 2 } as const;
+  return [...rows].sort((a, b) => {
+    const ta = tier[getSessionStatus(a, now)];
+    const tb = tier[getSessionStatus(b, now)];
+    if (ta !== tb) return ta - tb;
+    const ea = new Date(a.expires_at).getTime();
+    const eb = new Date(b.expires_at).getTime();
+    return ta === 2 ? eb - ea : ea - eb;
+  });
+}
+
+function SessionTtlSelect({
+  id,
+  value,
+  onChange,
+  label,
+  hint,
+  optionLabel,
+}: {
+  id: string;
+  value: SessionTtlHours;
+  onChange: (v: SessionTtlHours) => void;
+  label: string;
+  hint: string;
+  optionLabel: (hours: SessionTtlHours) => string;
+}) {
+  return (
+    <div>
+      <label htmlFor={id} className="bm-label text-zinc-300">
+        {label}
+      </label>
+      <select
+        id={id}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value) as SessionTtlHours)}
+        className="bm-input border-zinc-700 bg-zinc-900/50 text-white ring-offset-[#080808] focus:ring-[#0066ff]"
+      >
+        {SESSION_TTL_OPTIONS.map((h) => (
+          <option key={h} value={h}>
+            {optionLabel(h)}
+          </option>
+        ))}
+      </select>
+      <p className="mt-2 text-sm leading-[1.5] text-zinc-400">{hint}</p>
+    </div>
+  );
+}
 
 function truncateMiddle(s: string, keep = 14): string {
   if (s.length <= keep * 2 + 3) return s;
@@ -116,6 +172,7 @@ export default function PanelPage() {
   const [showFullUri, setShowFullUri] = useState(false);
   /** Human-readable label for this connection (stored as app_name; NIP-46 does not send the app name). */
   const [sessionLabel, setSessionLabel] = useState("");
+  const [sessionTtlHours, setSessionTtlHours] = useState<SessionTtlHours>(24);
   /** Paste `nostrconnect://…` from a client (e.g. Primal Remote Signer). */
   const [nostrConnectPaste, setNostrConnectPaste] = useState("");
   const [connectTab, setConnectTab] = useState<ConnectFlowTab>("nostrconnect");
@@ -162,7 +219,7 @@ export default function PanelPage() {
         return;
       }
       const data = (await res.json()) as SessionPreviewRow[];
-      setSessionRows(data);
+      setSessionRows(sortPreviewRows(data));
     } catch {
       setSessionRows([]);
     } finally {
@@ -332,6 +389,7 @@ export default function PanelPage() {
     setError(null);
     const body: Record<string, unknown> = {
       identity_id: id,
+      ttl_hours: sessionTtlHours,
     };
     const label = sessionLabel.trim();
     if (label) {
@@ -371,7 +429,7 @@ export default function PanelPage() {
     } finally {
       setLoading(false);
     }
-  }, [sessionLabel, t, refreshSessions]);
+  }, [sessionLabel, sessionTtlHours, t, refreshSessions]);
 
   const registerNostrConnectUri = useCallback(
     async (id: string) => {
@@ -386,6 +444,7 @@ export default function PanelPage() {
       const body = {
         identity_id: id,
         nostrconnect_uri: uri,
+        ttl_hours: sessionTtlHours,
       };
       try {
         const res = await fetch("/api/sessions", {
@@ -418,7 +477,7 @@ export default function PanelPage() {
         setLoading(false);
       }
     },
-    [nostrConnectPaste, t, refreshSessions],
+    [nostrConnectPaste, sessionTtlHours, t, refreshSessions],
   );
 
   const handleUnlock = async (e: React.FormEvent) => {
@@ -1307,7 +1366,9 @@ export default function PanelPage() {
                 </p>
               ) : sessionRows && sessionRows.length > 0 ? (
                 <ul className="space-y-2 text-sm">
-                  {sessionRows.slice(0, 6).map((row) => (
+                  {sessionRows.slice(0, 6).map((row) => {
+                    const st = getSessionStatus(row);
+                    return (
                     <li
                       key={row.id}
                       className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-zinc-800/80 bg-zinc-950/50 px-3 py-2"
@@ -1318,10 +1379,18 @@ export default function PanelPage() {
                       <span className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
                         <span
                           className={
-                            row.used ? "text-amber-200/90" : "text-emerald-400/90"
+                            st === "used"
+                              ? "text-emerald-400/90"
+                              : st === "pending"
+                                ? "text-amber-200/90"
+                                : "text-zinc-500"
                           }
                         >
-                          {row.used ? tSess("used") : tSess("pending")}
+                          {st === "used"
+                            ? tSess("used")
+                            : st === "pending"
+                              ? tSess("pending")
+                              : tSess("statusExpired")}
                         </span>
                         <span aria-hidden>·</span>
                         <time dateTime={row.expires_at}>
@@ -1333,7 +1402,8 @@ export default function PanelPage() {
                         </time>
                       </span>
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
               ) : (
                 <p className="text-sm leading-[1.5] text-zinc-500">
@@ -1465,6 +1535,14 @@ export default function PanelPage() {
                         {t("step3.nostrConnectHint")}
                       </p>
                     </div>
+                    <SessionTtlSelect
+                      id="session_ttl_nostrconnect"
+                      value={sessionTtlHours}
+                      onChange={setSessionTtlHours}
+                      label={t("step3.ttlLabel")}
+                      hint={t("step3.ttlHint")}
+                      optionLabel={(h) => t(`step3.ttlOption${h}`)}
+                    />
                     <button
                       ref={nostrRegisterRef}
                       id="nostrconnect-register"
@@ -1537,6 +1615,14 @@ export default function PanelPage() {
                         {t("step3.labelHint")}
                       </p>
                     </div>
+                    <SessionTtlSelect
+                      id="session_ttl_bunker"
+                      value={sessionTtlHours}
+                      onChange={setSessionTtlHours}
+                      label={t("step3.ttlLabel")}
+                      hint={t("step3.ttlHint")}
+                      optionLabel={(h) => t(`step3.ttlOption${h}`)}
+                    />
                     {statusRunning === false ? (
                       <p
                         className="rounded-lg border border-amber-900/50 bg-amber-950/30 px-4 py-3 text-sm leading-[1.5] text-amber-100"

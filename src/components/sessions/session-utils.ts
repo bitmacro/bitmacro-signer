@@ -17,20 +17,25 @@ export type StatusFilter = "all" | SessionStatus;
 
 export type SortMode = "expires" | "newest" | "oldest";
 
+/**
+ * Expiry wins over `used`: a connected session past `expires_at` is no longer
+ * accepted by the daemon, so it must show as expired, not as active.
+ * `"used"` = connected and still valid (shown as «Active»).
+ */
 export function getSessionStatus(
-  row: SessionRow,
+  row: Pick<SessionRow, "used" | "expires_at">,
   nowMs = Date.now(),
 ): SessionStatus {
-  if (row.used) return "used";
   if (new Date(row.expires_at).getTime() <= nowMs) return "expired";
+  if (row.used) return "used";
   return "pending";
 }
 
-/** For ordering: pending (0) → expired (1) → used (2). */
+/** For ordering: active (0) → pending (1) → expired (2). */
 function sessionSortTier(row: SessionRow, nowMs: number): 0 | 1 | 2 {
   const s = getSessionStatus(row, nowMs);
-  if (s === "pending") return 0;
-  if (s === "expired") return 1;
+  if (s === "used") return 0;
+  if (s === "pending") return 1;
   return 2;
 }
 
@@ -49,9 +54,9 @@ function compareExpiresSoonest(a: SessionRow, b: SessionRow, nowMs: number): num
   if (ta !== tb) return ta - tb;
   const ea = new Date(a.expires_at).getTime();
   const eb = new Date(b.expires_at).getTime();
-  if (ta === 0) return ea - eb;
-  if (ta === 1) return eb - ea;
-  return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  /** Active and pending: expiring soonest first. Expired: most recently expired first. */
+  if (ta === 2) return eb - ea;
+  return ea - eb;
 }
 
 export function sortSessions(
