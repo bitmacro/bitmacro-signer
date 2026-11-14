@@ -1,10 +1,30 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getBunkerRelayUrlServer, getRelayUrlServer } from "@/lib/relay/env";
+import {
+  getBunkerRelayUrlServer,
+  getNip46FallbackRelayUrlsServer,
+  getRelayUrlServer,
+} from "@/lib/relay/env";
 
 describe("relay env helpers", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
+  });
+
+  it("getNip46FallbackRelayUrlsServer parses, dedupes and drops non-ws entries", () => {
+    vi.stubEnv(
+      "NIP46_FALLBACK_RELAY_URLS",
+      " wss://a.example , https://x.example,wss://a.example,wss://b.example ",
+    );
+    expect(getNip46FallbackRelayUrlsServer()).toEqual([
+      "wss://a.example",
+      "wss://b.example",
+    ]);
+  });
+
+  it("getNip46FallbackRelayUrlsServer is empty when unset", () => {
+    vi.stubEnv("NIP46_FALLBACK_RELAY_URLS", "");
+    expect(getNip46FallbackRelayUrlsServer()).toEqual([]);
   });
 
   it("getRelayUrlServer prefers RELAY_URL over NEXT_PUBLIC", () => {

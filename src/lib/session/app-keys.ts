@@ -9,7 +9,10 @@ import type { ParsedNostrConnectUri } from "./nostr-connect-uri";
 import type { Session } from "./ttl";
 import { nostrPubkeyInputToHex } from "./ttl";
 
-import { getRelayUrlServer } from "@/lib/relay/env";
+import {
+  getNip46FallbackRelayUrlsServer,
+  getRelayUrlServer,
+} from "@/lib/relay/env";
 
 function secretBytesToBase64Url(bytes: Buffer): string {
   return bytes.toString("base64url");
@@ -230,6 +233,9 @@ export async function getActiveNip46RelayUrlsForIdentity(
   }
 
   const out: string[] = [defaultRelay];
+  for (const u of getNip46FallbackRelayUrlsServer()) {
+    if (!out.includes(u)) out.push(u);
+  }
   for (const u of extras) {
     if (!out.includes(u)) out.push(u);
   }

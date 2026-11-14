@@ -62,6 +62,19 @@ describe("session / ttl", () => {
       );
     });
 
+    it("adds extra relays as repeated relay= params, main relay first", () => {
+      const pkHex =
+        "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789";
+      expect(
+        buildBunkerUri(pkHex, "wss://main.example", "s", [
+          "wss://fb.example",
+          "wss://main.example",
+        ]),
+      ).toBe(
+        `bunker://${pkHex}?relay=wss%3A%2F%2Fmain.example&relay=wss%3A%2F%2Ffb.example&secret=s`,
+      );
+    });
+
     it("normalizes npub to hex in bunker:// host", () => {
       const npub =
         "npub1rwzv24nmzfjypx2a8m264ws9vht3uxp5vpypnluuzl67n4waq78suk0wul";

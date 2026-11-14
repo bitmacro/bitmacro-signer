@@ -33,3 +33,20 @@ export function getBunkerRelayUrlServer(): string {
   }
   return u;
 }
+
+/**
+ * Fallback NIP-46 relays (`NIP46_FALLBACK_RELAY_URLS`, comma-separated `wss://` URLs).
+ * The daemon subscribes on them besides `RELAY_URL`, and `bunker://` links list them as
+ * extra `relay=` params, so clients still reach the bunker if the main relay is down.
+ * Must be set on **both** signer-web and signer-daemon. Unset = no change.
+ */
+export function getNip46FallbackRelayUrlsServer(): string[] {
+  const raw = process.env.NIP46_FALLBACK_RELAY_URLS?.trim();
+  if (!raw) return [];
+  const out: string[] = [];
+  for (const part of raw.split(",")) {
+    const u = part.trim();
+    if (/^wss?:\/\/\S+$/i.test(u) && !out.includes(u)) out.push(u);
+  }
+  return out;
+}

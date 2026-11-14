@@ -34,7 +34,10 @@ import {
   revokeSessionsForIdentity,
 } from "@/lib/session/app-keys";
 import { parseNostrConnectUri } from "@/lib/session/nostr-connect-uri";
-import { getBunkerRelayUrlServer } from "@/lib/relay/env";
+import {
+  getBunkerRelayUrlServer,
+  getNip46FallbackRelayUrlsServer,
+} from "@/lib/relay/env";
 import {
   buildBunkerUri,
   bunkerPubkeyHexFromBunkerUri,
@@ -269,7 +272,12 @@ async function handlePost(request: Request) {
   /** After relay env or session relays change, re-subscribe (same as nostrconnect path). */
   await refreshBunkerNip46Relays(identity_id);
 
-  const bunker_uri = buildBunkerUri(vault.bunker_pubkey, relayUrl, secret);
+  const bunker_uri = buildBunkerUri(
+    vault.bunker_pubkey,
+    relayUrl,
+    secret,
+    getNip46FallbackRelayUrlsServer(),
+  );
 
   const relayDecodedFromQr = relayUrlFromBunkerUri(bunker_uri);
   const pkFromQr = bunkerPubkeyHexFromBunkerUri(bunker_uri);
