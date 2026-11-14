@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Sessions: remove / remove selected** use the in-app confirmation dialog instead of `window.confirm()`, which returns `false` in webviews and embedded browsers (the buttons looked dead).
+
 ## [0.6.19] - 2026-11-13
 
 ### Fixed
