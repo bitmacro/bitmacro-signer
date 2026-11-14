@@ -55,14 +55,23 @@ export async function notifyDaemonUnlock(
   cfg: DaemonInternalConfig,
   identityId: string,
   nsec: string,
-): Promise<{ ok: true } | { ok: false; status: number; message: string }> {
+): Promise<
+  { ok: true; bootId: string | null } | { ok: false; status: number; message: string }
+> {
   const res = await fetchWithAuth(cfg, "/internal/unlock", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ identity_id: identityId, nsec }),
   });
   if (res.ok) {
-    return { ok: true };
+    let bootId: string | null = null;
+    try {
+      const j = (await res.json()) as { boot_id?: unknown };
+      bootId = typeof j.boot_id === "string" ? j.boot_id : null;
+    } catch {
+      /* older daemon without boot_id */
+    }
+    return { ok: true, bootId };
   }
   let message = res.statusText;
   try {
@@ -127,22 +136,37 @@ export async function notifyDaemonNostrConnectInitiate(
   return { ok: false, status: res.status, message };
 }
 
+/**
+ * Bunker running flag plus the daemon process boot id.
+ * `reachable: false` when the daemon did not answer (callers must not end sessions on that).
+ */
+export async function getDaemonStatus(
+  cfg: DaemonInternalConfig,
+  identityId: string,
+): Promise<{ reachable: boolean; running: boolean; bootId: string | null }> {
+  try {
+    const res = await fetchWithAuth(
+      cfg,
+      `/internal/status?identity_id=${encodeURIComponent(identityId)}`,
+      { method: "GET", timeoutMs: 10_000 },
+    );
+    if (!res.ok) {
+      return { reachable: false, running: false, bootId: null };
+    }
+    const j = (await res.json()) as { running?: boolean; boot_id?: unknown };
+    return {
+      reachable: true,
+      running: Boolean(j.running),
+      bootId: typeof j.boot_id === "string" ? j.boot_id : null,
+    };
+  } catch {
+    return { reachable: false, running: false, bootId: null };
+  }
+}
+
 export async function getDaemonBunkerRunning(
   cfg: DaemonInternalConfig,
   identityId: string,
 ): Promise<boolean> {
-  const res = await fetchWithAuth(
-    cfg,
-    `/internal/status?identity_id=${encodeURIComponent(identityId)}`,
-    { method: "GET" },
-  );
-  if (!res.ok) {
-    return false;
-  }
-  try {
-    const j = (await res.json()) as { running?: boolean };
-    return Boolean(j.running);
-  } catch {
-    return false;
-  }
+  return (await getDaemonStatus(cfg, identityId)).running;
 }

@@ -5,4 +5,5 @@ export {
   notifyDaemonRefreshNip46Relays,
   notifyDaemonNostrConnectInitiate,
   getDaemonBunkerRunning,
+  getDaemonStatus,
 } from "./client";

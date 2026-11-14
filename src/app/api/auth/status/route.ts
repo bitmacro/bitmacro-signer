@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 
-import { getSessionCookie, setSessionCookie } from "@/lib/auth/session-cookie";
+import {
+  clearSessionCookie,
+  getSessionCookieClaims,
+  setSessionCookie,
+} from "@/lib/auth/session-cookie";
 import { apiGET } from "@/lib/observability/api-route-wrapper";
 import {
-  getDaemonBunkerRunning,
   getDaemonInternalConfig,
+  getDaemonStatus,
 } from "@/lib/daemon-internal";
 import { isRunning } from "@/lib/bunker";
 import { createServiceRoleClient } from "@/lib/supabase/server";
@@ -29,34 +33,49 @@ async function handleGet(request: Request) {
     );
   }
 
-  let identityId: string | null;
+  let claims: { identityId: string; bootId: string | null } | null;
   try {
-    identityId = await getSessionCookie();
+    claims = await getSessionCookieClaims();
   } catch {
     return jsonError("Server misconfigured: session secret unavailable", 503);
   }
 
-  if (!identityId) {
-    return NextResponse.json({
+  const loggedOut = (sessionEnded?: string) =>
+    NextResponse.json({
       identity_id: null,
       is_running: false,
       vault_exists: false,
       npub: null,
+      ...(sessionEnded ? { session_ended: sessionEnded } : {}),
     });
+
+  if (!claims) {
+    return loggedOut();
+  }
+  const identityId = claims.identityId;
+
+  let running = false;
+  if (daemonCfg) {
+    const st = await getDaemonStatus(daemonCfg, identityId);
+    running = st.running;
+    /**
+     * Daemon restarted since this session was unlocked (different boot id, or a
+     * session from before boot ids existed): the bunker is gone, so end the web
+     * session too. Not when the daemon is unreachable — a blip must not log out.
+     */
+    if (st.reachable && st.bootId && st.bootId !== claims.bootId) {
+      await clearSessionCookie().catch(() => {});
+      return loggedOut("daemon_restarted");
+    }
+  } else {
+    running = isRunning(identityId);
   }
 
   /** Sliding session: new JWT + `Set-Cookie` maxAge while the current token is still valid. */
   try {
-    await setSessionCookie(identityId);
+    await setSessionCookie(identityId, claims.bootId);
   } catch {
     /* Non-fatal: verified identity above; client keeps prior cookie for this response. */
-  }
-
-  let running = false;
-  if (daemonCfg) {
-    running = await getDaemonBunkerRunning(daemonCfg, identityId);
-  } else {
-    running = isRunning(identityId);
   }
 
   let vault_exists = false;
