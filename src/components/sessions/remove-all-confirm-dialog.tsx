@@ -10,11 +10,18 @@ export function RemoveAllConfirmDialog({
   onClose,
   onConfirm,
   loading,
+  title,
+  body,
+  confirmLabel,
 }: {
   open: boolean;
   onClose: () => void;
   onConfirm: () => void;
   loading: boolean;
+  /** Defaults to the "remove all" copy; pass to reuse for single/bulk removal. */
+  title?: string;
+  body?: string;
+  confirmLabel?: string;
 }) {
   const t = useTranslations("sessions");
 
@@ -48,10 +55,10 @@ export function RemoveAllConfirmDialog({
         )}
       >
         <h2 id="remove-all-title" className="text-lg font-bold text-white">
-          {t("removeAllTitle")}
+          {title ?? t("removeAllTitle")}
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-zinc-400">
-          {t("removeAllBody")}
+          {body ?? t("removeAllBody")}
         </p>
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
@@ -71,7 +78,7 @@ export function RemoveAllConfirmDialog({
             {loading ? (
               <Loader2 className="size-4 animate-spin" />
             ) : null}
-            {loading ? t("removing") : t("removeAllConfirm")}
+            {loading ? t("removing") : (confirmLabel ?? t("removeAllConfirm"))}
           </button>
         </div>
       </div>

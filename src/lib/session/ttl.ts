@@ -90,11 +90,14 @@ export function buildBunkerUri(
   bunkerPubkey: string,
   relayUrl: string,
   secret: string,
+  /** Extra relays (NIP-46 allows several `relay=` params); the main relay stays first. */
+  extraRelayUrls: string[] = [],
 ): string {
   const pkHex = bunkerPubkeyToHex(bunkerPubkey);
-  const relay = encodeURIComponent(relayUrl);
+  const relays = [relayUrl, ...extraRelayUrls.filter((u) => u && u !== relayUrl)];
+  const relayParams = relays.map((u) => `relay=${encodeURIComponent(u)}`).join("&");
   const sec = encodeURIComponent(secret);
-  return `bunker://${pkHex}?relay=${relay}&secret=${sec}`;
+  return `bunker://${pkHex}?${relayParams}&secret=${sec}`;
 }
 
 /** Bunker pubkey hex from `bunker://<64hex>?…` — public; no secret segment read. */

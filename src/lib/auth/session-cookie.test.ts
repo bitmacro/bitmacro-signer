@@ -4,6 +4,7 @@ import {
   SESSION_COOKIE_NAME,
   SESSION_MAX_AGE_SEC,
   signSessionCookieValue,
+  verifySessionCookieClaims,
   verifySessionCookieValue,
 } from "./session-cookie";
 
@@ -12,6 +13,20 @@ const testSecret = new TextEncoder().encode(
 );
 
 describe("session-cookie JWT", () => {
+  it("carries the daemon boot id when given, null otherwise", async () => {
+    const id = "550e8400-e29b-41d4-a716-446655440000";
+    const withBoot = await signSessionCookieValue(id, testSecret, "boot-1");
+    await expect(verifySessionCookieClaims(withBoot, testSecret)).resolves.toEqual({
+      identityId: id,
+      bootId: "boot-1",
+    });
+    const noBoot = await signSessionCookieValue(id, testSecret);
+    await expect(verifySessionCookieClaims(noBoot, testSecret)).resolves.toEqual({
+      identityId: id,
+      bootId: null,
+    });
+  });
+
   it("round-trips identity_id via sign + verify", async () => {
     const id = "550e8400-e29b-41d4-a716-446655440000";
     const token = await signSessionCookieValue(id, testSecret);

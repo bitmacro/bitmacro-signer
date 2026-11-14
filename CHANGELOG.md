@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Web session ends when the daemon restarts:** the daemon has a random boot id per process (`/internal/status` and `/internal/unlock` return `boot_id`); the session JWT stores the boot id from unlock. `GET /api/auth/status` clears the cookie and returns `identity_id: null` with `session_ended: "daemon_restarted"` when the ids differ (sessions from before this change end once). An unreachable daemon does not log anyone out.
+- **Fallback NIP-46 relays:** `NIP46_FALLBACK_RELAY_URLS` (comma-separated, set on signer-web **and** signer-daemon). The daemon also subscribes on them and `bunker://` links list them as extra `relay=` params (main relay first). Unset = no change.
+
+### Fixed
+
+- **Sessions: remove / remove selected** use the in-app confirmation dialog instead of `window.confirm()`, which returns `false` in webviews and embedded browsers (the buttons looked dead).
+
 ## [0.6.19] - 2026-11-13
 
 ### Fixed

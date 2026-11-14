@@ -114,6 +114,9 @@ async function handlePost(request: Request) {
     throw e;
   }
 
+  /** Daemon process id at unlock; stored in the session JWT (see /api/auth/status). */
+  let daemonBootId: string | null = null;
+
   try {
     void pushLokiStructured(
       "info",
@@ -149,6 +152,9 @@ async function handlePost(request: Request) {
       ).catch(() => {});
 
       const out = await notifyDaemonUnlock(daemonCfg, identity_id, nsec);
+      if (out.ok) {
+        daemonBootId = out.bootId;
+      }
       if (!out.ok) {
         void pushLokiStructured(
           "error",
@@ -222,7 +228,7 @@ async function handlePost(request: Request) {
   }
 
   try {
-    await setSessionCookie(identity_id);
+    await setSessionCookie(identity_id, daemonBootId);
   } catch (e) {
     if (daemonCfg) {
       await notifyDaemonLock(daemonCfg, identity_id).catch(() => {});

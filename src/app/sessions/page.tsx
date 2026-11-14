@@ -38,6 +38,10 @@ export default function SessionsPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [removeAllOpen, setRemoveAllOpen] = useState(false);
   const [removeAllLoading, setRemoveAllLoading] = useState(false);
+  // Own modal instead of window.confirm(): it returns false in webviews/embedded browsers.
+  const [pendingRemove, setPendingRemove] = useState<
+    { kind: "one"; id: string } | { kind: "bulk" } | null
+  >(null);
   const [toast, setToast] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -116,9 +120,6 @@ export default function SessionsPage() {
 
   const handleRemove = useCallback(
     async (sessionId: string) => {
-      if (!window.confirm(t("removeConfirm"))) {
-        return;
-      }
       setRemoveError(null);
       setRemovingId(sessionId);
       try {
@@ -145,9 +146,6 @@ export default function SessionsPage() {
   const handleRemoveSelected = useCallback(async () => {
     if (selectedIds.length === 0) return;
     const n = selectedIds.length;
-    if (!window.confirm(t("bulkRemoveConfirm", { count: n }))) {
-      return;
-    }
     setRemoveError(null);
     setBulkRemoving(true);
     try {
@@ -222,6 +220,26 @@ export default function SessionsPage() {
         onClose={() => setRemoveAllOpen(false)}
         onConfirm={() => void handleRemoveAll()}
         loading={removeAllLoading}
+      />
+
+      <RemoveAllConfirmDialog
+        open={pendingRemove !== null}
+        onClose={() => setPendingRemove(null)}
+        onConfirm={() => {
+          const p = pendingRemove;
+          if (!p) return;
+          void (p.kind === "one" ? handleRemove(p.id) : handleRemoveSelected()).finally(
+            () => setPendingRemove(null),
+          );
+        }}
+        loading={removingId !== null || bulkRemoving}
+        title={pendingRemove?.kind === "bulk" ? t("removeSelected") : t("remove")}
+        body={
+          pendingRemove?.kind === "bulk"
+            ? t("bulkRemoveConfirm", { count: selectedIds.length })
+            : t("removeConfirm")
+        }
+        confirmLabel={pendingRemove?.kind === "bulk" ? t("removeSelected") : t("remove")}
       />
 
       <div className="mx-auto max-w-3xl px-4 py-10 sm:px-5 sm:py-14">
@@ -325,7 +343,9 @@ export default function SessionsPage() {
               <SessionsSelectionToolbar
                 selectedCount={selectedIds.length}
                 visibleCount={visibleRows.length}
-                onRemoveSelected={() => void handleRemoveSelected()}
+                onRemoveSelected={() => {
+                  if (selectedIds.length > 0) setPendingRemove({ kind: "bulk" });
+                }}
                 onSelectAllVisible={selectAllVisible}
                 removing={bulkRemoving}
               />
@@ -350,7 +370,7 @@ export default function SessionsPage() {
                       row={r}
                       selected={selectedIds.includes(r.id)}
                       onToggleSelect={toggleSelect}
-                      onRemove={handleRemove}
+                      onRemove={(id) => setPendingRemove({ kind: "one", id })}
                       removing={removingId === r.id}
                       copiedKey={copiedKey}
                       onCopied={(key) => {

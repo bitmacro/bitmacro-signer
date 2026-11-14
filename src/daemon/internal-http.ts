@@ -3,6 +3,7 @@
  * Do not expose to the internet; Bearer auth required.
  */
 
+import { randomUUID } from "node:crypto";
 import http from "node:http";
 import { URL } from "node:url";
 
@@ -16,6 +17,12 @@ import {
   stopBunker,
 } from "@/lib/bunker";
 import { completeConnect } from "@/lib/session/app-keys";
+
+/**
+ * Random id per daemon process. Web sessions carry the boot id they were unlocked
+ * with; after a restart the ids differ and /api/auth/status ends the web session.
+ */
+export const DAEMON_BOOT_ID = randomUUID();
 
 function json(
   res: http.ServerResponse,
@@ -91,7 +98,7 @@ export function startInternalHttpServer(opts: {
           json(res, 400, { error: "identity_id query required (uuid)" });
           return;
         }
-        json(res, 200, { running: isRunning(identityId) });
+        json(res, 200, { running: isRunning(identityId), boot_id: DAEMON_BOOT_ID });
         return;
       }
 
@@ -281,7 +288,7 @@ export function startInternalHttpServer(opts: {
           "startBunker finished; bunker should be subscribed on relays",
           { identityId, running: true },
         );
-        json(res, 200, { ok: true });
+        json(res, 200, { ok: true, boot_id: DAEMON_BOOT_ID });
         return;
       }
 
