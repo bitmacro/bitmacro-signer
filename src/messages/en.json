@@ -53,8 +53,8 @@
     },
     "hero": {
       "eyebrow": "NIP-46 · Nostr Connect · Managed bunker",
-      "title": "Your NIP-46 bunker, always on.",
-      "body": "Sign Nostr events remotely. Your nsec stays encrypted in the vault; the server never stores it in plaintext, only an encrypted blob, with an optional in-memory session (configurable TTL).",
+      "title": "Your NIP-46 bunker.",
+      "body": "The server stores the nsec encrypted. When you unlock with your passphrase, it is decrypted in server memory in order to sign, and it is gone when the service restarts.",
       "ctaPrimary": "Start",
       "ctaSecondary": "View on GitHub",
       "infraLead": "Prefer to run your own stack?",
@@ -68,7 +68,7 @@
       "step2Title": "Show the QR",
       "step2Body": "Display the QR or bunker URI to your Nostr client (phone or desktop).",
       "step3Title": "Paste in your Nostr app",
-      "step3Body": "Connect via the BitMacro relay for stable signing requests, 24/7, without exposing your nsec."
+      "step3Body": "Connect via the BitMacro relay for signing requests. Signing stops when the service restarts, until you unlock again."
     },
     "compare": {
       "title": "Comparison",
@@ -100,13 +100,13 @@
         "unifiedOnboarding": "Unified onboarding",
         "nsecNeverExposed": "nsec never exposed to the app",
         "clientDecrypt": "Client-side decrypt",
-        "zeroKnowledgeHosted": "Zero-knowledge on hosted",
+        "zeroKnowledgeHosted": "Encrypted vault on the server",
         "shamirRecovery": "Recovery via Shamir SSS",
         "auditableCode": "Auditable open source code",
         "encryptedPdfBackup": "Encrypted offline backup (PDF)",
         "reproducibleBuilds": "Reproducible builds + hash",
         "remoteBunker": "Remote NIP-46 bunker",
-        "twentyFourSeven": "24/7 without a device online",
+        "twentyFourSeven": "Signing while the bunker stays unlocked",
         "autoSigningPolicy": "Automatic signing policy",
         "sessionTtl": "Configurable session TTL",
         "sessionRevoke": "Immediate session revocation",
@@ -150,7 +150,7 @@
       "items": [
         {
           "q": "What is BitMacro Signer?",
-          "a": "An NIP-46 bunker and vault: your Nostr private key (nsec) stays encrypted, and you can sign events 24/7 without handing your nsec to apps or keeping your phone online. Signing requests use NIP-44 over the relay; the relay cannot read the payload."
+          "a": "An NIP-46 bunker and vault: your Nostr private key (nsec) stays encrypted on the server. You can sign without handing your nsec to apps and without keeping your phone online, while the service stays unlocked. If the service restarts, signing stops until you unlock again. Signing requests use NIP-44 over the relay; the relay cannot read the payload."
         },
         {
           "q": "What is NIP-46 and what is a bunker?",
@@ -158,7 +158,7 @@
         },
         {
           "q": "Can BitMacro see my nsec or passphrase?",
-          "a": "Your vault passphrase never leaves the browser. Your nsec is encrypted on your device before storage; when unlocked, it lives in server RAM only for a TTL (default 24h), not on disk in plaintext. The hosted design aims for zero-knowledge encryption of what you store."
+          "a": "The server stores the nsec encrypted. When you unlock with your passphrase, it is decrypted in server memory in order to sign, and it is gone when the service restarts."
         },
         {
           "q": "Why is the backup PDF required?",

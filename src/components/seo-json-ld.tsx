@@ -21,7 +21,7 @@ export function SeoJsonLd() {
           priceCurrency: "EUR",
         },
         description:
-          "Bunker NIP-46 gerido pela BitMacro: assinatura remota Nostr (Nostr Connect) sem expor nsec no servidor. Cofre encriptado no browser, integração com BitMacro Identity.",
+          "Bunker NIP-46 gerido pela BitMacro: assinatura remota Nostr (Nostr Connect); nsec cifrada no servidor, decifrada em memória para assinar. Cofre encriptado no browser, integração com BitMacro Identity.",
         url: base,
         author: {
           "@type": "Organization",

@@ -112,13 +112,6 @@ export const COMPARISON_ROW_DEFS: CompareRowDef[] = [
   },
   {
     type: "row",
-    featureId: "zeroKnowledgeHosted",
-    amber: { kind: "yesPill", pill: "localOnly" },
-    alby: { kind: "no" },
-    signer: { kind: "yes" },
-  },
-  {
-    type: "row",
     featureId: "shamirRecovery",
     amber: { kind: "no" },
     alby: { kind: "no" },
@@ -158,7 +151,7 @@ export const COMPARISON_ROW_DEFS: CompareRowDef[] = [
     featureId: "twentyFourSeven",
     amber: { kind: "no" },
     alby: { kind: "partial" },
-    signer: { kind: "yes" },
+    signer: { kind: "partial" },
   },
   {
     type: "row",

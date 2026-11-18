@@ -11,7 +11,7 @@
 
 **Typical question:** *"What is this? Do I need it?"*
 
-BitMacro Signer is a digital vault for your Nostr private key — and a way to use that key 24/7 without leaving your phone unlocked or installing a browser extension.
+BitMacro Signer is a digital vault for your Nostr private key — and a way to sign with that key while the service stays unlocked, without leaving your phone unlocked or installing a browser extension. Signing stops when the service restarts, until you unlock again.
 
 ### The problem it solves
 
@@ -27,8 +27,8 @@ BitMacro Signer solves this with a **remote bunker**: your key is encrypted on o
 
 ### What you get
 
-- **24/7 signing** without keeping the phone or browser on.
-- **Zero-knowledge style design:** your `nsec` is encrypted in the browser before it reaches our servers — we never see it in plaintext at rest.
+- **Signing while unlocked.** The phone can stay off. A restart clears memory and signing stops until you unlock again.
+- **Encrypted vault:** the server stores the nsec encrypted. When you unlock with your passphrase, it is decrypted in server memory in order to sign, and it is gone when the service restarts.
 - **Works on any device:** iOS, Android, browser, desktop — nothing to install for basic use.
 - **Per-session control:** you authorize each app and can revoke access.
 - **Offline backup:** a PDF you keep locally can recover the key if you lose everything else.
@@ -68,13 +68,13 @@ Traffic goes through a Nostr relay (e.g. `wss://relay.bitmacro.io`) end-to-end e
 
 ### What a bunker is here
 
-The bunker is the server process that listens 24/7 and answers signing requests. In BitMacro Signer:
+The bunker is the server process that answers signing requests while it stays unlocked. A restart stops signing until you unlock again. In BitMacro Signer:
 
 1. Your `nsec` is stored encrypted (AES-GCM; encryption happens in the browser).
 2. When you unlock the vault, decrypted `nsec` lives in RAM only (not on disk or in the DB in plaintext).
 3. The bunker subscribes on the relay(s).
 4. When an authorized client sends a signing request, the bunker responds.
-5. After the configured TTL (default 24 hours), `nsec` is cleared from RAM and you must unlock again.
+5. Decrypted key material stays in RAM until the later of 24 hours after unlock and the latest client session you have not revoked. After that it is cleared and you must unlock again. An operator ceiling (`BUNKER_SESSION_RAM_TTL_MS`) can force an earlier stop.
 
 **Plain summary:** the bunker is like a trusted clerk with an encrypted copy of your keys — uses them only when you allow, and forgets them after the session window.
 
@@ -125,7 +125,7 @@ The vault holds your `nsec` encrypted. It is created once in your browser and th
 **7. Unlock the bunker**
 - Enter your password to unlock
 - The bunker starts and listens on the relay
-- `nsec` stays in RAM for 24h (or your configured TTL)
+- Decrypted key material stays in RAM until the later of 24h after unlock and the expiry of the client sessions you created (or sooner, if an operator ceiling is set)
 
 **8. Generate a QR code to connect an app**
 - Go to **Sessions** → **New session**
@@ -139,9 +139,9 @@ The vault holds your `nsec` encrypted. It is created once in your browser and th
 
 **Typical question:** *"Is my key safe on your servers? How does it work technically?"*
 
-### Zero-knowledge premise
+### What unlock does
 
-“Zero-knowledge” here means BitMacro never sees your `nsec` in plaintext. Encryption and decryption happen only in your browser.
+The server stores the nsec encrypted. When you unlock with your passphrase, it is decrypted in server memory in order to sign, and it is gone when the service restarts.
 
 ### Encryption flow (detail)
 
@@ -150,7 +150,7 @@ When saving `nsec` to the vault:
 1. **In your browser**, your password is run through PBKDF2-SHA256 with 600,000 iterations and a random 32-byte salt — producing a 256-bit key.
 2. That key encrypts `nsec` with AES-GCM and a random 12-byte IV.
 3. The result — ciphertext + salt + IV encoded as base64 — is sent to BitMacro and stored.
-4. **Your password never leaves the browser.** The server only receives the ciphertext blob.
+4. **At rest the server keeps the ciphertext.** Unlock sends the passphrase to the server, which decrypts the nsec in memory. The passphrase is not written to the database.
 
 ### What BitMacro stores
 
@@ -171,11 +171,11 @@ When saving `nsec` to the vault:
 
 After you unlock:
 
-1. The browser decrypts `nsec` locally.
-2. Decrypted `nsec` is passed securely (HTTPS + internal token) to the daemon.
+1. The server decrypts `nsec` with the passphrase you submit.
+2. Decrypted `nsec` is passed on the internal network to the daemon.
 3. The daemon keeps `nsec` **only in RAM**, never on disk.
-4. After TTL (default 24h), RAM is cleared.
-5. To sign again, unlock again.
+4. RAM is cleared at the later of 24h after unlock and the latest unexpired client session (sooner if `BUNKER_SESSION_RAM_TTL_MS` is set).
+5. To sign again after that, unlock again.
 
 ### Analogy
 
@@ -324,7 +324,7 @@ A session links **your bunker** to **one client app/device** instance (Nostrudel
 
 - **Label** (your choice)
 - **Session pubkey** (`app_pubkey`) — from the client, not your identity `npub`
-- **Expiry** (default ~24 hours; roadmap may widen)
+- **Expiry** — 24 hours, 7 days, or 30 days in the panel. The bunker keeps listening until that expiry (it no longer goes silent at 24h while the session is still valid).
 - **State** active vs revoked
 
 ### During a session
@@ -489,7 +489,7 @@ Semver (`v0.3.6`, …) and short commit tags also exist.
 They complement:
 
 - **Identity** (`id.bitmacro.io`): verified username (NIP-05), Lightning address, curated relay access themes.
-- **Signer** (`signer.bitmacro.io`): holds your Nostr key encrypted and signs 24/7 without handing `nsec` to arbitrary clients.
+- **Signer** (`signer.bitmacro.io`): holds your Nostr key encrypted and signs while the service stays unlocked, without handing `nsec` to arbitrary clients. Signing stops on restart until you unlock again.
 
 You can adopt either alone; paired they give hosted identity plus remote signing convenience. Unified onboarding is on the roadmap.
 
@@ -540,7 +540,7 @@ Today — one vault identity per BitMacro login. Multiple keypairs roadmap item.
 
 **What does bunker TTL mean?**
 
-TTL is how long decrypted `nsec` lives in daemon RAM post-unlock. Default ~24 hours, then erased and bunker loop stops until re-unlock — limits exposure windows.
+Two clocks. The panel expiry is how long that app may ask for signatures. Separately, decrypted key material stays in daemon RAM until the later of 24 hours after unlock and that expiry, then the bunker loop stops until you unlock again. `BUNKER_SESSION_RAM_TTL_MS`, when set, is a hard ceiling from unlock. This limits how long a RAM dump can expose the key.
 
 ---
 

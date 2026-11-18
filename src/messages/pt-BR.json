@@ -53,8 +53,8 @@
     },
     "hero": {
       "eyebrow": "NIP-46 · Nostr Connect · Bunker gerido",
-      "title": "O teu bunker NIP-46, sempre disponível.",
-      "body": "Assina eventos Nostr à distância. A nsec permanece encriptada no cofre; o servidor nunca a armazena em texto claro, apenas um blob cifrado, com sessão activa opcional em memória (TTL configurável).",
+      "title": "O teu bunker NIP-46.",
+      "body": "O servidor guarda a nsec cifrada. Ao desbloquear com a sua passphrase, ela é decifrada em memória no servidor para assinar, e some quando o serviço reinicia.",
       "ctaPrimary": "Começar",
       "ctaSecondary": "Ver no GitHub",
       "infraLead": "Preferes controlar a infraestrutura?",
@@ -68,7 +68,7 @@
       "step2Title": "Mostra o QR",
       "step2Body": "Mostra o QR ou o bunker URI ao teu cliente Nostr (telefone ou desktop).",
       "step3Title": "Cola na app Nostr",
-      "step3Body": "Liga ao relay BitMacro para pedidos de assinatura estáveis, 24/7, sem expor a nsec."
+      "step3Body": "Liga ao relay BitMacro para pedidos de assinatura. A assinatura pára quando o serviço reinicia, até novo desbloqueio."
     },
     "compare": {
       "title": "Comparação",
@@ -100,13 +100,13 @@
         "unifiedOnboarding": "Onboarding unificado",
         "nsecNeverExposed": "nsec nunca exposta à app",
         "clientDecrypt": "Desencriptação no cliente",
-        "zeroKnowledgeHosted": "Zero-knowledge no hosted",
+        "zeroKnowledgeHosted": "Cofre cifrado no servidor",
         "shamirRecovery": "Recuperação via Shamir SSS",
         "auditableCode": "Código open source auditável",
         "encryptedPdfBackup": "Backup físico encriptado (PDF)",
         "reproducibleBuilds": "Builds reprodutíveis + hash",
         "remoteBunker": "Bunker remoto NIP-46",
-        "twentyFourSeven": "24/7 sem dispositivo ligado",
+        "twentyFourSeven": "Assinatura enquanto o bunker está desbloqueado",
         "autoSigningPolicy": "Política automática de assinatura",
         "sessionTtl": "TTL de sessão configurável",
         "sessionRevoke": "Revogação imediata de sessão",
@@ -150,7 +150,7 @@
       "items": [
         {
           "q": "O que é o BitMacro Signer?",
-          "a": "É um cofre e bunker NIP-46: a tua chave privada Nostr (nsec) fica encriptada, podes assinar eventos 24/7 sem entregar a nsec às apps nem manter o telemóvel ligado. Os pedidos de assinatura chegam encriptados (NIP-44) pelo relay; o relay não lê o conteúdo."
+          "a": "É um cofre e bunker NIP-46: a tua chave privada Nostr (nsec) fica cifrada no servidor. Podes assinar sem entregar a nsec às apps e sem manter o telemóvel ligado, enquanto o serviço estiver desbloqueado. Se o serviço reiniciar, a assinatura pára até novo desbloqueio. Os pedidos chegam encriptados (NIP-44) pelo relay; o relay não lê o conteúdo."
         },
         {
           "q": "O que é NIP-46 e o que é um bunker?",
@@ -158,7 +158,7 @@
         },
         {
           "q": "A BitMacro vê a minha nsec ou a minha password?",
-          "a": "A password não sai do browser. A nsec é encriptada no teu dispositivo antes de ser guardada; em sessão desbloqueada fica só em RAM no servidor com TTL (por defeito 24h), nunca em disco em claro. O modelo é zero-knowledge relativamente ao que envias encriptado."
+          "a": "O servidor guarda a nsec cifrada. Ao desbloquear com a sua passphrase, ela é decifrada em memória no servidor para assinar, e some quando o serviço reinicia."
         },
         {
           "q": "Porque é obrigatório o PDF de backup?",

@@ -33,7 +33,7 @@ export const viewport: Viewport = {
 };
 
 const SIGNER_SEO_DESCRIPTION =
-  "BitMacro Signer: bunker NIP-46 gerido. Nostr Connect, assinatura remota sem expor nsec no servidor. Cofre encriptado (AES-GCM), relay BitMacro, integração BitMacro Identity. Remote Nostr signing, encrypted vault.";
+  "BitMacro Signer: bunker NIP-46 gerido. Nostr Connect; nsec cifrada no servidor, decifrada em memória para assinar. Cofre encriptado (AES-GCM), relay BitMacro, integração BitMacro Identity. Remote Nostr signing, encrypted vault.";
 
 export const metadata: Metadata = {
   title: {
