@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Sessions: remove / remove selected** use the in-app confirmation dialog instead of `window.confirm()`, which returns `false` in webviews and embedded browsers (the buttons looked dead).
 
+## [0.6.20] - 2026-11-18
+
+### Fixed
+
+- Ajuste de textos de compliance: remove claims absolutos de zero-knowledge e “sem expor nsec”; hero, comparação, gerador i18n e imagem OG passam a descrever cofre cifrado e decifração em memória.
+
 ## [0.6.19] - 2026-11-13
 
 ### Fixed
