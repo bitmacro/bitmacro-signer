@@ -2,11 +2,9 @@
  * Generates src/messages/{en,pt-BR,es}.json from inline catalogs.
  * Run: `npm run i18n:emit` (same as `node scripts/i18n-emit.mjs`).
  *
- * ⚠️ Do NOT run `npm run i18n:emit` until `recover.*` and `onboarding.backup.*`
- * are integrated into `buildMessages()` below. The script overwrites the JSON
- * files and will wipe those hand-maintained namespaces. Until then, edit
- * `src/messages/{en,pt-BR,es}.json` directly; if you already ran emit, restore
- * those sections from git or re-merge from a branch that has them.
+ * Deep-merges catalog.common + catalog.landing onto existing JSON. Other
+ * namespaces (recover, onboarding, sessions, …) stay hand-maintained until
+ * buildMessages() is complete for those trees.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -59,13 +57,13 @@ const featuresEn = {
   unifiedOnboarding: "Unified onboarding",
   nsecNeverExposed: "nsec never exposed to the app",
   clientDecrypt: "Client-side decrypt",
-  zeroKnowledgeHosted: "Zero-knowledge on hosted",
+  zeroKnowledgeHosted: "Encrypted vault, hosted",
   shamirRecovery: "Recovery via Shamir SSS",
   auditableCode: "Auditable open source code",
   encryptedPdfBackup: "Encrypted offline backup (PDF)",
   reproducibleBuilds: "Reproducible builds + hash",
   remoteBunker: "Remote NIP-46 bunker",
-  twentyFourSeven: "24/7 without a device online",
+  twentyFourSeven: "Signing while the bunker stays unlocked",
   autoSigningPolicy: "Automatic signing policy",
   sessionTtl: "Configurable session TTL",
   sessionRevoke: "Immediate session revocation",
@@ -91,13 +89,13 @@ const featuresPt = {
   unifiedOnboarding: "Onboarding unificado",
   nsecNeverExposed: "nsec nunca exposta à app",
   clientDecrypt: "Desencriptação no cliente",
-  zeroKnowledgeHosted: "Zero-knowledge no hosted",
+  zeroKnowledgeHosted: "Cofre cifrado, hosted",
   shamirRecovery: "Recuperação via Shamir SSS",
   auditableCode: "Código open source auditável",
   encryptedPdfBackup: "Backup físico encriptado (PDF)",
   reproducibleBuilds: "Builds reprodutíveis + hash",
   remoteBunker: "Bunker remoto NIP-46",
-  twentyFourSeven: "24/7 sem dispositivo ligado",
+  twentyFourSeven: "Assinatura enquanto o bunker está desbloqueado",
   autoSigningPolicy: "Política automática de assinatura",
   sessionTtl: "TTL de sessão configurável",
   sessionRevoke: "Revogação imediata de sessão",
@@ -123,13 +121,13 @@ const featuresEs = {
   unifiedOnboarding: "Onboarding unificado",
   nsecNeverExposed: "nsec nunca expuesta a la app",
   clientDecrypt: "Descifrado en el cliente",
-  zeroKnowledgeHosted: "Conocimiento cero en hosted",
+  zeroKnowledgeHosted: "Cofre cifrado, hosted",
   shamirRecovery: "Recuperación vía Shamir SSS",
   auditableCode: "Código abierto auditable",
   encryptedPdfBackup: "Copia de seguridad cifrada (PDF)",
   reproducibleBuilds: "Builds reproducibles + hash",
   remoteBunker: "Bunker remoto NIP-46",
-  twentyFourSeven: "24/7 sin dispositivo en línea",
+  twentyFourSeven: "Firma mientras el bunker sigue desbloqueado",
   autoSigningPolicy: "Política automática de firma",
   sessionTtl: "TTL de sesión configurable",
   sessionRevoke: "Revocación inmediata de sesión",
@@ -221,9 +219,9 @@ function buildMessages(features, lang) {
           },
           hero: {
             eyebrow: "NIP-46 · Nostr Connect · Managed bunker",
-            title: "Your NIP-46 bunker, always on.",
-            body: "Sign Nostr events remotely. Your nsec stays encrypted in the vault; the server never stores it in plaintext, only an encrypted blob, with an optional in-memory session (configurable TTL).",
-            ctaPrimary: "Get started free",
+            title: "Your NIP-46 bunker.",
+            body: "The server stores the nsec encrypted. When you unlock with your passphrase, it is decrypted in server memory in order to sign, and it is gone when the service restarts.",
+            ctaPrimary: "Start",
             ctaSecondary: "View on GitHub",
             infraLead: "Prefer to run your own stack?",
             infraLink: "Docker and MIT-licensed open source repo",
@@ -240,7 +238,7 @@ function buildMessages(features, lang) {
               "Display the QR or bunker URI to your Nostr client (phone or desktop).",
             step3Title: "Paste in your Nostr app",
             step3Body:
-              "Connect via the BitMacro relay for stable signing requests, 24/7, without exposing your nsec.",
+              "Connect via the BitMacro relay for signing requests. nsec encrypted on the server, decrypted in memory to sign.",
           },
           compare: {
             title: "Comparison",
@@ -285,9 +283,9 @@ function buildMessages(features, lang) {
             },
             hero: {
               eyebrow: "NIP-46 · Nostr Connect · Bunker gerido",
-              title: "O teu bunker NIP-46, sempre disponível.",
-              body: "Assina eventos Nostr à distância. A nsec permanece encriptada no cofre; o servidor nunca a armazena em texto claro, apenas um blob cifrado, com sessão activa opcional em memória (TTL configurável).",
-              ctaPrimary: "Começar grátis",
+              title: "O teu bunker NIP-46.",
+              body: "O servidor guarda a nsec cifrada. Ao desbloquear com a sua passphrase, ela é decifrada em memória no servidor para assinar, e some quando o serviço reinicia.",
+              ctaPrimary: "Começar",
               ctaSecondary: "Ver no GitHub",
               infraLead: "Preferes controlar a infraestrutura?",
               infraLink: "Docker e repositório open source (MIT)",
@@ -304,7 +302,7 @@ function buildMessages(features, lang) {
                 "Mostra o QR ou o bunker URI ao teu cliente Nostr (telefone ou desktop).",
               step3Title: "Cola na app Nostr",
               step3Body:
-                "Liga ao relay BitMacro para pedidos de assinatura estáveis, 24/7, sem expor a nsec.",
+                "Liga ao relay BitMacro para pedidos de assinatura. nsec cifrada no servidor, decifrada em memória para assinar.",
             },
             compare: {
               title: "Comparação",
@@ -348,9 +346,9 @@ function buildMessages(features, lang) {
             },
             hero: {
               eyebrow: "NIP-46 · Nostr Connect · Bunker gestionado",
-              title: "Tu bunker NIP-46, siempre disponible.",
-              body: "Firma eventos Nostr a distancia. Tu nsec permanece cifrado en la bóveda; el servidor nunca lo guarda en claro, solo un blob cifrado, con sesión opcional en memoria (TTL configurable).",
-              ctaPrimary: "Empezar gratis",
+              title: "Tu bunker NIP-46.",
+              body: "El servidor guarda la nsec cifrada. Al desbloquear con tu passphrase, se descifra en memoria en el servidor para firmar, y desaparece cuando el servicio se reinicia.",
+              ctaPrimary: "Empezar",
               ctaSecondary: "Ver en GitHub",
               infraLead: "¿Prefieres tu propia infraestructura?",
               infraLink: "Docker y repo open source (MIT)",
@@ -367,7 +365,7 @@ function buildMessages(features, lang) {
                 "Muestra el QR o el bunker URI a tu cliente Nostr (móvil o escritorio).",
               step3Title: "Pega en la app Nostr",
               step3Body:
-                "Conecta vía relay BitMacro para peticiones de firma estables, 24/7, sin exponer tu nsec.",
+                "Conecta vía relay BitMacro para peticiones de firma. nsec cifrada en el servidor, descifrada en memoria para firmar.",
             },
             compare: {
               title: "Comparación",
@@ -769,8 +767,44 @@ const es = buildMessages(
   "es",
 );
 
+/** Deep-merge overlay onto base; arrays and scalars from overlay win; extra base keys kept. */
+function deepMerge(base, overlay) {
+  if (
+    !base ||
+    typeof base !== "object" ||
+    Array.isArray(base) ||
+    !overlay ||
+    typeof overlay !== "object" ||
+    Array.isArray(overlay)
+  ) {
+    return overlay;
+  }
+  const out = { ...base };
+  for (const [key, value] of Object.entries(overlay)) {
+    out[key] = deepMerge(base[key], value);
+  }
+  return out;
+}
+
+function writeMerged(fileName, catalog) {
+  const filePath = path.join(outDir, fileName);
+  let existing = {};
+  if (fs.existsSync(filePath)) {
+    existing = JSON.parse(fs.readFileSync(filePath, "utf8"));
+  }
+  // Only overlay common + landing from the catalog. onboarding/sessions in
+  // buildMessages() are still incomplete vs hand-maintained JSON (backup.*,
+  // panel copy, bulk session actions, …) and must not regress those keys.
+  const merged = {
+    ...existing,
+    common: deepMerge(existing.common || {}, catalog.common || {}),
+    landing: deepMerge(existing.landing || {}, catalog.landing || {}),
+  };
+  fs.writeFileSync(filePath, `${JSON.stringify(merged, null, 2)}\n`);
+}
+
 fs.mkdirSync(outDir, { recursive: true });
-fs.writeFileSync(path.join(outDir, "en.json"), JSON.stringify(en, null, 2));
-fs.writeFileSync(path.join(outDir, "pt-BR.json"), JSON.stringify(ptBR, null, 2));
-fs.writeFileSync(path.join(outDir, "es.json"), JSON.stringify(es, null, 2));
+writeMerged("en.json", en);
+writeMerged("pt-BR.json", ptBR);
+writeMerged("es.json", es);
 console.log("Wrote src/messages/{en,pt-BR,es}.json");

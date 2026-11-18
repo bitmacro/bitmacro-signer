@@ -68,7 +68,7 @@
       "step2Title": "Mostra o QR",
       "step2Body": "Mostra o QR ou o bunker URI ao teu cliente Nostr (telefone ou desktop).",
       "step3Title": "Cola na app Nostr",
-      "step3Body": "Liga ao relay BitMacro para pedidos de assinatura. A assinatura pára quando o serviço reinicia, até novo desbloqueio."
+      "step3Body": "Liga ao relay BitMacro para pedidos de assinatura. nsec cifrada no servidor, decifrada em memória para assinar."
     },
     "compare": {
       "title": "Comparação",
@@ -100,7 +100,7 @@
         "unifiedOnboarding": "Onboarding unificado",
         "nsecNeverExposed": "nsec nunca exposta à app",
         "clientDecrypt": "Desencriptação no cliente",
-        "zeroKnowledgeHosted": "Cofre cifrado no servidor",
+        "zeroKnowledgeHosted": "Cofre cifrado, hosted",
         "shamirRecovery": "Recuperação via Shamir SSS",
         "auditableCode": "Código open source auditável",
         "encryptedPdfBackup": "Backup físico encriptado (PDF)",

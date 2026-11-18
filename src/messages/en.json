@@ -68,7 +68,7 @@
       "step2Title": "Show the QR",
       "step2Body": "Display the QR or bunker URI to your Nostr client (phone or desktop).",
       "step3Title": "Paste in your Nostr app",
-      "step3Body": "Connect via the BitMacro relay for signing requests. Signing stops when the service restarts, until you unlock again."
+      "step3Body": "Connect via the BitMacro relay for signing requests. nsec encrypted on the server, decrypted in memory to sign."
     },
     "compare": {
       "title": "Comparison",
@@ -100,7 +100,7 @@
         "unifiedOnboarding": "Unified onboarding",
         "nsecNeverExposed": "nsec never exposed to the app",
         "clientDecrypt": "Client-side decrypt",
-        "zeroKnowledgeHosted": "Encrypted vault on the server",
+        "zeroKnowledgeHosted": "Encrypted vault, hosted",
         "shamirRecovery": "Recovery via Shamir SSS",
         "auditableCode": "Auditable open source code",
         "encryptedPdfBackup": "Encrypted offline backup (PDF)",
