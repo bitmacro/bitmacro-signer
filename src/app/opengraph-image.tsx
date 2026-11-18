@@ -78,7 +78,7 @@ export default function OpenGraphImage() {
                   'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif',
               }}
             >
-              Managed NIP-46 bunker · remote signing without exposing nsec
+              Managed NIP-46 bunker · nsec encrypted on the server, decrypted in memory to sign
             </p>
           </div>
         </div>
