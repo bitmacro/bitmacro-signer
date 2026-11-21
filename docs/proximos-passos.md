@@ -2,16 +2,6 @@
 
 A 1.0.0 fecha as melhorias de segurança da auditoria de 21 de novembro de 2026. Shamir e 2FA ficam para a linha 1.0.x. Este ficheiro diz a ordem do que falta e porque esses dois existem.
 
-## Antes de publicar a 1.0.0
-
-1. No SQL do Supabase, criar a coluna `scopes` com o script `supabase/migrations/00003_signer_session_scopes.sql`. Sem essa coluna o bunker da 1.0.0 não lê as sessões.
-2. Rever o diff local e fazer o commit da 1.0.0.
-3. Fazer o push. O GitHub Actions publica as imagens `signer-web` e `signer-daemon`.
-4. No EQ14, puxar e recriar só esses dois contentores. O desbloqueio com a passphrase volta a ser obrigatório, porque recriar apaga a chave da RAM.
-5. Confirmar a versão 1.0.0 no painel e, depois do desbloqueio, o log `RAM TTL scheduled` com `reason` `session_expires_at`.
-
-As sessões que já existem passam a poder assinar só kinds 1, 6 e 7 e a ler a chave pública. Cifrar e decifrar ficam desligados até criares uma sessão nova e marcares essas caixas.
-
 ## Porque Shamir
 
 O cofre e o PDF de backup são o mesmo blob cifrado. A passphrase é a única coisa que o abre. Se a esqueceres, ou se o único PDF se perder, a nsec não se recupera. Não há segundo exemplar da chave no servidor: o daemon só a tem em RAM depois do desbloqueio.
