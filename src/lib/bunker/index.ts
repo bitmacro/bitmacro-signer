@@ -8,6 +8,7 @@ export {
   sendNostrConnectInitiate,
   type NostrConnectPostPublishHook,
   type SendNostrConnectInitiateParams,
+  rearmBunkerRamTtl,
   restartBunkerSubscriptions,
   startBunker,
   stopAllBunkers,

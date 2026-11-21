@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Sessions: remove / remove selected** use the in-app confirmation dialog instead of `window.confirm()`, which returns `false` in webviews and embedded browsers (the buttons looked dead).
 
+## [0.6.21] - 2026-11-21
+
+### Fixed
+
+- **Bunker went silent 24h after unlock while a longer client session was still valid.** `startBunker` armed one `setTimeout` of `BUNKER_SESSION_RAM_TTL_MS` or 24h, then closed the NIP-46 sockets. With the variable unset, RAM now lasts until the later of 24h after unlock and the latest unexpired `signer_sessions.expires_at`. Thirty days is 2_592_000_000 ms, above Node's 2_147_483_647 ms `setTimeout` cap, so the wait is chained (at most one hour, and never above that cap) and recomputed from the database each wake, and again when a session is created or revoked. Setting `BUNKER_SESSION_RAM_TTL_MS` is an optional ceiling from unlock; a longer session cannot extend past it. A failed session lookup does not extend past the idle floor. Logs: `RAM TTL scheduled` / `RAM TTL expired; clearing nsec` with `reason` (`idle_floor`, `session_expires_at`, `operator_cap`), `stopAt`, and `nextCheckInMs`.
+
 ## [0.6.20] - 2026-11-18
 
 ### Fixed

@@ -581,3 +581,41 @@ export async function listSessions(identityId: string): Promise<Session[]> {
   // so the user can see a link that was generated but never completed.
   return (data ?? []) as Session[];
 }
+
+/**
+ * `expires_at` (epoch ms) of sessions that have not expired yet.
+ * Pending and connected rows both count. Revoked rows are already gone.
+ * Selects no secret material.
+ */
+export async function listOpenSessionExpiresAtMs(
+  identityId: string,
+): Promise<number[]> {
+  const supabase = createServiceRoleClient();
+  let vaultId: string;
+  try {
+    vaultId = await getVaultIdForIdentity(supabase, identityId);
+  } catch (e) {
+    if (e instanceof Error && e.message.includes("no vault for identity_id")) {
+      return [];
+    }
+    throw e;
+  }
+  const { data, error } = await supabase
+    .from("signer_sessions")
+    .select("expires_at")
+    .eq("vault_id", vaultId)
+    .gt("expires_at", new Date().toISOString());
+
+  if (error) {
+    throw new Error(`listOpenSessionExpiresAtMs: ${error.message}`);
+  }
+
+  const out: number[] = [];
+  for (const row of data ?? []) {
+    const ms = Date.parse(
+      String((row as { expires_at?: unknown }).expires_at ?? ""),
+    );
+    if (Number.isFinite(ms)) out.push(ms);
+  }
+  return out;
+}

@@ -5,7 +5,6 @@ import { getSessionCookie } from "@/lib/auth/session-cookie";
 import {
   getDaemonInternalConfig,
   notifyDaemonNostrConnectInitiate,
-  notifyDaemonRefreshNip46Relays,
 } from "@/lib/daemon-internal";
 import {
   apiDELETE,
@@ -22,9 +21,9 @@ import {
 import {
   copyRunningBunkerSecretKey,
   isRunning,
-  restartBunkerSubscriptions,
   sendNostrConnectInitiate,
 } from "@/lib/bunker";
+import { syncBunkerAfterSessionChange } from "@/lib/bunker/sync-after-session-change";
 import {
   authorizeApp,
   authorizeAppFromNostrConnect,
@@ -70,27 +69,6 @@ function toPublicSession(s: Session): SessionListItem {
     expires_at: s.expires_at,
     created_at: s.created_at,
   };
-}
-
-async function refreshBunkerNip46Relays(identityId: string): Promise<void> {
-  try {
-    let daemonCfg: ReturnType<typeof getDaemonInternalConfig>;
-    try {
-      daemonCfg = getDaemonInternalConfig();
-    } catch {
-      return;
-    }
-    if (daemonCfg) {
-      const out = await notifyDaemonRefreshNip46Relays(daemonCfg, identityId);
-      if (!out.ok) {
-        console.warn("[POST /api/sessions] daemon refresh-nip46-relays:", out.message);
-      }
-    } else if (isRunning(identityId)) {
-      await restartBunkerSubscriptions(identityId);
-    }
-  } catch (e) {
-    console.warn("[POST /api/sessions] refreshBunkerNip46Relays:", e);
-  }
 }
 
 /**
@@ -166,7 +144,7 @@ async function handlePost(request: Request) {
         ttl_hours,
       );
       /** Before outbound initiate: align subscriptions with session relays (avoids stop/start racing the client’s kind 24133). */
-      await refreshBunkerNip46Relays(identity_id);
+      await syncBunkerAfterSessionChange(identity_id);
 
       const daemonCfgNc = getDaemonInternalConfig();
       if (daemonCfgNc) {
@@ -270,7 +248,7 @@ async function handlePost(request: Request) {
   }
 
   /** After relay env or session relays change, re-subscribe (same as nostrconnect path). */
-  await refreshBunkerNip46Relays(identity_id);
+  await syncBunkerAfterSessionChange(identity_id);
 
   const bunker_uri = buildBunkerUri(
     vault.bunker_pubkey,
@@ -414,10 +392,16 @@ async function handleBulkDelete(request: Request, _context: ParamsBag) {
   try {
     if (parsed.data.all === true) {
       const out = await revokeAllListableSessionsForIdentity(cookieIdentityId);
+      if (out.removed > 0) {
+        await syncBunkerAfterSessionChange(cookieIdentityId);
+      }
       return NextResponse.json(out);
     }
     const ids = parsed.data.ids ?? [];
     const out = await revokeSessionsForIdentity(cookieIdentityId, ids);
+    if (out.removed > 0) {
+      await syncBunkerAfterSessionChange(cookieIdentityId);
+    }
     return NextResponse.json(out);
   } catch (e: unknown) {
     if (e instanceof Error && e.message.includes("no vault for identity_id")) {

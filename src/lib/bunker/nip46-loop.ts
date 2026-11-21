@@ -18,6 +18,7 @@ import {
   assertAppMayUseSigner,
   completeConnect,
   getActiveNip46RelayUrlsForIdentity,
+  listOpenSessionExpiresAtMs,
 } from "@/lib/session/app-keys";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
@@ -29,6 +30,10 @@ import {
   type DecryptNip46InboundResult,
   type Nip46RpcResult,
 } from "./nip46-methods";
+import {
+  decideBunkerRamStop,
+  parseOperatorRamTtlMs,
+} from "./ram-ttl";
 import { createKeyedSerializer } from "./serialize-per-key";
 
 function log(
@@ -76,7 +81,14 @@ type BunkerRuntime = {
   secretKey: Uint8Array;
   bunkerPubkeyHex: string;
   relaySubs: RelaySubscription[];
-  ttlTimer: ReturnType<typeof setTimeout>;
+  /** Unlock (or full bunker recycle) instant. The idle floor is measured from here. */
+  ramStartedAtMs: number;
+  /**
+   * Bumped on every re-arm and on stop. An in-flight DB read must not
+   * schedule a timer after the bunker has stopped or a newer arm has started.
+   */
+  ramTimerGeneration: number;
+  ttlTimer?: ReturnType<typeof setTimeout>;
   idleInboundWarnTimer?: ReturnType<typeof setTimeout>;
   /** Shared across initial subs + additive relay joins (idle warn / inbound seen). */
   inboundSeenRef: { v: boolean };
@@ -84,12 +96,8 @@ type BunkerRuntime = {
 
 const active = new Map<string, BunkerRuntime>();
 
-function defaultRamTtlMs(): number {
-  const raw = process.env.BUNKER_SESSION_RAM_TTL_MS;
-  if (raw && /^\d+$/.test(raw.trim())) {
-    return Number.parseInt(raw.trim(), 10);
-  }
-  return 24 * 60 * 60 * 1000;
+function isoOrNull(ms: number | null): string | null {
+  return ms == null ? null : new Date(ms).toISOString();
 }
 
 /** After unlock, log once if no kind 24133 arrived (Grafana: "connected but deaf"). 0 = off. */
@@ -406,6 +414,7 @@ export async function restartBunkerSubscriptions(
         relayCount: rt.relaySubs.length,
       },
     );
+    await rearmBunkerRamTtl(identityId);
     return;
   }
 
@@ -435,6 +444,7 @@ export async function restartBunkerSubscriptions(
           addRelayUrls: toAddRaw,
         });
         await extendBunkerRelaySubscriptions(identityId, rt, toAddRaw);
+        await rearmBunkerRamTtl(identityId);
         return;
       }
     }
@@ -460,11 +470,85 @@ export async function restartBunkerSubscriptions(
   }
 }
 
+/**
+ * Recompute how long key material may stay in RAM and arm the next wake.
+ * The delay is always one chunk, never the full time until a 30-day session.
+ * Stops the bunker when the idle floor or the operator ceiling is already past.
+ */
+export async function rearmBunkerRamTtl(identityId: string): Promise<void> {
+  const rt = active.get(identityId);
+  if (!rt) return;
+
+  if (rt.ttlTimer) clearTimeout(rt.ttlTimer);
+  rt.ttlTimer = undefined;
+  const generation = ++rt.ramTimerGeneration;
+  const startedAtMs = rt.ramStartedAtMs;
+
+  let openExpires: number[] = [];
+  let sessionsUnreadable = false;
+  try {
+    openExpires = await listOpenSessionExpiresAtMs(identityId);
+  } catch (e) {
+    sessionsUnreadable = true;
+    log(
+      "warn",
+      "RAM TTL session lookup failed; will not extend past the idle floor",
+      {
+        identityId,
+        event: "ram_ttl_sessions_unreadable",
+        err: e instanceof Error ? e.message : String(e),
+      },
+    );
+  }
+
+  const current = active.get(identityId);
+  if (!current || current.ramTimerGeneration !== generation) return;
+
+  const decision = decideBunkerRamStop({
+    nowMs: Date.now(),
+    startedAtMs,
+    operatorCapMs: parseOperatorRamTtlMs(process.env.BUNKER_SESSION_RAM_TTL_MS),
+    openSessionExpiresAtMs: sessionsUnreadable ? [] : openExpires,
+  });
+
+  const fields = {
+    identityId,
+    reason: decision.reason,
+    stopAt: new Date(decision.stopAtMs).toISOString(),
+    ramStartedAt: new Date(startedAtMs).toISOString(),
+    latestSessionExpiresAt: isoOrNull(decision.latestSessionExpiresAtMs),
+    openSessionCount: decision.openSessionCount,
+    operatorCapMs: decision.operatorCapMs,
+    remainingMs: decision.remainingMs,
+    sessionsUnreadable,
+  };
+
+  if (decision.expired) {
+    log("info", "RAM TTL expired; clearing nsec", {
+      ...fields,
+      event: "ram_ttl_expired",
+    });
+    await stopBunker(identityId);
+    return;
+  }
+
+  current.ttlTimer = setTimeout(() => {
+    void rearmBunkerRamTtl(identityId);
+  }, decision.nextDelayMs);
+
+  log("info", "RAM TTL scheduled", {
+    ...fields,
+    event: "ram_ttl_scheduled",
+    nextCheckInMs: decision.nextDelayMs,
+  });
+}
+
 export async function stopBunker(identityId: string): Promise<void> {
   const rt = active.get(identityId);
   if (!rt) return;
 
-  clearTimeout(rt.ttlTimer);
+  rt.ramTimerGeneration += 1;
+  if (rt.ttlTimer) clearTimeout(rt.ttlTimer);
   if (rt.idleInboundWarnTimer) clearTimeout(rt.idleInboundWarnTimer);
   for (const { sub, relay } of rt.relaySubs) {
     try {
@@ -639,11 +723,6 @@ export async function startBunker(
     });
   }
 
-  const ttlTimer = setTimeout(() => {
-    log("info", "RAM TTL expired; clearing nsec", { identityId });
-    void stopBunker(identityId);
-  }, defaultRamTtlMs());
-
   const warnMs = idleInboundWarnMs();
   let idleInboundWarnTimer: ReturnType<typeof setTimeout> | undefined;
   if (warnMs > 0) {
@@ -668,10 +747,14 @@ export async function startBunker(
     secretKey,
     bunkerPubkeyHex,
     relaySubs,
-    ttlTimer,
+    ramStartedAtMs: Date.now(),
+    ramTimerGeneration: 0,
     idleInboundWarnTimer,
     inboundSeenRef,
   });
+
+  await rearmBunkerRamTtl(identityId);
+  if (!active.has(identityId)) return;
 
   log("info", "bunker started", {
     identityId,

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getSessionCookie } from "@/lib/auth/session-cookie";
+import { syncBunkerAfterSessionChange } from "@/lib/bunker/sync-after-session-change";
 import { apiDELETE, type ParamsBag } from "@/lib/observability/api-route-wrapper";
 import { revokeSessionForIdentity } from "@/lib/session/app-keys";
 
@@ -49,6 +50,7 @@ async function handleDelete(_request: Request, context: ParamsBag) {
     return jsonError("Session not found", 404);
   }
 
+  await syncBunkerAfterSessionChange(identityId);
   return NextResponse.json({ revoked: true });
 }
 
