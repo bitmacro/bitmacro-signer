@@ -7,6 +7,8 @@ export const vaultCreateBodySchema = z.object({
   salt: z.string().min(1),
   iv: z.string().min(1),
   bunker_pubkey: z.string().min(1),
+  /** Signed proof covering identity_id and the ciphertext fields. */
+  proof: z.unknown(),
 });
 
 export type VaultCreateBody = z.infer<typeof vaultCreateBodySchema>;

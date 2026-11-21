@@ -9,6 +9,7 @@ import { finalizeEvent, getPublicKey, verifyEvent } from "nostr-tools";
 import * as nip04 from "nostr-tools/nip04";
 import * as nip44 from "nostr-tools/nip44";
 
+import { scopeAllows } from "@/lib/session/scopes";
 import { nostrPubkeyInputToHex } from "@/lib/session/ttl";
 
 /** Same as `nostr-tools/kinds` NostrConnect */
@@ -40,7 +41,7 @@ export type Nip46MethodDeps = {
     secret: string,
     trace?: Nip46ConnectTrace,
   ) => Promise<void>;
-  assertAppMayUseSigner: (appPubkey: string) => Promise<void>;
+  assertAppMayUseSigner: (appPubkey: string) => Promise<string[]>;
   /** NIP-46 `switch_relays`: bunker’s preferred relay URLs (JSON array string when set). */
   getSwitchRelayUrls?: () => Promise<string[]>;
 };
@@ -64,6 +65,16 @@ export function parseNip46RpcPayload(plaintext: string): Nip46RpcRequest {
 
 export function formatNip46RpcResponse(r: Nip46RpcResult): string {
   return JSON.stringify(r);
+}
+
+function denyUnlessPermitted(
+  scopes: readonly string[],
+  method: string,
+  kind?: number,
+): void {
+  if (!scopeAllows(scopes, method, kind)) {
+    throw new Error("NIP-46: method not permitted for this session");
+  }
 }
 
 export type DecryptNip46InboundResult = {
@@ -131,13 +142,18 @@ export async function runNip46Method(
         return { id, result: secret.length > 0 ? secret : "ack" };
       }
       case "get_public_key": {
-        await deps.assertAppMayUseSigner(appPubkey);
+        const scopes = await deps.assertAppMayUseSigner(appPubkey);
+        denyUnlessPermitted(scopes, "get_public_key");
         return { id, result: getPublicKey(sk) };
       }
       case "sign_event": {
-        await deps.assertAppMayUseSigner(appPubkey);
+        const scopes = await deps.assertAppMayUseSigner(appPubkey);
         const raw = params[0] ?? "";
         const tmpl = JSON.parse(raw) as EventTemplate;
+        if (typeof tmpl.kind !== "number" || !Number.isInteger(tmpl.kind)) {
+          throw new Error("sign_event: kind required");
+        }
+        denyUnlessPermitted(scopes, "sign_event", tmpl.kind);
         const signed = finalizeEvent(tmpl, sk);
         if (!verifyEvent(signed as Event)) {
           throw new Error("sign_event: internal finalize failed verification");
@@ -145,28 +161,32 @@ export async function runNip46Method(
         return { id, result: JSON.stringify(signed) };
       }
       case "nip04_encrypt": {
-        await deps.assertAppMayUseSigner(appPubkey);
+        const scopes = await deps.assertAppMayUseSigner(appPubkey);
+        denyUnlessPermitted(scopes, "nip04_encrypt");
         const peer = params[0] ?? "";
         const plaintext = params[1] ?? "";
         const out = await nip04.encrypt(sk, peer, plaintext);
         return { id, result: out };
       }
       case "nip04_decrypt": {
-        await deps.assertAppMayUseSigner(appPubkey);
+        const scopes = await deps.assertAppMayUseSigner(appPubkey);
+        denyUnlessPermitted(scopes, "nip04_decrypt");
         const peer = params[0] ?? "";
         const ciphertext = params[1] ?? "";
         const out = await nip04.decrypt(sk, peer, ciphertext);
         return { id, result: out };
       }
       case "nip44_encrypt": {
-        await deps.assertAppMayUseSigner(appPubkey);
+        const scopes = await deps.assertAppMayUseSigner(appPubkey);
+        denyUnlessPermitted(scopes, "nip44_encrypt");
         const peer = params[0] ?? "";
         const plaintext = params[1] ?? "";
         const ck = nip44.getConversationKey(sk, peer);
         return { id, result: nip44.encrypt(plaintext, ck) };
       }
       case "nip44_decrypt": {
-        await deps.assertAppMayUseSigner(appPubkey);
+        const scopes = await deps.assertAppMayUseSigner(appPubkey);
+        denyUnlessPermitted(scopes, "nip44_decrypt");
         const peer = params[0] ?? "";
         const payload = params[1] ?? "";
         const ck = nip44.getConversationKey(sk, peer);

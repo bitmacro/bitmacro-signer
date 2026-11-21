@@ -16,6 +16,8 @@ const sessionCreateFieldsSchema = z.object({
       return t.length === 0 ? undefined : t;
     }),
   ttl_hours: z.number().int().positive().max(8760).optional(),
+  /** Methods this app may call. Omitted = kinds 1, 6, 7 and get_public_key. */
+  scopes: z.array(z.string().max(40)).max(32).optional(),
   /** NIP-46 client-initiated URI (`nostrconnect://…`) from the app (e.g. Primal Remote Signer). */
   nostrconnect_uri: z
     .string()

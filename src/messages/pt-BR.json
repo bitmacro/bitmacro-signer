@@ -192,6 +192,7 @@
       "incorrectPassphrase": "Passphrase incorrecta. O PDF de backup usa a mesma passphrase — sem ela não dá para recuperar.",
       "npubNotRegistered": "Este npub ainda não tem cofre neste Signer. Usa «colar nsec» em baixo para o criar.",
       "unlockFailed": "Erro ao desbloquear",
+      "tooManyAttempts": "Demasiadas tentativas. Espera um pouco e tenta outra vez.",
       "daemonUnreachable": "A passphrase foi aceite, mas esta página não chegou ao processo do bunker. O Signer está a correr; tenta outra vez. Se persistir, o contentor web e o daemon não estão na mesma rede Docker.",
       "invalidClientPubkey": "Pubkey do cliente inválido",
       "couldNotCreateSession": "Não foi possível criar a sessão",
@@ -237,7 +238,7 @@
       "guideTitle": "Como entrar",
       "guideUnlock": "Já tens cofre: npub + passphrase. Não colas a nsec para desbloquear.",
       "guideFirst": "Primeira vez neste Signer: cola a nsec uma vez (ligação abaixo) ou gera um par novo.",
-      "importNsecLink": "Primeira vez: colar nsec e criar o cofre",
+      "importNsecLink": "Primeira vez: comece aqui.",
       "importNsecBody": "Cola a nsec que corresponde a este npub e escolhe a passphrase do cofre. Só precisas disto uma vez neste Signer.",
       "recentLabel": "Contas neste browser",
       "recentHint": "Só neste browser. Nome e foto vêm do perfil Nostr (kind 0) depois de desbloqueares ou quando os relays responderem.",
@@ -304,7 +305,10 @@
       "ttlOption24": "24 horas",
       "ttlOption168": "7 dias",
       "ttlOption720": "30 dias",
-      "ttlHint": "Depois disso a app deixa de poder assinar e tens de voltar a ligá-la. Mais tempo é mais cómodo, mas a ligação fica aberta durante mais tempo se o dispositivo for comprometido."
+      "ttlHint": "Depois disso a app deixa de poder assinar e tens de voltar a ligá-la. Mais tempo é mais cómodo, mas a ligação fica aberta durante mais tempo se o dispositivo for comprometido.",
+      "scopesHint": "Por omissão a app só assina notas, reposts e reações (kinds 1, 6 e 7) e pode ler a chave pública.",
+      "allowEncrypt": "Permitir cifrar mensagens (NIP-04 e NIP-44)",
+      "allowDecrypt": "Permitir decifrar mensagens (NIP-04 e NIP-44)"
     },
     "backup": {
       "sectionTitle": "Cópia de recuperação offline (obrigatória)",

@@ -8,6 +8,8 @@ export const identityBootstrapBodySchema = z.object({
     .string()
     .trim()
     .regex(NPUB_REGEX, "Invalid npub format"),
+  /** Signed proof that the caller holds this npub. */
+  proof: z.unknown(),
 });
 
 export type IdentityBootstrapBody = z.infer<typeof identityBootstrapBodySchema>;

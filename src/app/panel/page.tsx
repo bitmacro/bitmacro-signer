@@ -38,6 +38,12 @@ import {
   rememberNpub,
 } from "@/app/panel/recent-npubs";
 import { generateKeypair, encryptNsec } from "@/lib/vault";
+import {
+  bootstrapCommitment,
+  signPossession,
+  vaultCommitment,
+} from "@/lib/auth/possession";
+import { scopesForNewSession } from "@/lib/session/scopes";
 
 const BG = "#080808";
 const ACCENT = "#0066FF";
@@ -45,7 +51,7 @@ const ACCENT = "#0066FF";
 type UnlockOk = {
   ok: true;
   vault_exists: boolean;
-  identity_id: string;
+  identity_id?: string;
   is_running: boolean;
 };
 
@@ -116,6 +122,48 @@ function SessionTtlSelect({
   );
 }
 
+function SessionPowers({
+  allowEncrypt,
+  allowDecrypt,
+  onEncrypt,
+  onDecrypt,
+  hint,
+  encryptLabel,
+  decryptLabel,
+}: {
+  allowEncrypt: boolean;
+  allowDecrypt: boolean;
+  onEncrypt: (value: boolean) => void;
+  onDecrypt: (value: boolean) => void;
+  hint: string;
+  encryptLabel: string;
+  decryptLabel: string;
+}) {
+  return (
+    <div className="space-y-2">
+      <p className="text-sm leading-[1.5] text-zinc-400">{hint}</p>
+      <label className="flex items-start gap-2 text-sm text-zinc-200">
+        <input
+          type="checkbox"
+          checked={allowEncrypt}
+          onChange={(e) => onEncrypt(e.target.checked)}
+          className="mt-1"
+        />
+        <span>{encryptLabel}</span>
+      </label>
+      <label className="flex items-start gap-2 text-sm text-zinc-200">
+        <input
+          type="checkbox"
+          checked={allowDecrypt}
+          onChange={(e) => onDecrypt(e.target.checked)}
+          className="mt-1"
+        />
+        <span>{decryptLabel}</span>
+      </label>
+    </div>
+  );
+}
+
 function truncateMiddle(s: string, keep = 14): string {
   if (s.length <= keep * 2 + 3) return s;
   return `${s.slice(0, keep)}…${s.slice(-keep)}`;
@@ -128,6 +176,7 @@ export default function PanelPage() {
   const parseUnlockError = useCallback(
     async (res: Response): Promise<string> => {
       if (res.status === 401) return t("errors.incorrectPassphrase");
+      if (res.status === 429) return t("errors.tooManyAttempts");
       if (res.status === 404) return t("errors.npubNotRegistered");
       if (res.status === 502) return t("errors.daemonUnreachable");
       try {
@@ -173,6 +222,12 @@ export default function PanelPage() {
   /** Human-readable label for this connection (stored as app_name; NIP-46 does not send the app name). */
   const [sessionLabel, setSessionLabel] = useState("");
   const [sessionTtlHours, setSessionTtlHours] = useState<SessionTtlHours>(24);
+  const [allowEncrypt, setAllowEncrypt] = useState(false);
+  const [allowDecrypt, setAllowDecrypt] = useState(false);
+  const sessionScopes = useMemo(
+    () => scopesForNewSession({ allowEncrypt, allowDecrypt }),
+    [allowEncrypt, allowDecrypt],
+  );
   /** Paste `nostrconnect://…` from a client (e.g. Primal Remote Signer). */
   const [nostrConnectPaste, setNostrConnectPaste] = useState("");
   const [connectTab, setConnectTab] = useState<ConnectFlowTab>("nostrconnect");
@@ -390,6 +445,7 @@ export default function PanelPage() {
     const body: Record<string, unknown> = {
       identity_id: id,
       ttl_hours: sessionTtlHours,
+      scopes: sessionScopes,
     };
     const label = sessionLabel.trim();
     if (label) {
@@ -429,7 +485,7 @@ export default function PanelPage() {
     } finally {
       setLoading(false);
     }
-  }, [sessionLabel, sessionTtlHours, t, refreshSessions]);
+  }, [sessionLabel, sessionScopes, sessionTtlHours, t, refreshSessions]);
 
   const registerNostrConnectUri = useCallback(
     async (id: string) => {
@@ -445,6 +501,7 @@ export default function PanelPage() {
         identity_id: id,
         nostrconnect_uri: uri,
         ttl_hours: sessionTtlHours,
+        scopes: sessionScopes,
       };
       try {
         const res = await fetch("/api/sessions", {
@@ -477,7 +534,7 @@ export default function PanelPage() {
         setLoading(false);
       }
     },
-    [nostrConnectPaste, sessionTtlHours, t, refreshSessions],
+    [nostrConnectPaste, sessionScopes, sessionTtlHours, t, refreshSessions],
   );
 
   const handleUnlock = async (e: React.FormEvent) => {
@@ -501,16 +558,20 @@ export default function PanelPage() {
       }
 
       const data = (await res.json()) as UnlockOk;
-      setIdentityId(data.identity_id);
-
-      await refreshStatus();
 
       if (!data.vault_exists) {
+        setIdentityId("");
         setNsecImport("");
         setEncryptPassword("");
         setPhase(2);
         return;
       }
+      if (!data.identity_id) {
+        throw new Error(t("errors.missingIdentityId"));
+      }
+      setIdentityId(data.identity_id);
+
+      await refreshStatus();
 
       setBunkerUri(null);
       setPhase(3);
@@ -518,6 +579,66 @@ export default function PanelPage() {
       setError(err instanceof Error ? err.message : t("errors.generic"));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const bootstrapIdentity = async (npub: string, nsec: string) => {
+    const proof = signPossession(nsec, "bootstrap", bootstrapCommitment(npub));
+    const bootRes = await fetch("/api/identities/bootstrap", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ npub, proof }),
+    });
+    const bootJson = (await bootRes.json().catch(() => ({}))) as {
+      identity_id?: string;
+      error?: string;
+    };
+    if (!bootRes.ok) {
+      throw new Error(bootJson.error ?? t("errors.couldNotCreateIdentity"));
+    }
+    const id = bootJson.identity_id?.trim();
+    if (!id) {
+      throw new Error(t("errors.missingIdentityId"));
+    }
+    return id;
+  };
+
+  const saveVault = async (
+    id: string,
+    npub: string,
+    nsec: string,
+    payload: VaultPayload,
+  ) => {
+    const proof = signPossession(
+      nsec,
+      "vault",
+      vaultCommitment({
+        identityId: id,
+        blob: payload.blob,
+        salt: payload.salt,
+        iv: payload.iv,
+        bunkerPubkey: npub,
+      }),
+    );
+    const vaultRes = await fetch("/api/vault", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        identity_id: id,
+        blob: payload.blob,
+        salt: payload.salt,
+        iv: payload.iv,
+        bunker_pubkey: npub,
+        proof,
+      }),
+    });
+    const vJson = (await vaultRes.json().catch(() => ({}))) as {
+      error?: string;
+    };
+    if (!vaultRes.ok) {
+      throw new Error(vJson.error ?? t("errors.saveVaultFailed"));
     }
   };
 
@@ -555,46 +676,11 @@ export default function PanelPage() {
 
     setLoading(true);
     try {
-      const bootRes = await fetch("/api/identities/bootstrap", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ npub }),
-      });
-      const bootJson = (await bootRes.json().catch(() => ({}))) as {
-        identity_id?: string;
-        error?: string;
-      };
-      if (!bootRes.ok) {
-        throw new Error(bootJson.error ?? t("errors.couldNotCreateIdentity"));
-      }
-      const id = bootJson.identity_id?.trim();
-      if (!id) {
-        throw new Error(t("errors.missingIdentityId"));
-      }
+      const id = await bootstrapIdentity(npub, raw);
       setIdentityId(id);
-
       const payload = await encryptNsec(raw, encryptPassword);
+      await saveVault(id, npub, raw, payload);
       setNsecImport("");
-
-      const vaultRes = await fetch("/api/vault", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          identity_id: id,
-          blob: payload.blob,
-          salt: payload.salt,
-          iv: payload.iv,
-          bunker_pubkey: npub,
-        }),
-      });
-      const vJson = (await vaultRes.json().catch(() => ({}))) as {
-        error?: string;
-      };
-      if (!vaultRes.ok) {
-        throw new Error(vJson.error ?? t("errors.saveVaultFailed"));
-      }
 
       const unlockRes = await fetch("/api/auth/unlock", {
         method: "POST",
@@ -637,46 +723,11 @@ export default function PanelPage() {
 
     setLoading(true);
     try {
-      const bootRes = await fetch("/api/identities/bootstrap", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ npub }),
-      });
-      const bootJson = (await bootRes.json().catch(() => ({}))) as {
-        identity_id?: string;
-        error?: string;
-      };
-      if (!bootRes.ok) {
-        throw new Error(bootJson.error ?? t("errors.couldNotCreateIdentity"));
-      }
-      const id = bootJson.identity_id?.trim();
-      if (!id) {
-        throw new Error(t("errors.missingIdentityId"));
-      }
+      const id = await bootstrapIdentity(npub, nsecRef);
       setIdentityId(id);
-
       const payload = await encryptNsec(nsecRef, encryptPassword);
+      await saveVault(id, npub, nsecRef, payload);
       vaultNsecRef.current = null;
-
-      const vaultRes = await fetch("/api/vault", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          identity_id: id,
-          blob: payload.blob,
-          salt: payload.salt,
-          iv: payload.iv,
-          bunker_pubkey: npub,
-        }),
-      });
-      const vJson = (await vaultRes.json().catch(() => ({}))) as {
-        error?: string;
-      };
-      if (!vaultRes.ok) {
-        throw new Error(vJson.error ?? t("errors.saveVaultFailed"));
-      }
 
       const unlockRes = await fetch("/api/auth/unlock", {
         method: "POST",
@@ -706,12 +757,6 @@ export default function PanelPage() {
   const handleStep2ImportVault = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    const id = identityId.trim();
-    if (!id) {
-      setError(t("errors.missingIdentityStep1"));
-      return;
-    }
-
     setLoading(true);
     try {
       const raw = nsecImport.trim();
@@ -741,27 +786,12 @@ export default function PanelPage() {
         return;
       }
 
+      const npub = npubInput.trim();
+      const id = await bootstrapIdentity(npub, raw);
+      setIdentityId(id);
       const payload = await encryptNsec(raw, encryptPassword);
+      await saveVault(id, npub, raw, payload);
       setNsecImport("");
-
-      const vaultRes = await fetch("/api/vault", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          identity_id: id,
-          blob: payload.blob,
-          salt: payload.salt,
-          iv: payload.iv,
-          bunker_pubkey: npubInput.trim(),
-        }),
-      });
-      const vJson = (await vaultRes.json().catch(() => ({}))) as {
-        error?: string;
-      };
-      if (!vaultRes.ok) {
-        throw new Error(vJson.error ?? t("errors.saveVaultFailed"));
-      }
 
       const unlockRes = await fetch("/api/auth/unlock", {
         method: "POST",
@@ -1543,6 +1573,15 @@ export default function PanelPage() {
                       hint={t("step3.ttlHint")}
                       optionLabel={(h) => t(`step3.ttlOption${h}`)}
                     />
+                    <SessionPowers
+                      allowEncrypt={allowEncrypt}
+                      allowDecrypt={allowDecrypt}
+                      onEncrypt={setAllowEncrypt}
+                      onDecrypt={setAllowDecrypt}
+                      hint={t("step3.scopesHint")}
+                      encryptLabel={t("step3.allowEncrypt")}
+                      decryptLabel={t("step3.allowDecrypt")}
+                    />
                     <button
                       ref={nostrRegisterRef}
                       id="nostrconnect-register"
@@ -1622,6 +1661,15 @@ export default function PanelPage() {
                       label={t("step3.ttlLabel")}
                       hint={t("step3.ttlHint")}
                       optionLabel={(h) => t(`step3.ttlOption${h}`)}
+                    />
+                    <SessionPowers
+                      allowEncrypt={allowEncrypt}
+                      allowDecrypt={allowDecrypt}
+                      onEncrypt={setAllowEncrypt}
+                      onDecrypt={setAllowDecrypt}
+                      hint={t("step3.scopesHint")}
+                      encryptLabel={t("step3.allowEncrypt")}
+                      decryptLabel={t("step3.allowDecrypt")}
                     />
                     {statusRunning === false ? (
                       <p

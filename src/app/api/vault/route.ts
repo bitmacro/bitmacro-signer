@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { getSessionCookie } from "@/lib/auth/session-cookie";
+import {
+  parsePossessionEvent,
+  possessionIsValid,
+  vaultCommitment,
+} from "@/lib/auth/possession";
 import { apiGET, apiPOST } from "@/lib/observability/api-route-wrapper";
 import { vaultCreateBodySchema } from "@/lib/schemas/vault";
 import { createServiceRoleClient } from "@/lib/supabase/server";
@@ -39,15 +44,35 @@ async function handlePost(request: Request) {
 
   const { data: identity, error: identityError } = await supabase
     .from("identities")
-    .select("id")
+    .select("id, npub")
     .eq("id", identity_id)
     .maybeSingle();
 
   if (identityError) {
     return jsonError(identityError.message, 500);
   }
-  if (!identity) {
+  if (!identity?.npub) {
     return jsonError("Identity not found", 404);
+  }
+  if (bunker_pubkey !== identity.npub) {
+    return jsonError("bunker_pubkey does not match this identity", 400);
+  }
+  const proof = parsePossessionEvent(parsed.data.proof);
+  if (
+    !proof ||
+    !possessionIsValid(proof, {
+      purpose: "vault",
+      npub: identity.npub,
+      commitment: vaultCommitment({
+        identityId: identity_id,
+        blob,
+        salt,
+        iv,
+        bunkerPubkey: bunker_pubkey,
+      }),
+    })
+  ) {
+    return jsonError("Proof of key possession failed", 401);
   }
 
   const { data: vault, error: insertError } = await supabase

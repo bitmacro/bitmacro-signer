@@ -1,3 +1,4 @@
+import { rejectUnlessSession } from "@/lib/auth/require-session";
 import { resolveServiceRoleSupabaseUrl } from "@/lib/supabase/service-role";
 import { apiGET } from "@/lib/observability/api-route-wrapper";
 import { NextResponse } from "next/server";
@@ -9,6 +10,8 @@ export const runtime = "nodejs";
  * No API key sent. Expect 401 or 200 from PostgREST.
  */
 async function handleGet(request: Request) {
+  const denied = await rejectUnlessSession();
+  if (denied) return denied;
   void request;
   let base: string;
   try {

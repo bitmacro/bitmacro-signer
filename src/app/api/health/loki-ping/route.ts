@@ -1,3 +1,4 @@
+import { rejectUnlessSession } from "@/lib/auth/require-session";
 import { NextResponse } from "next/server";
 
 import { getCorrelationIds } from "@/lib/observability/correlation";
@@ -12,6 +13,8 @@ export const dynamic = "force-dynamic";
  * Grafana: {service_name="bitmacro-signer"} |= "signer.loki.ping"
  */
 async function handleGet(request: Request) {
+  const denied = await rejectUnlessSession();
+  if (denied) return denied;
   const ids = getCorrelationIds(request);
   await pushLokiStructured("info", {
     component: "health",

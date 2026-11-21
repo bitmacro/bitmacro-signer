@@ -1,3 +1,4 @@
+import { rejectUnlessSession } from "@/lib/auth/require-session";
 import { apiGET } from "@/lib/observability/api-route-wrapper";
 import { NextResponse } from "next/server";
 
@@ -33,6 +34,8 @@ function errorChainCode(e: unknown): string | undefined {
 }
 
 async function handleGet(request: Request) {
+  const denied = await rejectUnlessSession();
+  if (denied) return denied;
   void request;
   const usingRelay = Boolean(process.env.OPENAI_BASE_URL?.trim());
   const baseRaw =

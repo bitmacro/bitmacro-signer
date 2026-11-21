@@ -7,7 +7,7 @@ import { randomUUID } from "node:crypto";
 
 import { relayConnectLog } from "@bitmacro/relay-connect";
 import type { Event } from "nostr-tools";
-import { finalizeEvent, getPublicKey } from "nostr-tools";
+import { finalizeEvent, getPublicKey, verifyEvent } from "nostr-tools";
 import * as nip04 from "nostr-tools/nip04";
 import * as nip19 from "nostr-tools/nip19";
 import * as nip44 from "nostr-tools/nip44";
@@ -138,6 +138,20 @@ function createNip46AttachOnevent(
 ): (relay: Relay, relayUrl: string) => (event: Event) => Promise<void> {
   return (relay: Relay, relayUrl: string) =>
     async function onevent(event: Event): Promise<void> {
+      let signatureOk = false;
+      try {
+        signatureOk = verifyEvent(event);
+      } catch {
+        signatureOk = false;
+      }
+      if (!signatureOk) {
+        log("warn", "ignored event (invalid signature)", {
+          identityId,
+          relayUrl,
+          eventIdPrefix: event.id?.slice(0, 16) ?? "",
+        });
+        return;
+      }
       if (event.kind !== NostrConnect) {
         log("warn", "ignored event (not Nostr Connect / kind 24133)", {
           identityId,
@@ -235,7 +249,8 @@ function createNip46AttachOnevent(
                 relayUrl,
                 rpcId: res.id,
                 clientPk,
-                resultPreview: (res.result ?? "").slice(0, 24),
+                resultKind: res.result === "ack" ? "ack" : "redacted",
+                resultCharLen: (res.result ?? "").length,
               });
             }
           }

@@ -2,6 +2,11 @@ import { randomUUID } from "node:crypto";
 
 import { NextResponse } from "next/server";
 
+import {
+  clientIpFromRequest,
+  forgetAttempt,
+  takeAttempt,
+} from "@/lib/auth/attempt-limit";
 import { setSessionCookie } from "@/lib/auth/session-cookie";
 import { apiPOST } from "@/lib/observability/api-route-wrapper";
 import { pushLokiStructured } from "@/lib/observability/loki-http-push";
@@ -66,6 +71,12 @@ async function handlePost(request: Request) {
   }
 
   const { npub, passphrase } = parsed.data;
+  const ip = clientIpFromRequest(request);
+  const ipAttempt = takeAttempt(`unlock-ip:${ip}`, 40, 15 * 60 * 1000);
+  const npubAttempt = takeAttempt(`unlock-npub:${npub}`, 8, 15 * 60 * 1000);
+  if (!ipAttempt.ok || !npubAttempt.ok) {
+    return jsonError("Too many attempts", 429);
+  }
 
   const { data: identity, error: idErr } = await supabase
     .from("identities")
@@ -96,7 +107,6 @@ async function handlePost(request: Request) {
     return NextResponse.json({
       ok: true,
       vault_exists: false,
-      identity_id,
       is_running: false,
     });
   }
@@ -261,6 +271,7 @@ async function handlePost(request: Request) {
     { streamLabels: { subsystem: "signer-web-api" } },
   ).catch(() => {});
 
+  forgetAttempt(`unlock-npub:${npub}`);
   return NextResponse.json({
     ok: true,
     vault_exists: true,

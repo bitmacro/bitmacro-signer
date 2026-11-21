@@ -192,6 +192,7 @@
       "incorrectPassphrase": "Incorrect passphrase. The backup PDF uses the same passphrase — without it you cannot recover.",
       "npubNotRegistered": "This npub has no vault on this Signer yet. Use “paste nsec” below to create it.",
       "unlockFailed": "Failed to unlock",
+      "tooManyAttempts": "Too many attempts. Wait a moment and try again.",
       "daemonUnreachable": "The passphrase was accepted, but this page could not reach the bunker process. The Signer is up; try again in a moment. If it persists, the web and daemon containers are not on the same Docker network.",
       "invalidClientPubkey": "Invalid client pubkey",
       "couldNotCreateSession": "Could not create session",
@@ -237,7 +238,7 @@
       "guideTitle": "How to sign in",
       "guideUnlock": "Vault already created: npub + passphrase. You do not paste nsec to unlock.",
       "guideFirst": "First time on this Signer: paste nsec once (link below) or generate a new pair.",
-      "importNsecLink": "First time: paste nsec and create the vault",
+      "importNsecLink": "First time: start here.",
       "importNsecBody": "Paste the nsec that matches this npub and choose the vault passphrase. You only need this once on this Signer.",
       "recentLabel": "Accounts in this browser",
       "recentHint": "Saved only here. Name and photo come from the Nostr profile (kind 0) after you unlock or when the relays answer.",
@@ -304,7 +305,10 @@
       "ttlOption24": "24 hours",
       "ttlOption168": "7 days",
       "ttlOption720": "30 days",
-      "ttlHint": "After that the app can no longer sign and you need to connect it again. Longer is more convenient, but the connection stays open longer if the device is compromised."
+      "ttlHint": "After that the app can no longer sign and you need to connect it again. Longer is more convenient, but the connection stays open longer if the device is compromised.",
+      "scopesHint": "By default the app can only sign notes, reposts and reactions (kinds 1, 6 and 7) and read the public key.",
+      "allowEncrypt": "Allow encrypting messages (NIP-04 and NIP-44)",
+      "allowDecrypt": "Allow decrypting messages (NIP-04 and NIP-44)"
     },
     "backup": {
       "sectionTitle": "Offline recovery backup (required)",

@@ -16,6 +16,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Sessions: remove / remove selected** use the in-app confirmation dialog instead of `window.confirm()`, which returns `false` in webviews and embedded browsers (the buttons looked dead).
 
+## [1.0.0] - 2026-11-21
+
+### Security
+
+- **Vault creation requires proof of the key.** `POST /api/identities/bootstrap` and `POST /api/vault` accept a signed possession event. A request that only knows the npub can no longer create or occupy a vault. `POST /api/auth/unlock` no longer returns `identity_id` when the npub has no vault.
+- **Connected apps are limited to the session scopes.** New and existing sessions default to `get_public_key` plus kinds 1, 6 and 7. Encrypt and decrypt are off unless chosen when the session is created. `sign_event` and NIP-04/NIP-44 calls outside that list are rejected.
+- **Unlock attempts are limited** (40 per address and 8 per npub, each in 15 minutes).
+- **Operator probes require a panel session:** `/api/help/network-check`, `/api/help/supabase-check` and `/api/health/loki-ping`. The help chat stays public and is limited to 12 questions per address in 10 minutes.
+- **The connect success log no longer stores the session secret.** It records only whether the result was `ack` and how long it was.
+- **The daemon compares its bearer token with a hash compare** and rejects internal bodies larger than 64 KiB.
+- **Kind 24133 events with an invalid signature are dropped** before decrypt.
+
+### Changed
+
+- The first-time login link no longer says "paste nsec". It now reads "Primeira vez: comece aqui." (en: "First time: start here.", es: "Primera vez: empieza aquí.").
+- Creating a session shows the default signing limit and optional checkboxes for encrypt and decrypt.
+
+### Migration
+
+- Apply `supabase/migrations/00003_signer_session_scopes.sql` before starting 1.0.0. Existing sessions receive the kinds 1, 6 and 7 default.
+
 ## [0.6.21] - 2026-11-21
 
 ### Fixed

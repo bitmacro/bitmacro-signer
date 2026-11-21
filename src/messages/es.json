@@ -192,6 +192,7 @@
       "incorrectPassphrase": "Frase de paso incorrecta. El PDF de copia usa la misma frase — sin ella no hay recuperación.",
       "npubNotRegistered": "Este npub aún no tiene bóveda en este Signer. Usa «pegar nsec» abajo para crearla.",
       "unlockFailed": "Error al desbloquear",
+      "tooManyAttempts": "Demasiados intentos. Espera un momento y vuelve a intentar.",
       "daemonUnreachable": "La frase fue aceptada, pero esta página no alcanzó el proceso del bunker. El Signer está en marcha; inténtalo de nuevo. Si persiste, el contenedor web y el daemon no están en la misma red Docker.",
       "invalidClientPubkey": "Pubkey de cliente inválida",
       "couldNotCreateSession": "No se pudo crear la sesión",
@@ -237,7 +238,7 @@
       "guideTitle": "Cómo entrar",
       "guideUnlock": "Ya tienes bóveda: npub + frase. No pegas la nsec para desbloquear.",
       "guideFirst": "Primera vez en este Signer: pega la nsec una vez (enlace abajo) o genera un par nuevo.",
-      "importNsecLink": "Primera vez: pegar nsec y crear la bóveda",
+      "importNsecLink": "Primera vez: empieza aquí.",
       "importNsecBody": "Pega la nsec que coincide con este npub y elige la frase de la bóveda. Solo lo necesitas una vez en este Signer.",
       "recentLabel": "Cuentas en este navegador",
       "recentHint": "Solo en este navegador. Nombre y foto vienen del perfil Nostr (kind 0) tras desbloquear o cuando responden los relays.",
@@ -304,7 +305,10 @@
       "ttlOption24": "24 horas",
       "ttlOption168": "7 días",
       "ttlOption720": "30 días",
-      "ttlHint": "Después de eso la app ya no puede firmar y tienes que volver a conectarla. Más tiempo es más cómodo, pero la conexión queda abierta más tiempo si el dispositivo se ve comprometido."
+      "ttlHint": "Después de eso la app ya no puede firmar y tienes que volver a conectarla. Más tiempo es más cómodo, pero la conexión queda abierta más tiempo si el dispositivo se ve comprometido.",
+      "scopesHint": "Por defecto la app solo firma notas, reposts y reacciones (kinds 1, 6 y 7) y puede leer la clave pública.",
+      "allowEncrypt": "Permitir cifrar mensajes (NIP-04 y NIP-44)",
+      "allowDecrypt": "Permitir descifrar mensajes (NIP-04 y NIP-44)"
     },
     "backup": {
       "sectionTitle": "Copia de recuperación sin conexión (obligatoria)",

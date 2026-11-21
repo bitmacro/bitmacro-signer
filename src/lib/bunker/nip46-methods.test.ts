@@ -19,7 +19,14 @@ function testDeps(overrides: Partial<Nip46MethodDeps> = {}): Nip46MethodDeps {
     bunkerSecretKey,
     bunkerPubkeyHex,
     completeConnect: vi.fn().mockResolvedValue(undefined),
-    assertAppMayUseSigner: vi.fn().mockResolvedValue(undefined),
+    assertAppMayUseSigner: vi.fn().mockResolvedValue([
+      "get_public_key",
+      "sign_event",
+      "nip04_encrypt",
+      "nip04_decrypt",
+      "nip44_encrypt",
+      "nip44_decrypt",
+    ]),
     ...overrides,
   };
 }
@@ -287,6 +294,35 @@ describe("runNip46Method", () => {
       "wss://nip46.bitmacro.io",
       "wss://nrs.primal.net",
     ]);
+  });
+
+  it("refuses a kind and a decrypt call outside the session scopes", async () => {
+    const deps = testDeps({
+      assertAppMayUseSigner: vi.fn().mockResolvedValue([
+        "get_public_key",
+        "sign_event:1",
+        "sign_event:6",
+        "sign_event:7",
+      ]),
+    });
+    const tmpl = {
+      kind: 0,
+      content: "{}",
+      tags: [],
+      created_at: Math.floor(Date.now() / 1000),
+    };
+    const signed = await runNip46Method(
+      "e".repeat(64),
+      { id: "scope-1", method: "sign_event", params: [JSON.stringify(tmpl)] },
+      deps,
+    );
+    expect(signed.error).toMatch(/not permitted/);
+    const decrypted = await runNip46Method(
+      "e".repeat(64),
+      { id: "scope-2", method: "nip44_decrypt", params: ["ab".repeat(32), "cipher"] },
+      deps,
+    );
+    expect(decrypted.error).toMatch(/not permitted/);
   });
 
   it("unknown method returns error in result object", async () => {

@@ -6,6 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 import type { ParsedNostrConnectUri } from "./nostr-connect-uri";
+import { resolveSessionScopes, storedScopesOrDefault } from "./scopes";
 import type { Session } from "./ttl";
 import { nostrPubkeyInputToHex } from "./ttl";
 
@@ -83,6 +84,7 @@ export async function authorizeApp(
   appPubkey: string | null,
   appName?: string,
   ttlHours = 24,
+  scopes?: string[],
 ): Promise<{ sessionId: string; secret: string }> {
   const supabase = createServiceRoleClient();
   const vaultId = await getVaultIdForIdentity(supabase, identityId);
@@ -116,6 +118,7 @@ export async function authorizeApp(
   const expires_at = new Date(
     Date.now() + ttlHours * 60 * 60 * 1000,
   ).toISOString();
+  const granted = resolveSessionScopes(scopes);
 
   const { data, error } = await supabase
     .from("signer_sessions")
@@ -126,6 +129,7 @@ export async function authorizeApp(
       secret_hash,
       used: false,
       expires_at,
+      scopes: granted,
     })
     .select("id")
     .single();
@@ -151,6 +155,7 @@ export async function authorizeAppFromNostrConnect(
   parsed: ParsedNostrConnectUri,
   appNameOverride?: string,
   ttlHours = 24,
+  scopes?: string[],
 ): Promise<{ sessionId: string }> {
   const supabase = createServiceRoleClient();
   const vaultId = await getVaultIdForIdentity(supabase, identityId);
@@ -178,6 +183,7 @@ export async function authorizeAppFromNostrConnect(
   const expires_at = new Date(
     Date.now() + ttlHours * 60 * 60 * 1000,
   ).toISOString();
+  const granted = resolveSessionScopes(scopes);
 
   const { data, error } = await supabase
     .from("signer_sessions")
@@ -189,6 +195,7 @@ export async function authorizeAppFromNostrConnect(
       nip46_relay_urls: parsed.relayUrls,
       used: false,
       expires_at,
+      scopes: granted,
     })
     .select("id")
     .single();
@@ -488,13 +495,13 @@ export async function completeConnect(
 export async function assertAppMayUseSigner(
   identityId: string,
   appPubkey: string,
-): Promise<void> {
+): Promise<string[]> {
   const supabase = createServiceRoleClient();
   const vaultId = await getVaultIdForIdentity(supabase, identityId);
   const pk = appPubkey.trim().toLowerCase();
   const { data, error } = await supabase
     .from("signer_sessions")
-    .select("id")
+    .select("id, scopes")
     .eq("vault_id", vaultId)
     .eq("app_pubkey", pk)
     .eq("used", true)
@@ -507,6 +514,7 @@ export async function assertAppMayUseSigner(
   if (!data?.id) {
     throw new Error("NIP-46: app not authorized or session expired");
   }
+  return storedScopesOrDefault((data as { scopes?: unknown }).scopes);
 }
 
 /**

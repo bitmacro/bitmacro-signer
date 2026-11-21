@@ -1,3 +1,4 @@
+import { clientIpFromRequest, takeAttempt } from "@/lib/auth/attempt-limit";
 import {
   getHelpLocaleFromCookieHeader,
   normalizeHelpLocale,
@@ -250,6 +251,15 @@ async function handlePost(req: Request) {
       { error: msgQuestionInvalid(locale) },
       { status: 400 },
     );
+  }
+
+  const chatAttempt = takeAttempt(
+    `help-chat:${clientIpFromRequest(req)}`,
+    12,
+    10 * 60 * 1000,
+  );
+  if (!chatAttempt.ok) {
+    return NextResponse.json({ error: msgTryLater(locale) }, { status: 429 });
   }
 
   const openaiKey = process.env.OPENAI_API_KEY;

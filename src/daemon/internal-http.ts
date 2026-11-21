@@ -7,6 +7,8 @@ import { randomUUID } from "node:crypto";
 import http from "node:http";
 import { URL } from "node:url";
 
+import { secretEqual } from "@/lib/auth/secret-equal";
+
 import { enqueueDaemonInternalHttpLoki } from "@/daemon/loki-forward";
 import {
   copyRunningBunkerSecretKey,
@@ -33,10 +35,19 @@ function json(
   res.end(JSON.stringify(body));
 }
 
+const MAX_INTERNAL_BODY_BYTES = 65_536;
+
 function readBody(req: http.IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
+    let size = 0;
     req.on("data", (c: Buffer) => {
+      size += c.length;
+      if (size > MAX_INTERNAL_BODY_BYTES) {
+        reject(new Error("body too large"));
+        req.destroy();
+        return;
+      }
       chunks.push(c);
     });
     req.on("end", () => {
@@ -87,7 +98,7 @@ export function startInternalHttpServer(opts: {
       }
 
       const provided = bearerToken(req);
-      if (!provided || provided !== token) {
+      if (!provided || !secretEqual(provided, token)) {
         json(res, 401, { error: "Unauthorized" });
         return;
       }
@@ -294,6 +305,10 @@ export function startInternalHttpServer(opts: {
 
       json(res, 404, { error: "Not found" });
     } catch (e) {
+      if (e instanceof Error && e.message === "body too large") {
+        json(res, 413, { error: "Payload too large" });
+        return;
+      }
       log("error", "internal http handler", {
         err: e instanceof Error ? e.message : String(e),
       });

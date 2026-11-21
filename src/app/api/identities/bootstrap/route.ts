@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 
+import {
+  bootstrapCommitment,
+  parsePossessionEvent,
+  possessionIsValid,
+} from "@/lib/auth/possession";
 import { identityBootstrapBodySchema } from "@/lib/schemas/identity";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { getCorrelationIds } from "@/lib/observability/correlation";
@@ -61,6 +66,17 @@ async function handlePost(request: Request) {
   }
 
   const { npub } = parsed.data;
+  const proof = parsePossessionEvent(parsed.data.proof);
+  if (
+    !proof ||
+    !possessionIsValid(proof, {
+      purpose: "bootstrap",
+      npub,
+      commitment: bootstrapCommitment(npub),
+    })
+  ) {
+    return jsonError("Proof of key possession failed", 401);
+  }
   await pushLokiStructured("info", {
     component: "identities_bootstrap",
     event: SignerEvents.identityBootstrap.started,

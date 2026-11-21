@@ -32,6 +32,7 @@ import {
   revokeAllListableSessionsForIdentity,
   revokeSessionsForIdentity,
 } from "@/lib/session/app-keys";
+import { resolveSessionScopes } from "@/lib/session/scopes";
 import { parseNostrConnectUri } from "@/lib/session/nostr-connect-uri";
 import {
   getBunkerRelayUrlServer,
@@ -111,6 +112,12 @@ async function handlePost(request: Request) {
   const { identity_id, app_name, ttl_hours: ttlHoursRaw } = parsed.data;
   const ttl_hours = ttlHoursRaw ?? 24;
   const ncUri = parsed.data.nostrconnect_uri;
+  let scopes: string[];
+  try {
+    scopes = resolveSessionScopes(parsed.data.scopes);
+  } catch {
+    return jsonError("Invalid scopes", 400);
+  }
 
   const { data: vault, error: vaultError } = await supabase
     .from("signer_vaults")
@@ -142,6 +149,7 @@ async function handlePost(request: Request) {
         parsedNc,
         app_name,
         ttl_hours,
+        scopes,
       );
       /** Before outbound initiate: align subscriptions with session relays (avoids stop/start racing the client’s kind 24133). */
       await syncBunkerAfterSessionChange(identity_id);
@@ -234,6 +242,7 @@ async function handlePost(request: Request) {
       appPubkeyRaw === "" ? null : appPubkeyRaw,
       app_name,
       ttl_hours,
+      scopes,
     );
     sessionId = out.sessionId;
     secret = out.secret;

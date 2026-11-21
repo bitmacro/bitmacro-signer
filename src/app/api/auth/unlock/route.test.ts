@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
+import { resetAttempts } from "@/lib/auth/attempt-limit";
 import { VaultDecryptError } from "@/lib/vault";
 
 const TEST_NPUB =
@@ -74,6 +75,7 @@ function makeSupabaseMock(opts: {
 describe("POST /api/auth/unlock", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    resetAttempts();
     mocks.isRunning.mockReturnValue(true);
   });
 
@@ -135,9 +137,9 @@ describe("POST /api/auth/unlock", () => {
     expect(j).toEqual({
       ok: true,
       vault_exists: false,
-      identity_id: TEST_IDENTITY_ID,
       is_running: false,
     });
+    expect(j.identity_id).toBeUndefined();
     expect(mocks.decryptNsec).not.toHaveBeenCalled();
     expect(mocks.startBunker).not.toHaveBeenCalled();
   });
@@ -186,7 +188,7 @@ describe("POST /api/auth/unlock", () => {
       TEST_IDENTITY_ID,
       "nsec1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq8f4t4w",
     );
-    expect(mocks.setSessionCookie).toHaveBeenCalledWith(TEST_IDENTITY_ID);
+    expect(mocks.setSessionCookie).toHaveBeenCalledWith(TEST_IDENTITY_ID, null);
     const j = (await res.json()) as {
       ok: boolean;
       vault_exists: boolean;
