@@ -67,13 +67,30 @@ export function formatNip46RpcResponse(r: Nip46RpcResult): string {
   return JSON.stringify(r);
 }
 
+/** Kind integer from a `sign_event` param. Ignores every other field. */
+export function signEventKindParam(raw: string): number | undefined {
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object") return undefined;
+    const kind = (parsed as { kind?: unknown }).kind;
+    if (typeof kind === "number" && Number.isInteger(kind)) return kind;
+  } catch {
+    return undefined;
+  }
+  return undefined;
+}
+
 function denyUnlessPermitted(
   scopes: readonly string[],
   method: string,
   kind?: number,
 ): void {
   if (!scopeAllows(scopes, method, kind)) {
-    throw new Error("NIP-46: method not permitted for this session");
+    const detail =
+      method === "sign_event" && kind != null
+        ? `sign_event kind ${kind}`
+        : method;
+    throw new Error(`NIP-46: method not permitted for this session (${detail})`);
   }
 }
 

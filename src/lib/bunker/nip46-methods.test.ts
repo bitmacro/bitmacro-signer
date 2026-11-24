@@ -316,13 +316,17 @@ describe("runNip46Method", () => {
       { id: "scope-1", method: "sign_event", params: [JSON.stringify(tmpl)] },
       deps,
     );
-    expect(signed.error).toMatch(/not permitted/);
+    expect(signed.error).toBe(
+      "NIP-46: method not permitted for this session (sign_event kind 0)",
+    );
     const decrypted = await runNip46Method(
       "e".repeat(64),
       { id: "scope-2", method: "nip44_decrypt", params: ["ab".repeat(32), "cipher"] },
       deps,
     );
-    expect(decrypted.error).toMatch(/not permitted/);
+    expect(decrypted.error).toBe(
+      "NIP-46: method not permitted for this session (nip44_decrypt)",
+    );
   });
 
   it("unknown method returns error in result object", async () => {

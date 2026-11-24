@@ -27,6 +27,7 @@ import {
   parseNip46RpcPayload,
   decryptNip46InboundEventContent,
   runNip46Method,
+  signEventKindParam,
   type DecryptNip46InboundResult,
   type Nip46RpcResult,
 } from "./nip46-methods";
@@ -218,7 +219,11 @@ function createNip46AttachOnevent(
             ...connectExtra,
           };
           if (req.method === "sign_event") {
-            log("info", `NIP-46 inbound ${req.method}`, inboundLog);
+            const eventKind = signEventKindParam(req.params[0] ?? "");
+            log("info", `NIP-46 inbound ${req.method}`, {
+              ...inboundLog,
+              ...(eventKind != null ? { eventKind } : {}),
+            });
           } else {
             log("info", "NIP-46 inbound", inboundLog);
           }

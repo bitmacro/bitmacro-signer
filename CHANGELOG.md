@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Sessions: remove / remove selected** use the in-app confirmation dialog instead of `window.confirm()`, which returns `false` in webviews and embedded browsers (the buttons looked dead).
 
+## [1.0.1] - 2026-11-23
+
+### Fixed
+
+- **A refused NIP-46 call now names what was refused.** The client error is `NIP-46: method not permitted for this session (sign_event kind N)` or `(method)`. The daemon logs `eventKind` on the inbound `sign_event` line and the same text in `rpcErrorPreview`. Scopes stay as in 1.0.0: kinds 1, 6 and 7, plus encrypt and decrypt only when the panel checkboxes were set. The log records the kind number only, not the event.
+
 ## [1.0.0] - 2026-11-21
 
 ### Security
