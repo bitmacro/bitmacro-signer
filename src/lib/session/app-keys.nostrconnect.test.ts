@@ -29,6 +29,7 @@ vi.mock("@bitmacro/relay-connect", () => ({
 
 vi.mock("@/lib/relay/env", () => ({
   getRelayUrlServer: () => "wss://default-signer.relay.example/nostr",
+  getNip46FallbackRelayUrlsServer: () => [],
 }));
 
 function vaultTableMock(vaultId: string | null, err: { message: string } | null = null) {
